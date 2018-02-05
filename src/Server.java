@@ -28,11 +28,10 @@ public class Server {
                         SocketChannel sc = ssc.accept();
                         sc.configureBlocking(false);
                         sc.register(selector, SelectionKey.OP_READ);
-                    }
-                    if (key.isReadable()) {
+                        System.out.println("We have a new connection!");
+                    }else if (key.isReadable()) {
                         SocketChannel chan = (SocketChannel)key.channel();
                         ByteBuffer buffer = ByteBuffer.allocate(1024);
-                        byte[] message = new byte[1024];
 
                         try {
                             while (true) {
@@ -43,21 +42,21 @@ public class Server {
                                     break;
                                 }
                                 buffer.flip();
+
+                                char[] playerInput = new char[buffer.limit()];
+                                int i = 0;
                                 while (buffer.limit() > buffer.position()) {
-                                    System.out.print((char) buffer.get());
+                                    playerInput[i++] = (char)buffer.get();
                                 }
+                                System.out.println(playerInput);
+                                String message = "You said: " + new String(playerInput);
 
-                                String string = "Hello, Client!";
-                                for (int i = 0; i < string.length(); i++) {
-                                    message[i] = (byte) string.charAt(i);
-                                }
+                                ByteBuffer buffer2 = ByteBuffer.allocate(1024);
+                                buffer2.put(message.getBytes());
+                                buffer2.flip();
 
-                                buffer.clear();
-                                buffer.put(message);
-                                buffer.flip();
-
-                                chan.write(buffer);
-                                chan.close();
+                                chan.write(buffer2);
+                                //chan.close();
                             }
                         }catch(IOException | CancelledKeyException exc){
                             System.out.println("Connection to client lost!");
