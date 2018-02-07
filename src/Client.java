@@ -11,50 +11,52 @@ import java.nio.channels.SocketChannel;
 public class Client {
     public static void main(String args[]){
         try{
+            final int BUFFER_SIZE = 1024;
+
             SocketChannel sock = SocketChannel.open();
             sock.connect(new InetSocketAddress("localhost", 6969));
 
-            ByteBuffer output = ByteBuffer.allocate(1024);
+            // CREATE BUFFER AND SEND INITIALIZATION MESSAGE
+            ByteBuffer output = ByteBuffer.allocate(BUFFER_SIZE);
             output.put("<connection initialization message here>\n".getBytes());
             output.flip();
-
             while(output.hasRemaining()){
                 sock.write(output);
             }
-//            BufferedReader serverOutput = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+
             BufferedReader playerInput = new BufferedReader(new InputStreamReader(System.in));
             String playerMessage;
 
+            // START OF CLIENT- SERVER MESSAGE EXCHANGE
             while(true) {
                 System.out.println("Ready to send a command to the server...");
                 playerMessage = playerInput.readLine();
+
+                // STOPS THE EXCHANGE IF MESSAGE IS "stop"
                 if (playerMessage.equals("stop")) {
                     output.clear();
-                    output.put("Bye!".getBytes());
+                    output.put("Bye!\n".getBytes());
                     output.flip();
                     sock.write(output);
+                    sock.close();
                     break;
                 }
 
+                // SENDS THE INPUT MESSAGE TO THE SERVER
                 output.clear();
                 output.put((playerMessage + '\n').getBytes());
                 output.flip();
                 sock.write(output);
 
-                output.clear();
-
-                sock.read(output);
-                output.flip();
-                while (output.limit() > output.position()) {
-                    System.out.print((char) output.get());
-                }
-                        //                output.println(playerMessage);
-//                output.flush();
-//
-//                String line;
-//                while ((line = serverOutput.readLine()) != null) {
-//                    System.out.println(line);
-//                }
+                // READS BACK THE SERVER RESPONSE WITHOUT OVERFLOW
+                do {
+                    output.clear();
+                    sock.read(output);
+                    output.flip();
+                    while (output.limit() > output.position()) {
+                        System.out.print((char) output.get());
+                    }
+                }while(output.limit() >= output.capacity());
             }
 
         }catch(UnknownHostException exc){
