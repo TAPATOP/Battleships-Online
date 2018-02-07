@@ -10,7 +10,7 @@ public class Client {
     private static void sendMessageToServer(MessageType messageType, String message, ByteBuffer buffer, SocketChannel socket) throws IOException {
         buffer.clear();
         buffer.put((byte) messageType.ordinal());
-        buffer.put((message + '\n').getBytes());
+        buffer.put((message).getBytes());
         buffer.flip();
         while(buffer.hasRemaining()){
             socket.write(buffer);
@@ -72,7 +72,7 @@ public class Client {
                 sendMessageToServer(MessageType.CUSTOM_MESSAGE, playerMessage, output, sock);
 
                 // READS BACK THE SERVER RESPONSE WITHOUT OVERFLOW
-                readMessageFromServer(output, sock);
+                //readMessageFromServer(output, sock);
             }
 
         }catch(UnknownHostException exc){

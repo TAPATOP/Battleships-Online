@@ -4,6 +4,10 @@ import java.io.FileOutputStream;
 import java.io.PrintWriter;
 
 public class Account {
+    Account(){
+
+    }
+
     Account(String name, String password){
         this.name = name;
         this.password = password;
@@ -18,9 +22,25 @@ public class Account {
         return password;
     }
 
+    public int getCurrentGameID() {
+        return currentGameID;
+    }
+
+//    public void setName(String name) {
+//        this.name = name;
+//    }
+
+//    public void setPassword(String password) {
+//        this.password = password;
+//    }
+
+    public void setCurrentGameID(int currentGameID) {
+        this.currentGameID = currentGameID;
+    }
+
     public Errors updateAccountStatistics(int gameID){
         File f = new File(pathName);
-        if(!f.exists()) {
+        if(!f.isFile()) {
             System.out.println("Account doesn't exist");
             return Errors.CANNOT_LOCATE_ACCOUNT;
         }
@@ -35,7 +55,7 @@ public class Account {
 
     public Errors registerAccount() {
         File f = new File(pathName);
-        if(f.exists()) {
+        if(f.isFile()) {
             System.out.println("Account already exists");
             return Errors.ACCOUNT_ALREADY_EXISTS;
         }
@@ -48,8 +68,18 @@ public class Account {
         return Errors.SUCCESS;
     }
 
+    public boolean exists(){
+        File f = new File(pathName);
+        if(f.isFile()) {
+            return true;
+        }
+        return false;
+    }
+
     private String name;
     private String password;
+    private int currentGameID;
+
     private String pathName;
 
     enum Errors{

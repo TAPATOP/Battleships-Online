@@ -7,9 +7,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 public class Server {
-    private static MessageType readMessageType(ByteBuffer buffer){
-        return MessageType.values()[(int)buffer.get()];
-    }
 
     private static void acceptConnections(Selector selector, SelectionKey key) throws IOException{
         ServerSocketChannel ssc = (ServerSocketChannel)key.channel();
@@ -21,18 +18,60 @@ public class Server {
 
     private static boolean readFromClient(ByteBuffer buffer, SocketChannel chan) throws IOException{
         buffer.clear();
-        int r = 1;
         try {
-            r = chan.read(buffer);
+            if(chan.read(buffer) <= 0){
+                return false;
+            }
         }catch (BufferOverflowException exc){
             System.out.println("Client message too long!");
         }
-        if(r <= 0){
-            return false;
-        }
         buffer.flip();
-        System.out.println(readMessageType(buffer));
+        MessageType mesType = readClientMessageType(buffer);
+        System.out.println("Processing a " + mesType + " message");
+        String playerMessage = readClientMessage(buffer);
+        System.out.print("Processing this message: " + playerMessage);
+        processMessage(mesType, playerMessage, chan);
         return true;
+    }
+
+    private static MessageType readClientMessageType(ByteBuffer buffer){
+        return MessageType.values()[(int)buffer.get()];
+    }
+
+    private static String readClientMessage(ByteBuffer buffer){
+        char[] playerInput = new char[buffer.limit()];
+        int i = 0;
+        while (buffer.limit() > buffer.position()) {
+            playerInput[i++] = (char) buffer.get();
+        }
+        return new String(playerInput);
+    }
+
+    private static void processMessage(MessageType mesType, String message, SocketChannel chan){
+        switch(mesType){
+            case LOGIN:
+                String[] usernameAndPassword = splitUsernameAndPassword(message);
+                if(usernameAndPassword == null){
+                    return;
+                }
+                System.out.println("Here you go:" + usernameAndPassword[0] + " " + usernameAndPassword[1]);
+                Account acc = new Account(usernameAndPassword[0], usernameAndPassword[1]);
+                if(acc.exists()){
+                    System.out.println("Successful login!");
+                }
+                break;
+            default:
+                System.out.println("I don't know how to handle this :c");
+        }
+    }
+
+    private static String[] splitUsernameAndPassword(String input){
+        String[] usernameAndPassword = input.split(" ");
+        if(usernameAndPassword.length > 2){
+            System.out.println("Username and password not validated...");
+            return null;
+        }
+        return usernameAndPassword;
     }
 
     private static void writeToClient(String message, ByteBuffer buffer, SocketChannel chan) throws IOException{
@@ -41,6 +80,7 @@ public class Server {
         buffer.flip();
         chan.write(buffer);
     }
+
     public static void main(String args[]){
         System.out.println("Server is working");
         try{
@@ -65,21 +105,22 @@ public class Server {
                         acceptConnections(selector, key);
                     }else if (key.isReadable()) {
                         SocketChannel chan = (SocketChannel)key.channel();
+                        
                         ByteBuffer buffer = ByteBuffer.allocate(1024);
                         try {
                             // READ THE CLIENT INPUT
                             while(readFromClient(buffer, chan)) {
 
                                 // SEND INPUT TO THE CLIENT
-                                char[] playerInput = new char[buffer.limit()];
-                                int i = 0;
-                                while (buffer.limit() > buffer.position()) {
-                                    playerInput[i++] = (char) buffer.get();
-                                }
-                                String message = "You said: " + new String(playerInput);
-                                writeToClient(message, buffer, chan);
-
-                                System.out.print(playerInput);
+//                                char[] playerInput = new char[buffer.limit()];
+//                                int i = 0;
+//                                while (buffer.limit() > buffer.position()) {
+//                                    playerInput[i++] = (char) buffer.get();
+//                                }
+//                                String message = "You said: " + new String(playerInput);
+//                                writeToClient(message, buffer, chan);
+//
+//                                System.out.print(playerInput);
                             }
                         }catch(IOException | CancelledKeyException exc){
                             System.out.println("Connection to client lost!");
