@@ -1,6 +1,5 @@
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
@@ -8,27 +7,35 @@ import java.util.Iterator;
 import java.util.Set;
 
 public class Server {
-    public static void acceptConnections(Selector selector, SelectionKey key) throws IOException{
+    private static MessageType readMessageType(ByteBuffer buffer){
+        return MessageType.values()[(int)buffer.get()];
+    }
+
+    private static void acceptConnections(Selector selector, SelectionKey key) throws IOException{
         ServerSocketChannel ssc = (ServerSocketChannel)key.channel();
         SocketChannel sc = ssc.accept();
         sc.configureBlocking(false);
         sc.register(selector, SelectionKey.OP_READ);
         System.out.println("We have a new connection!");
-
     }
 
-    public static void readFromClient(ByteBuffer buffer, SocketChannel chan) throws IOException{
+    private static boolean readFromClient(ByteBuffer buffer, SocketChannel chan) throws IOException{
         buffer.clear();
+        int r = 1;
         try {
-            chan.read(buffer);
+            r = chan.read(buffer);
         }catch (BufferOverflowException exc){
             System.out.println("Client message too long!");
         }
+        if(r <= 0){
+            return false;
+        }
         buffer.flip();
-        System.out.println(MessageType.values()[(int)buffer.get()]);
+        System.out.println(readMessageType(buffer));
+        return true;
     }
 
-    public static void writeToClient(String message, ByteBuffer buffer, SocketChannel chan) throws IOException{
+    private static void writeToClient(String message, ByteBuffer buffer, SocketChannel chan) throws IOException{
         buffer.clear();
         buffer.put(message.getBytes());
         buffer.flip();
@@ -60,15 +67,14 @@ public class Server {
                         SocketChannel chan = (SocketChannel)key.channel();
                         ByteBuffer buffer = ByteBuffer.allocate(1024);
                         try {
-                            while (true) {
-                                // READ THE CLIENT INPUT
-                                readFromClient(buffer, chan);
+                            // READ THE CLIENT INPUT
+                            while(readFromClient(buffer, chan)) {
 
                                 // SEND INPUT TO THE CLIENT
                                 char[] playerInput = new char[buffer.limit()];
                                 int i = 0;
                                 while (buffer.limit() > buffer.position()) {
-                                    playerInput[i++] = (char)buffer.get();
+                                    playerInput[i++] = (char) buffer.get();
                                 }
                                 String message = "You said: " + new String(playerInput);
                                 writeToClient(message, buffer, chan);
@@ -79,6 +85,7 @@ public class Server {
                             System.out.println("Connection to client lost!");
                             chan.close();
                         }
+
                     }
                     keyIterator.remove();
                 }

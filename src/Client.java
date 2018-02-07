@@ -7,8 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 public class Client {
-
-    public static void sendMessageToServer(MessageType messageType, String message, ByteBuffer buffer, SocketChannel socket) throws IOException {
+    private static void sendMessageToServer(MessageType messageType, String message, ByteBuffer buffer, SocketChannel socket) throws IOException {
         buffer.clear();
         buffer.put((byte) messageType.ordinal());
         buffer.put((message + '\n').getBytes());
@@ -18,7 +17,7 @@ public class Client {
         }
     }
 
-    public static void readMessageFromServer(ByteBuffer buffer, SocketChannel socket) throws IOException{
+    private static void readMessageFromServer(ByteBuffer buffer, SocketChannel socket) throws IOException{
         do {
             buffer.clear();
             socket.read(buffer);
@@ -29,7 +28,7 @@ public class Client {
         }while(buffer.limit() >= buffer.capacity());
     }
 
-    public static void welcomeScreen(BufferedReader playerInput, ByteBuffer buffer, SocketChannel socket) throws IOException {
+    private static void welcomeScreen(BufferedReader playerInput, ByteBuffer buffer, SocketChannel socket) throws IOException {
         String username;
         String password;
 
