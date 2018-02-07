@@ -26,13 +26,13 @@ public class Account {
         return currentGameID;
     }
 
-//    public void setName(String name) {
-//        this.name = name;
-//    }
+    void setName(String name) {
+        this.name = name;
+    }
 
-//    public void setPassword(String password) {
-//        this.password = password;
-//    }
+    void setPassword(String password) {
+        this.password = password;
+    }
 
     public void setCurrentGameID(int currentGameID) {
         this.currentGameID = currentGameID;
@@ -68,12 +68,9 @@ public class Account {
         return Errors.SUCCESS;
     }
 
-    public boolean exists(){
+    boolean exists(){
         File f = new File(pathName);
-        if(f.isFile()) {
-            return true;
-        }
-        return false;
+        return f.isFile();
     }
 
     private String name;

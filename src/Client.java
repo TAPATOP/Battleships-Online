@@ -40,7 +40,7 @@ public class Client {
 
         System.out.println("OK, let's see what the server has to say about that :>");
         sendMessageToServer(MessageType.LOGIN, username + " " + password, buffer, socket);
-        readMessageFromServer(buffer, socket);
+        // readMessageFromServer(buffer, socket);
     }
 
     public static void main(String args[]){
