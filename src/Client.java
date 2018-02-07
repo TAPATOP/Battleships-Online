@@ -7,6 +7,43 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 public class Client {
+
+    public static void sendMessageToServer(MessageType messageType, String message, ByteBuffer buffer, SocketChannel socket) throws IOException {
+        buffer.clear();
+        buffer.put((byte) messageType.ordinal());
+        buffer.put((message + '\n').getBytes());
+        buffer.flip();
+        while(buffer.hasRemaining()){
+            socket.write(buffer);
+        }
+    }
+
+    public static void readMessageFromServer(ByteBuffer buffer, SocketChannel socket) throws IOException{
+        do {
+            buffer.clear();
+            socket.read(buffer);
+            buffer.flip();
+            while (buffer.limit() > buffer.position()) {
+                System.out.print((char) buffer.get());
+            }
+        }while(buffer.limit() >= buffer.capacity());
+    }
+
+    public static void welcomeScreen(BufferedReader playerInput, ByteBuffer buffer, SocketChannel socket) throws IOException {
+        String username;
+        String password;
+
+        System.out.println("Hello to BattleshipsOnline!");
+        System.out.println("username:");
+        username = playerInput.readLine();
+        System.out.println("password:");
+        password  = playerInput.readLine();
+
+        System.out.println("OK, let's see what the server has to say about that :>");
+        sendMessageToServer(MessageType.LOGIN, username + " " + password, buffer, socket);
+        readMessageFromServer(buffer, socket);
+    }
+
     public static void main(String args[]){
         try{
             final int BUFFER_SIZE = 1024;
@@ -14,16 +51,11 @@ public class Client {
             SocketChannel sock = SocketChannel.open();
             sock.connect(new InetSocketAddress("localhost", 6969));
 
-            // CREATE BUFFER AND SEND INITIALIZATION MESSAGE
+            // CREATE BUFFER AND CHANNEL AND INITIATE THE LOGIN SCREEN
             ByteBuffer output = ByteBuffer.allocate(BUFFER_SIZE);
-            output.put("<connection initialization message here>\n".getBytes());
-            output.flip();
-            while(output.hasRemaining()){
-                sock.write(output);
-            }
-
             BufferedReader playerInput = new BufferedReader(new InputStreamReader(System.in));
             String playerMessage;
+            welcomeScreen(playerInput, output, sock);
 
             // START OF CLIENT- SERVER MESSAGE EXCHANGE
             while(true) {
@@ -32,29 +64,16 @@ public class Client {
 
                 // STOPS THE EXCHANGE IF MESSAGE IS "stop"
                 if (playerMessage.equals("stop")) {
-                    output.clear();
-                    output.put("Bye!\n".getBytes());
-                    output.flip();
-                    sock.write(output);
+                    sendMessageToServer(MessageType.LOGOUT,"Bye!", output, sock);
                     sock.close();
                     break;
                 }
 
                 // SENDS THE INPUT MESSAGE TO THE SERVER
-                output.clear();
-                output.put((playerMessage + '\n').getBytes());
-                output.flip();
-                sock.write(output);
+                sendMessageToServer(MessageType.CUSTOM_MESSAGE, playerMessage, output, sock);
 
                 // READS BACK THE SERVER RESPONSE WITHOUT OVERFLOW
-                do {
-                    output.clear();
-                    sock.read(output);
-                    output.flip();
-                    while (output.limit() > output.position()) {
-                        System.out.print((char) output.get());
-                    }
-                }while(output.limit() >= output.capacity());
+                readMessageFromServer(output, sock);
             }
 
         }catch(UnknownHostException exc){

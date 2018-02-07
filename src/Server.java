@@ -1,11 +1,39 @@
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Iterator;
 import java.util.Set;
 
 public class Server {
+    public static void acceptConnections(Selector selector, SelectionKey key) throws IOException{
+        ServerSocketChannel ssc = (ServerSocketChannel)key.channel();
+        SocketChannel sc = ssc.accept();
+        sc.configureBlocking(false);
+        sc.register(selector, SelectionKey.OP_READ);
+        System.out.println("We have a new connection!");
+
+    }
+
+    public static void readFromClient(ByteBuffer buffer, SocketChannel chan) throws IOException{
+        buffer.clear();
+        try {
+            chan.read(buffer);
+        }catch (BufferOverflowException exc){
+            System.out.println("Client message too long!");
+        }
+        buffer.flip();
+        System.out.println(MessageType.values()[(int)buffer.get()]);
+    }
+
+    public static void writeToClient(String message, ByteBuffer buffer, SocketChannel chan) throws IOException{
+        buffer.clear();
+        buffer.put(message.getBytes());
+        buffer.flip();
+        chan.write(buffer);
+    }
     public static void main(String args[]){
         System.out.println("Server is working");
         try{
@@ -27,23 +55,14 @@ public class Server {
                     SelectionKey key = keyIterator.next();
                     if(key.isAcceptable()) {
                         // ACCEPT THE PENDING CONNECTIONS AND DESIGNATE THEM FOR READING
-                        ServerSocketChannel ssc = (ServerSocketChannel)key.channel();
-                        SocketChannel sc = ssc.accept();
-                        sc.configureBlocking(false);
-                        sc.register(selector, SelectionKey.OP_READ);
-                        System.out.println("We have a new connection!");
+                        acceptConnections(selector, key);
                     }else if (key.isReadable()) {
                         SocketChannel chan = (SocketChannel)key.channel();
                         ByteBuffer buffer = ByteBuffer.allocate(1024);
                         try {
                             while (true) {
                                 // READ THE CLIENT INPUT
-                                buffer.clear();
-                                int r = chan.read(buffer);
-                                if (r <= 0) {
-                                    break;
-                                }
-                                buffer.flip();
+                                readFromClient(buffer, chan);
 
                                 // SEND INPUT TO THE CLIENT
                                 char[] playerInput = new char[buffer.limit()];
@@ -51,12 +70,10 @@ public class Server {
                                 while (buffer.limit() > buffer.position()) {
                                     playerInput[i++] = (char)buffer.get();
                                 }
-                                System.out.print(playerInput);
                                 String message = "You said: " + new String(playerInput);
-                                buffer.clear();
-                                buffer.put(message.getBytes());
-                                buffer.flip();
-                                chan.write(buffer);
+                                writeToClient(message, buffer, chan);
+
+                                System.out.print(playerInput);
                             }
                         }catch(IOException | CancelledKeyException exc){
                             System.out.println("Connection to client lost!");
