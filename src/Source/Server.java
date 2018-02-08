@@ -74,12 +74,11 @@ public class Server {
             return 0 + "Unverified username/ password";
         }
         Account acc = new Account(usernameAndPassword[0], usernameAndPassword[1]);
-        if(loggedInUsers.contains(acc.getName())){
+        if(accountIsLoggedIn(acc)){
             System.out.println(acc.getName() + " is already logged in");
             return 0 + "User already logged in...";
         }
         return verifyLoginDataAndLogin(acc, (Account)(key.attachment()));
-
     }
 
     private static String verifyLoginDataAndLogin(Account requestedAcc, Account savedAcc) throws IOException{
@@ -99,10 +98,14 @@ public class Server {
             return 0 + "Account doesn't exist";
         }
     }
+
     private static boolean channelIsLoggedIn(SelectionKey key){
         return ((Account)key.attachment()).getName() != null;
     }
 
+    private static boolean accountIsLoggedIn(Account acc){
+        return loggedInUsers.contains(acc.getName());
+    }
     private static String loadPassword(Account acc) throws IOException{
         File f = new File(acc.getPathName());
         BufferedReader reader = new BufferedReader(new FileReader(f));

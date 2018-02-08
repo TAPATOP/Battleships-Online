@@ -36,7 +36,7 @@ public class Client {
         return messageFromServer.toString();
     }
 
-    private static void loginMessage() throws IOException {
+    private static void login() throws IOException {
         String username;
         String password;
 
@@ -66,6 +66,8 @@ public class Client {
         switch(string){
             case "login":
                 return MessageType.LOGIN;
+            case "register":
+                return MessageType.REGISTER;
             default:
                 return MessageType.CUSTOM_MESSAGE;
         }
@@ -73,8 +75,10 @@ public class Client {
 
     private static void callCommand(MessageType commandType) throws IOException{
         switch(commandType){
-            case LOGIN: loginMessage();
+            case LOGIN: login();
             break;
+            case REGISTER:
+
             default:
                 System.out.println("No idea what to do with this");
         }
@@ -89,7 +93,7 @@ public class Client {
             playerInput = new BufferedReader(new InputStreamReader(System.in));
             String playerMessage;
 
-            //loginMessage(playerInput);
+            //login(playerInput);
 
             // START OF CLIENT- SERVER MESSAGE EXCHANGE
             while(true) {
@@ -108,7 +112,21 @@ public class Client {
     }
     // MEMBER VARIABLES
     static final int BUFFER_SIZE = 1024;
-    static SocketChannel socket;
-    static ByteBuffer buffer;
-    static BufferedReader playerInput;
+    private static SocketChannel socket;
+    private static ByteBuffer buffer;
+    private static BufferedReader playerInput;
+
+    // MEMBER VARIABLES- RELATED STUFF( shouldn't be needed outside of Testing)
+
+    public static void setSocket(SocketChannel socket) {
+        Client.socket = socket;
+    }
+
+    public static void setBuffer(ByteBuffer buffer) {
+        Client.buffer = buffer;
+    }
+
+    public static void setPlayerInput(BufferedReader playerInput) {
+        Client.playerInput = playerInput;
+    }
 }
