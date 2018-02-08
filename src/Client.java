@@ -40,6 +40,10 @@ public class Client {
 
         System.out.println("OK, let's see what the server has to say about that :>");
         sendMessageToServer(MessageType.LOGIN, username + " " + password, buffer, socket);
+        if(!socket.isConnected()){
+            System.out.println("Server is a fag");
+            socket.close();
+        }
         // readMessageFromServer(buffer, socket);
     }
 
@@ -72,7 +76,7 @@ public class Client {
                 sendMessageToServer(MessageType.CUSTOM_MESSAGE, playerMessage, output, sock);
 
                 // READS BACK THE SERVER RESPONSE WITHOUT OVERFLOW
-                //readMessageFromServer(output, sock);
+                // readMessageFromServer(output, sock);
             }
 
         }catch(UnknownHostException exc){

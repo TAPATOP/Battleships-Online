@@ -1,5 +1,6 @@
 public enum MessageType {
     LOGIN,
+    REGISTER,
     LOGOUT,
     GAME_COMMAND,
     JOIN_GAME,

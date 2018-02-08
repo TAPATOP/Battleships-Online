@@ -50,26 +50,29 @@ public class Server {
     private static void processMessage(MessageType mesType, String message, SocketChannel chan, SelectionKey key) throws IOException {
         switch (mesType) {
             case LOGIN:
-                String[] usernameAndPassword = splitUsernameAndPassword(message);
-                if (usernameAndPassword == null) {
-                    return;
-                }
-                //System.out.println("Here you go:" + usernameAndPassword[0] + " " + usernameAndPassword[1]);
-                Account acc = new Account(usernameAndPassword[0], usernameAndPassword[1]);
-                if (acc.exists()) {
-                    System.out.println("Successful login!");
-                    ((Account)key.attachment()).setName(usernameAndPassword[0]);
-                    ((Account)key.attachment()).setPassword(usernameAndPassword[1]);
-                } else{
-                    System.out.println("Account not found. Disconnecting the imposer!");
-                    chan.close();
-                }
+                loginAccount(message, chan, key);
                 break;
             default:
                 System.out.println("I don't know how to handle this :c");
         }
     }
 
+    private static void loginAccount(String message, SocketChannel  chan, SelectionKey key) throws IOException{
+        String[] usernameAndPassword = splitUsernameAndPassword(message);
+        if (usernameAndPassword == null) {
+            return;
+        }
+        Account acc = new Account(usernameAndPassword[0], usernameAndPassword[1]);
+        if (acc.exists()) {
+            System.out.println("Successful login!");
+            ((Account)key.attachment()).setName(usernameAndPassword[0]);
+            ((Account)key.attachment()).setPassword(usernameAndPassword[1]);
+            //writeToClient(MessageType.LOGIN, "Successful login!", buffer, chan);
+        } else{
+            System.out.println("Account not found. Disconnecting the imposer!");
+            chan.close();
+        }
+    }
     private static String[] splitUsernameAndPassword(String input) {
         String[] usernameAndPassword = input.split(" ");
         if (usernameAndPassword.length > 2) {
@@ -79,13 +82,15 @@ public class Server {
         return usernameAndPassword;
     }
 
-    private static void writeToClient(String message, ByteBuffer buffer, SocketChannel chan) throws IOException {
+    private static void writeToClient(MessageType mesType, String message, ByteBuffer buffer, SocketChannel chan) throws IOException {
         buffer.clear();
+        buffer.put((byte) mesType.ordinal());
         buffer.put(message.getBytes());
         buffer.flip();
         chan.write(buffer);
     }
 
+    @SuppressWarnings("InfiniteLoopStatement")
     public static void main(String args[]) {
         System.out.println("Server is working");
         try {
