@@ -58,10 +58,49 @@ public class Server {
         switch (mesType) {
             case LOGIN:
                 return loginAccount(message, key);
+            case REGISTER:
+                return registerAccount(message, key);
+            case LOGOUT:
+                return logoutAccount(key);
             default:
                 System.out.println("I don't know how to handle this :c");
-                return message;
+                return "I have no idea what to do with this so I will just repeat it: " + message;
         }
+    }
+
+    private static String logoutAccount(SelectionKey key){
+        if(channelIsLoggedIn(key)){
+            System.out.println(((Account)key.attachment()).getName() + " has logged out");
+            logChannelOut(key);
+            return 1 + "Successful logout. Bye!";
+        }
+        return 0 + "You need to have logged in to log out...";
+    }
+
+    private static String registerAccount(String message, SelectionKey key){
+        String[] usernameAndPassword = splitUsernameAndPassword(message);
+        if (usernameAndPassword == null) {
+            return 0 + "Unverified username/ password";
+        }
+        Account acc = new Account(usernameAndPassword[0], usernameAndPassword[1]);
+        if(accountExists(acc)){
+            System.out.println(acc.getName() + " already exists");
+            return 0 + "User already exists...";
+        }
+        if(channelIsLoggedIn(key)){
+            System.out.println("This channel is already logged in");
+            return 0 + "You need to log out before you can log in";
+        }
+        acc.registerAccount();
+        return 1 + "Successful registration! Welcome aboard, " + acc.getName();
+    }
+
+    private static boolean accountExists(Account acc) {
+        return (new File(acc.getPathName()).isFile());
+    }
+    private static void logChannelOut(SelectionKey key){
+        loggedInUsers.remove(((Account)key.attachment()).getName());
+        key.attach(new Account());
     }
 
     private static String loginAccount(String message, SelectionKey key) throws IOException{
@@ -100,20 +139,22 @@ public class Server {
     }
 
     private static boolean channelIsLoggedIn(SelectionKey key){
-        return ((Account)key.attachment()).getName() != null;
+        return  ((Account)key.attachment()).getName() != null;
     }
 
     private static boolean accountIsLoggedIn(Account acc){
         return loggedInUsers.contains(acc.getName());
     }
+
     private static String loadPassword(Account acc) throws IOException{
         File f = new File(acc.getPathName());
         BufferedReader reader = new BufferedReader(new FileReader(f));
         return reader.readLine();
     }
+
     private static String[] splitUsernameAndPassword(String input) {
         String[] usernameAndPassword = input.split(" ");
-        if (usernameAndPassword.length > 2) {
+        if (usernameAndPassword.length != 2) {
             System.out.println("Username and password not validated...");
             return null;
         }
@@ -162,7 +203,7 @@ public class Server {
                             while (readFromClient(buffer, chan, key));
                         } catch (IOException | CancelledKeyException exc) {
                             System.out.println("Connection to client lost!");
-                            loggedInUsers.remove(((Account)key.attachment()).getName());
+                            logChannelOut(key);
                             chan.close();
                         }
 

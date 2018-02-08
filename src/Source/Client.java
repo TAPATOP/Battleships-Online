@@ -12,7 +12,9 @@ public class Client {
     public static void sendMessageToServer(MessageType messageType, String message) throws IOException {
         buffer.clear();
         buffer.put((byte) messageType.ordinal());
-        buffer.put((message).getBytes());
+        if(message != null) {
+            buffer.put((message).getBytes());
+        }
         buffer.flip();
         while(buffer.hasRemaining()){
             socket.write(buffer);
@@ -37,25 +39,27 @@ public class Client {
     }
 
     private static String login(String playerMessage) throws IOException {
-        String[] usernameAndPassword = splitUsernameAndPassword(playerMessage);
-
-        System.out.println("OK, let's see what the server has to say about that :>");
-        if(usernameAndPassword == null){
-            System.out.println("Message not validated");
-            return null;
-        }
-        sendMessageToServer(MessageType.LOGIN, usernameAndPassword[0] + " " + usernameAndPassword[1]);
+        sendMessageToServer(MessageType.LOGIN, playerMessage);
         return readMessageFromServer();
     }
 
-    private static String[] splitUsernameAndPassword(String input) {
-        String[] usernameAndPassword = input.split(" ");
-        if (usernameAndPassword.length != 2) {
-            System.out.println("Username and password not validated...");
-            return null;
-        }
-        return usernameAndPassword;
+    private static String register(String playerMessage) throws IOException{
+        sendMessageToServer(MessageType.REGISTER, playerMessage);
+        return readMessageFromServer();
     }
+
+    private static String logout() throws IOException{
+        sendMessageToServer(MessageType.LOGOUT, null);
+        return readMessageFromServer();
+    }
+//    private static String[] splitUsernameAndPassword(String input) {
+//        String[] usernameAndPassword = input.split(" ");
+//        if (usernameAndPassword.length != 2) {
+//            System.out.println("Username and password not validated...");
+//            return null;
+//        }
+//        return usernameAndPassword;
+//    }
 
     public static boolean processPlayerCommand(String playerMessage) throws IOException{
         String playerMessageType = playerMessage.split(" ")[0];
@@ -77,6 +81,8 @@ public class Client {
                 return MessageType.LOGIN;
             case "register":
                 return MessageType.REGISTER;
+            case "logout":
+                return MessageType.LOGOUT;
             default:
                 return MessageType.CUSTOM_MESSAGE;
         }
@@ -91,7 +97,13 @@ public class Client {
                 }
                 return login(remainingMessage);
             case REGISTER:
-
+                if(remainingMessage == null){
+                    System.out.println("There is nothing to register...");
+                    return null;
+                }
+                return register(remainingMessage);
+            case LOGOUT:
+                return logout();
             default:
                 System.out.println("No idea what to do with this");
                 return null;
