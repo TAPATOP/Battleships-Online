@@ -131,6 +131,7 @@ public class Server {
     @SuppressWarnings("InfiniteLoopStatement")
     public static void main(String args[]) {
         System.out.println("Server is working");
+        SelectionKey key = null;
         try {
             // SERVER INITIALIZATION
             serverSocketChannel = ServerSocketChannel.open();
@@ -148,7 +149,7 @@ public class Server {
                 Set<SelectionKey> selectedKeys = selector.selectedKeys();
                 Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
                 while (keyIterator.hasNext()) {
-                    SelectionKey key = keyIterator.next();
+                    key = keyIterator.next();
                     if (key.isAcceptable()) {
                         // ACCEPT THE PENDING CONNECTIONS AND DESIGNATE THEM FOR READING
                         acceptConnections(selector, key);
@@ -161,6 +162,7 @@ public class Server {
                             while (readFromClient(buffer, chan, key));
                         } catch (IOException | CancelledKeyException exc) {
                             System.out.println("Connection to client lost!");
+                            loggedInUsers.remove(((Account)key.attachment()).getName());
                             chan.close();
                         }
 

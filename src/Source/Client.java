@@ -36,30 +36,39 @@ public class Client {
         return messageFromServer.toString();
     }
 
-    private static void login() throws IOException {
-        String username;
-        String password;
-
-        System.out.println("Hello to BattleshipsOnline!");
-        System.out.println("username:");
-        username = playerInput.readLine();
-        System.out.println("password:");
-        password = playerInput.readLine();
+    private static String login(String playerMessage) throws IOException {
+        String[] usernameAndPassword = splitUsernameAndPassword(playerMessage);
 
         System.out.println("OK, let's see what the server has to say about that :>");
-        sendMessageToServer(MessageType.LOGIN, username + " " + password);
-        if (!socket.isConnected()) {
-            System.out.println("Server is a fag");
-            socket.close();
+        if(usernameAndPassword == null){
+            System.out.println("Message not validated");
+            return null;
         }
-        readMessageFromServer();
+        sendMessageToServer(MessageType.LOGIN, usernameAndPassword[0] + " " + usernameAndPassword[1]);
+        return readMessageFromServer();
     }
 
-    public static void processPlayerCommand(String command) throws IOException{
-        String commandType = command.split(" ")[0];
-        MessageType messageType = findMessageTypeOut(commandType);
+    private static String[] splitUsernameAndPassword(String input) {
+        String[] usernameAndPassword = input.split(" ");
+        if (usernameAndPassword.length != 2) {
+            System.out.println("Username and password not validated...");
+            return null;
+        }
+        return usernameAndPassword;
+    }
 
-        callCommand(messageType);
+    public static boolean processPlayerCommand(String playerMessage) throws IOException{
+        String playerMessageType = playerMessage.split(" ")[0];
+        MessageType messageType = findMessageTypeOut(playerMessageType);
+        String remainingMessage = null;
+        if(playerMessageType.length() + 1 < playerMessage.length()){
+            remainingMessage = playerMessage.substring(playerMessageType.length() + 1, playerMessage.length());
+        }
+
+        String result = callCommand(messageType, remainingMessage);
+
+        // return false if result is null or message starts with '0'
+        return !(result == null || result.charAt(0) == '0');
     }
 
     private static MessageType findMessageTypeOut(String string){
@@ -73,14 +82,19 @@ public class Client {
         }
     }
 
-    private static void callCommand(MessageType commandType) throws IOException{
-        switch(commandType){
-            case LOGIN: login();
-            break;
+    private static String callCommand(MessageType messageType, String remainingMessage) throws IOException{
+        switch(messageType){
+            case LOGIN:
+                if(remainingMessage == null){
+                    System.out.println("Username and password format is not okay");
+                    return null;
+                }
+                return login(remainingMessage);
             case REGISTER:
 
             default:
                 System.out.println("No idea what to do with this");
+                return null;
         }
     }
 
@@ -93,7 +107,7 @@ public class Client {
             playerInput = new BufferedReader(new InputStreamReader(System.in));
             String playerMessage;
 
-            //login(playerInput);
+            System.out.println("Welcome to BattleshipsOnline!");
 
             // START OF CLIENT- SERVER MESSAGE EXCHANGE
             while(true) {
