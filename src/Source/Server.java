@@ -8,6 +8,8 @@ import java.net.InetSocketAddress;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -58,13 +60,13 @@ public class Server {
                 return loginAccount(message, key);
             default:
                 System.out.println("I don't know how to handle this :c");
+                return message;
         }
-        return null;
     }
 
     private static String loginAccount(String message, SelectionKey key) throws IOException{
-        if(isLoggedIn(key)){
-            System.out.println("User already logged in");
+        if(channelIsLoggedIn(key)){
+            System.out.println("This channel is already logged in");
             return 0 + "You need to log out before you can log in";
         }
         String[] usernameAndPassword = splitUsernameAndPassword(message);
@@ -72,12 +74,22 @@ public class Server {
             return 0 + "Unverified username/ password";
         }
         Account acc = new Account(usernameAndPassword[0], usernameAndPassword[1]);
-        if (acc.exists()) {
-            String savedPass = loadPassword(acc);
-            if(savedPass.equals(usernameAndPassword[1])){
-                ((Account)key.attachment()).setName(usernameAndPassword[0]);
-                ((Account)key.attachment()).setPassword(usernameAndPassword[1]);
+        if(loggedInUsers.contains(acc.getName())){
+            System.out.println(acc.getName() + " is already logged in");
+            return 0 + "User already logged in...";
+        }
+        return verifyLoginDataAndLogin(acc, (Account)(key.attachment()));
+
+    }
+
+    private static String verifyLoginDataAndLogin(Account requestedAcc, Account savedAcc) throws IOException{
+        if (requestedAcc.exists()) {
+            String savedPass = loadPassword(requestedAcc);
+            if(savedPass.equals(requestedAcc.getPassword())){
+                savedAcc.setName(requestedAcc.getName());
+                savedAcc.setPassword(requestedAcc.getPassword());
                 System.out.println("Successful login!");
+                loggedInUsers.add(requestedAcc.getName());
                 return 1 + "Successful login!";
             }
             System.out.println("Incorrect pass");
@@ -87,8 +99,7 @@ public class Server {
             return 0 + "Account doesn't exist";
         }
     }
-
-    private static boolean isLoggedIn(SelectionKey key){
+    private static boolean channelIsLoggedIn(SelectionKey key){
         return ((Account)key.attachment()).getName() != null;
     }
 
@@ -119,11 +130,13 @@ public class Server {
         System.out.println("Server is working");
         try {
             // SERVER INITIALIZATION
-            ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+            serverSocketChannel = ServerSocketChannel.open();
             serverSocketChannel.socket().bind(new InetSocketAddress(6969));
-            Selector selector = Selector.open();
+            selector = Selector.open();
             serverSocketChannel.configureBlocking(false);
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+            loggedInUsers = new HashSet<>();
+
             // CHANNEL PROCESSING
             while (true) {
                 int readyChannels = selector.select();
@@ -142,19 +155,7 @@ public class Server {
                         ByteBuffer buffer = ByteBuffer.allocate(1024);
                         try {
                             // READ THE CLIENT INPUT
-                            while (readFromClient(buffer, chan, key)) {
-
-                                // SEND INPUT TO THE CLIENT
-//                                char[] playerInput = new char[buffer.limit()];
-//                                int i = 0;
-//                                while (buffer.limit() > buffer.position()) {
-//                                    playerInput[i++] = (char) buffer.get();
-//                                }
-//                                String message = "You said: " + new String(playerInput);
-//                                writeToClient(message, buffer, chan);
-//
-//                                System.out.print(playerInput);
-                            }
+                            while (readFromClient(buffer, chan, key));
                         } catch (IOException | CancelledKeyException exc) {
                             System.out.println("Connection to client lost!");
                             chan.close();
@@ -168,4 +169,8 @@ public class Server {
             System.out.println("IOException");
         }
     }
+    // MEMBER VARIABLES
+    private static HashSet<String> loggedInUsers;
+    private static ServerSocketChannel serverSocketChannel;
+    private static Selector selector;
 }

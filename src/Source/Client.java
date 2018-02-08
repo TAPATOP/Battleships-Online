@@ -19,19 +19,24 @@ public class Client {
         }
     }
 
-    private static void readMessageFromServer() throws IOException{
+    private static String readMessageFromServer() throws IOException{
+        StringBuilder messageFromServer = new StringBuilder();
+        char c;
         do {
             buffer.clear();
             socket.read(buffer);
             buffer.flip();
             while (buffer.limit() > buffer.position()) {
-                System.out.print((char) buffer.get());
+                c = (char) buffer.get();
+                System.out.print(c);
+                messageFromServer.append(c);
             }
             System.out.println();
         }while(buffer.limit() >= buffer.capacity());
+        return messageFromServer.toString();
     }
 
-    private static void loginMessage(BufferedReader playerInput) throws IOException {
+    private static void loginMessage() throws IOException {
         String username;
         String password;
 
@@ -39,49 +44,60 @@ public class Client {
         System.out.println("username:");
         username = playerInput.readLine();
         System.out.println("password:");
-        password  = playerInput.readLine();
+        password = playerInput.readLine();
 
         System.out.println("OK, let's see what the server has to say about that :>");
         sendMessageToServer(MessageType.LOGIN, username + " " + password);
-        if(!socket.isConnected()){
-            System.out.println("Source.Server is a fag");
+        if (!socket.isConnected()) {
+            System.out.println("Server is a fag");
             socket.close();
         }
         readMessageFromServer();
     }
 
-    public void acceptPlayerMessage(String message){
+    public static void processPlayerCommand(String command) throws IOException{
+        String commandType = command.split(" ")[0];
+        MessageType messageType = findMessageTypeOut(commandType);
 
+        callCommand(messageType);
+    }
+
+    private static MessageType findMessageTypeOut(String string){
+        switch(string){
+            case "login":
+                return MessageType.LOGIN;
+            default:
+                return MessageType.CUSTOM_MESSAGE;
+        }
+    }
+
+    private static void callCommand(MessageType commandType) throws IOException{
+        switch(commandType){
+            case LOGIN: loginMessage();
+            break;
+            default:
+                System.out.println("No idea what to do with this");
+        }
     }
 
     public static void main(String args[]){
         try{
+            // INITIALIZE BUFFER AND CHANNEL AND INITIATE THE LOGIN SCREEN
             socket = SocketChannel.open();
             socket.connect(new InetSocketAddress("localhost", 6969));
-
-            // CREATE BUFFER AND CHANNEL AND INITIATE THE LOGIN SCREEN
             buffer = ByteBuffer.allocate(BUFFER_SIZE);
-            BufferedReader playerInput = new BufferedReader(new InputStreamReader(System.in));
+            playerInput = new BufferedReader(new InputStreamReader(System.in));
             String playerMessage;
-            loginMessage(playerInput);
+
+            //loginMessage(playerInput);
 
             // START OF CLIENT- SERVER MESSAGE EXCHANGE
             while(true) {
                 System.out.println("Ready to send a command to the server...");
                 playerMessage = playerInput.readLine();
 
-                // STOPS THE EXCHANGE IF MESSAGE IS "stop"
-                if (playerMessage.equals("stop")) {
-                    sendMessageToServer(MessageType.LOGOUT,"Bye!");
-                    socket.close();
-                    break;
-                }
-
                 // SENDS THE INPUT MESSAGE TO THE SERVER
-                sendMessageToServer(MessageType.CUSTOM_MESSAGE, playerMessage);
-
-                // READS BACK THE SERVER RESPONSE WITHOUT OVERFLOW
-                // readMessageFromServer(output, sock);
+                processPlayerCommand(playerMessage);
             }
 
         }catch(UnknownHostException exc){
@@ -94,4 +110,5 @@ public class Client {
     static final int BUFFER_SIZE = 1024;
     static SocketChannel socket;
     static ByteBuffer buffer;
+    static BufferedReader playerInput;
 }
