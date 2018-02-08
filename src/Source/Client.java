@@ -1,3 +1,5 @@
+package Source;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -7,7 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 public class Client {
-    private static void sendMessageToServer(MessageType messageType, String message, ByteBuffer buffer, SocketChannel socket) throws IOException {
+    public static void sendMessageToServer(MessageType messageType, String message) throws IOException {
         buffer.clear();
         buffer.put((byte) messageType.ordinal());
         buffer.put((message).getBytes());
@@ -17,7 +19,7 @@ public class Client {
         }
     }
 
-    private static void readMessageFromServer(ByteBuffer buffer, SocketChannel socket) throws IOException{
+    private static void readMessageFromServer() throws IOException{
         do {
             buffer.clear();
             socket.read(buffer);
@@ -29,7 +31,7 @@ public class Client {
         }while(buffer.limit() >= buffer.capacity());
     }
 
-    private static void loginMessage(BufferedReader playerInput, ByteBuffer buffer, SocketChannel socket) throws IOException {
+    private static void loginMessage(BufferedReader playerInput) throws IOException {
         String username;
         String password;
 
@@ -40,26 +42,28 @@ public class Client {
         password  = playerInput.readLine();
 
         System.out.println("OK, let's see what the server has to say about that :>");
-        sendMessageToServer(MessageType.LOGIN, username + " " + password, buffer, socket);
+        sendMessageToServer(MessageType.LOGIN, username + " " + password);
         if(!socket.isConnected()){
-            System.out.println("Server is a fag");
+            System.out.println("Source.Server is a fag");
             socket.close();
         }
-        readMessageFromServer(buffer, socket);
+        readMessageFromServer();
+    }
+
+    public void acceptPlayerMessage(String message){
+
     }
 
     public static void main(String args[]){
         try{
-            final int BUFFER_SIZE = 1024;
-
-            SocketChannel sock = SocketChannel.open();
-            sock.connect(new InetSocketAddress("localhost", 6969));
+            socket = SocketChannel.open();
+            socket.connect(new InetSocketAddress("localhost", 6969));
 
             // CREATE BUFFER AND CHANNEL AND INITIATE THE LOGIN SCREEN
-            ByteBuffer output = ByteBuffer.allocate(BUFFER_SIZE);
+            buffer = ByteBuffer.allocate(BUFFER_SIZE);
             BufferedReader playerInput = new BufferedReader(new InputStreamReader(System.in));
             String playerMessage;
-            loginMessage(playerInput, output, sock);
+            loginMessage(playerInput);
 
             // START OF CLIENT- SERVER MESSAGE EXCHANGE
             while(true) {
@@ -68,13 +72,13 @@ public class Client {
 
                 // STOPS THE EXCHANGE IF MESSAGE IS "stop"
                 if (playerMessage.equals("stop")) {
-                    sendMessageToServer(MessageType.LOGOUT,"Bye!", output, sock);
-                    sock.close();
+                    sendMessageToServer(MessageType.LOGOUT,"Bye!");
+                    socket.close();
                     break;
                 }
 
                 // SENDS THE INPUT MESSAGE TO THE SERVER
-                sendMessageToServer(MessageType.CUSTOM_MESSAGE, playerMessage, output, sock);
+                sendMessageToServer(MessageType.CUSTOM_MESSAGE, playerMessage);
 
                 // READS BACK THE SERVER RESPONSE WITHOUT OVERFLOW
                 // readMessageFromServer(output, sock);
@@ -86,4 +90,8 @@ public class Client {
             System.out.println("Cannot connect to server");
         }
     }
+    // MEMBER VARIABLES
+    static final int BUFFER_SIZE = 1024;
+    static SocketChannel socket;
+    static ByteBuffer buffer;
 }

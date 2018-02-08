@@ -1,3 +1,5 @@
+package Source;
+
 public enum MessageType {
     LOGIN,
     REGISTER,
