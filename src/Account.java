@@ -5,13 +5,14 @@ import java.io.PrintWriter;
 
 public class Account {
     Account(){
-
+        currentGameID = 0;
     }
 
     Account(String name, String password){
         this.name = name;
         this.password = password;
         pathName = ".\\Accounts\\" + name + ".txt";
+        currentGameID = 0;
     }
 
     public String getName() {
@@ -24,6 +25,10 @@ public class Account {
 
     public int getCurrentGameID() {
         return currentGameID;
+    }
+
+    public String getPathName() {
+        return pathName;
     }
 
     void setName(String name) {

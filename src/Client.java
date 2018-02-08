@@ -25,10 +25,11 @@ public class Client {
             while (buffer.limit() > buffer.position()) {
                 System.out.print((char) buffer.get());
             }
+            System.out.println();
         }while(buffer.limit() >= buffer.capacity());
     }
 
-    private static void welcomeScreen(BufferedReader playerInput, ByteBuffer buffer, SocketChannel socket) throws IOException {
+    private static void loginMessage(BufferedReader playerInput, ByteBuffer buffer, SocketChannel socket) throws IOException {
         String username;
         String password;
 
@@ -44,7 +45,7 @@ public class Client {
             System.out.println("Server is a fag");
             socket.close();
         }
-        // readMessageFromServer(buffer, socket);
+        readMessageFromServer(buffer, socket);
     }
 
     public static void main(String args[]){
@@ -58,7 +59,7 @@ public class Client {
             ByteBuffer output = ByteBuffer.allocate(BUFFER_SIZE);
             BufferedReader playerInput = new BufferedReader(new InputStreamReader(System.in));
             String playerMessage;
-            welcomeScreen(playerInput, output, sock);
+            loginMessage(playerInput, output, sock);
 
             // START OF CLIENT- SERVER MESSAGE EXCHANGE
             while(true) {

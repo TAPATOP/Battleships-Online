@@ -1,3 +1,6 @@
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.BufferOverflowException;
@@ -30,7 +33,7 @@ public class Server {
         System.out.println("Processing a " + mesType + " message");
         String playerMessage = readClientMessage(buffer);
         System.out.println("Processing this message: " + playerMessage);
-        processMessage(mesType, playerMessage, chan, key);
+        writeToClient(processMessage(mesType, playerMessage, chan, key), buffer, chan);
         return true;
     }
 
@@ -47,31 +50,50 @@ public class Server {
         return new String(playerInput);
     }
 
-    private static void processMessage(MessageType mesType, String message, SocketChannel chan, SelectionKey key) throws IOException {
+    private static String processMessage(MessageType mesType, String message, SocketChannel chan, SelectionKey key) throws IOException {
         switch (mesType) {
             case LOGIN:
-                loginAccount(message, chan, key);
-                break;
+                return loginAccount(message, key);
             default:
                 System.out.println("I don't know how to handle this :c");
         }
+        return null;
     }
 
-    private static void loginAccount(String message, SocketChannel  chan, SelectionKey key) throws IOException{
+    private static String loginAccount(String message, SelectionKey key) throws IOException{
+        if(isLoggedIn(key)){
+            System.out.println("User already logged in");
+            return 0 + "You need to log out before you can log in";
+        }
         String[] usernameAndPassword = splitUsernameAndPassword(message);
         if (usernameAndPassword == null) {
-            return;
+            return 0 + "Unverified username/ password";
         }
         Account acc = new Account(usernameAndPassword[0], usernameAndPassword[1]);
         if (acc.exists()) {
-            System.out.println("Successful login!");
-            ((Account)key.attachment()).setName(usernameAndPassword[0]);
-            ((Account)key.attachment()).setPassword(usernameAndPassword[1]);
-            //writeToClient(MessageType.LOGIN, "Successful login!", buffer, chan);
+            String savedPass = loadPassword(acc);
+            if(savedPass.equals(usernameAndPassword[1])){
+                ((Account)key.attachment()).setName(usernameAndPassword[0]);
+                ((Account)key.attachment()).setPassword(usernameAndPassword[1]);
+                System.out.println("Successful login!");
+                return 1 + "Successful login!";
+            }
+            System.out.println("Incorrect pass");
+            return 0 + "Incorrect password...";
         } else{
-            System.out.println("Account not found. Disconnecting the imposer!");
-            chan.close();
+            System.out.println("Account not found.");
+            return 0 + "Account doesn't exist";
         }
+    }
+
+    private static boolean isLoggedIn(SelectionKey key){
+        return ((Account)key.attachment()).getName() != null;
+    }
+
+    private static String loadPassword(Account acc) throws IOException{
+        File f = new File(acc.getPathName());
+        BufferedReader reader = new BufferedReader(new FileReader(f));
+        return reader.readLine();
     }
     private static String[] splitUsernameAndPassword(String input) {
         String[] usernameAndPassword = input.split(" ");
@@ -79,12 +101,12 @@ public class Server {
             System.out.println("Username and password not validated...");
             return null;
         }
+        usernameAndPassword[1] = usernameAndPassword[1].substring(0, usernameAndPassword[1].length() - 1);
         return usernameAndPassword;
     }
 
-    private static void writeToClient(MessageType mesType, String message, ByteBuffer buffer, SocketChannel chan) throws IOException {
+    private static void writeToClient(String message, ByteBuffer buffer, SocketChannel chan) throws IOException {
         buffer.clear();
-        buffer.put((byte) mesType.ordinal());
         buffer.put(message.getBytes());
         buffer.flip();
         chan.write(buffer);
