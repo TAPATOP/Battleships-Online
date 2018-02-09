@@ -4,7 +4,7 @@ public enum MessageType {
     LOGIN,
     REGISTER,
     LOGOUT,
-    GAME_COMMAND,
+    // GAME_COMMAND,
     JOIN_GAME,
     JOIN_RANDOM_GAME,
     EXIT_GAME,
@@ -14,5 +14,7 @@ public enum MessageType {
     SEARCH_GAMES,
     CREATE_GAME,
     SHOW_PLAYER_STATISTICS,
+    DEPLOY,
+    FIRE,
     CUSTOM_MESSAGE
 }

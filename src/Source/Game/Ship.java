@@ -16,6 +16,7 @@ abstract public class Ship {
     }
 
     /**
+     * Used when a player tries hitting the enemy's ships
      *
      * @return true if the ship got destroyed and false if it
      * was already destroyed( should only reach this in a case of a bug) or survived

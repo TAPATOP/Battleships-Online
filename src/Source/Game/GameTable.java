@@ -44,6 +44,10 @@ public class GameTable {
     }
 
     private boolean deployShip(Ship ship, int x, int y, boolean isVertical){
+        if(allShipsAreDeployed()){
+            System.out.println("All ships are already deployed");
+            return false;
+        }
         int xChange = 0;
         int yChange = 0;
         if(isVertical){
@@ -86,16 +90,41 @@ public class GameTable {
         return true;
     }
 
-    public void visualizeBoard(){
-        for (Ship[] line:
-             boardOfDeployments) {
-            for (Ship square :
-                    line) {
-                System.out.print(visualizeSquare(square));
+    boolean allShipsAreDeployed(){
+        return deployedShipsCount >= TOTAL_NUMBER_OF_SHIPS;
+    }
+
+    private char[][] visualizeBoard(){
+        char[][] visualizedBoard = new char[DIMENTION_LIMIT][DIMENTION_LIMIT];
+
+        for (int i = 0; i < DIMENTION_LIMIT; i++){
+            for(int j = 0; j < DIMENTION_LIMIT; j++){
+                visualizedBoard[i][j] = visualizeSquare(boardOfDeployments[i][j]);
+            }
+        }
+        return visualizedBoard;
+    }
+
+    public void stylizeAndPrintBoard(char[][] visualizedBoard ){
+        System.out.print("/|");
+        for(int i = 1; i <= DIMENTION_LIMIT; i++){
+            System.out.print(i + "|");
+        }
+        System.out.println();
+
+        for(int i = 0; i < DIMENTION_LIMIT; i++){
+            System.out.print((char)(i + 65) + "|");
+            for (char c :
+                    visualizedBoard[i]) {
+                System.out.print(c + "|");
             }
             System.out.println();
         }
-        System.out.println();
+    }
+
+    public void stylizeAndPrintBoard(){
+        char[][] visualizedBoard = visualizeBoard();
+        stylizeAndPrintBoard(visualizedBoard);
     }
 
     private char visualizeSquare(Ship shipOccupyingTheSuare){
@@ -109,7 +138,9 @@ public class GameTable {
     }
 
     // MEMBER VARIABLES
+    private final int TOTAL_NUMBER_OF_SHIPS = 10;
+    private final int DIMENTION_LIMIT = 10;
     private Vector<Ship> ships = new Vector<>();
-    private Ship[][] boardOfDeployments = new Ship[11][11];
+    private Ship[][] boardOfDeployments = new Ship[DIMENTION_LIMIT][DIMENTION_LIMIT];
     private int deployedShipsCount;
 }

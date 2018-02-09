@@ -11,13 +11,17 @@ public class Player {
         this.acc = acc;
     }
 
-    public boolean logIntoAGame(int gameID){
+    public boolean joinAGame(int gameID){
         if(acc.getCurrentGameID() != 0){
             System.out.println("Account is already logged into another game");
             return false;
         }
         acc.setCurrentGameID(gameID);
         return true;
+    }
+
+    public GameTable getGameTable(){
+        return gameTable;
     }
 
     private Account acc;
