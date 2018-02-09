@@ -117,9 +117,9 @@ public class Client {
         gt.deployNextShip("A1", true);
         gt.deployNextShip("A3", false);
         gt.deployNextShip("C3", false);
-//        gt.processFireCommand(1, 1);
-//        gt.processFireCommand(1, 2);
-//        gt.processFireCommand(2, 1);
+        gt.processFireCommand("A1");
+        gt.processFireCommand("B1");
+        gt.processFireCommand("D1");
         gt.stylizeAndPrintBoard();
         try{
             // INITIALIZE BUFFER AND CHANNEL AND INITIATE THE LOGIN SCREEN

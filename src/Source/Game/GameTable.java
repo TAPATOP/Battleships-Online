@@ -41,6 +41,9 @@ public class GameTable {
 
     public boolean deployNextShip(String squareCoordinates, boolean isVertical){
         int[] coords = tranformCoordinatesForReading(squareCoordinates);
+        if(coords[0] < 0){
+            return false;
+        }
         int x = coords[0];
         int y = coords[1];
         return deployShip(ships.get(deployedShipsCount), x, y, isVertical);
@@ -97,7 +100,7 @@ public class GameTable {
         return deployedShipsCount >= TOTAL_NUMBER_OF_SHIPS;
     }
 
-    private char[][] visualizeBoard(){
+    public char[][] visualizeBoard(){
         char[][] visualizedBoard = new char[DIMENTION_LIMIT][DIMENTION_LIMIT];
 
         for (int i = 0; i < DIMENTION_LIMIT; i++){
@@ -146,6 +149,9 @@ public class GameTable {
 
     public boolean processFireCommand(String squareCoordinates){
         int[] coords = tranformCoordinatesForReading(squareCoordinates);
+        if(coords[0] < 0){
+            return false;
+        }
         int x = coords[0];
         int y = coords[1];
         try {
@@ -186,6 +192,11 @@ public class GameTable {
         transformedCoords[0] = x - 'A';
         transformedCoords[1] = y - 1;
 
+        boolean xIsIllegal = transformedCoords[0] >= DIMENTION_LIMIT || transformedCoords[0] < 0;
+        boolean yIsIllegal = transformedCoords[1] >= DIMENTION_LIMIT || transformedCoords[1] < 0;
+        if(xIsIllegal || yIsIllegal){
+            transformedCoords[0] = -1;
+        }
         return transformedCoords;
     }
 
