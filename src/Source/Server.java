@@ -98,6 +98,7 @@ public class Server {
     private static boolean accountExists(Account acc) {
         return (new File(acc.getPathName()).isFile());
     }
+
     private static void logChannelOut(SelectionKey key){
         loggedInUsers.remove(((Account)key.attachment()).getName());
         key.attach(new Account());

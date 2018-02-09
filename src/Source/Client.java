@@ -114,6 +114,13 @@ public class Client {
 
     public static void main(String args[]){
         GameTable gt = new GameTable();
+        gt.deployNextShip("A1", true);
+        gt.deployNextShip("A3", false);
+        gt.deployNextShip("C3", false);
+//        gt.processFireCommand(1, 1);
+//        gt.processFireCommand(1, 2);
+//        gt.processFireCommand(2, 1);
+        gt.stylizeAndPrintBoard();
         try{
             // INITIALIZE BUFFER AND CHANNEL AND INITIATE THE LOGIN SCREEN
             socket = SocketChannel.open();

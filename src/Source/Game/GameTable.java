@@ -39,7 +39,10 @@ public class GameTable {
         }
     }
 
-    public boolean deployNextShip(int x, int y, boolean isVertical){
+    public boolean deployNextShip(String squareCoordinates, boolean isVertical){
+        int[] coords = tranformCoordinatesForReading(squareCoordinates);
+        int x = coords[0];
+        int y = coords[1];
         return deployShip(ships.get(deployedShipsCount), x, y, isVertical);
     }
 
@@ -127,14 +130,78 @@ public class GameTable {
         stylizeAndPrintBoard(visualizedBoard);
     }
 
-    private char visualizeSquare(Ship shipOccupyingTheSuare){
-        if(shipOccupyingTheSuare == null){
+    private char visualizeSquare(Ship shipOccupyingTheSquare){
+        if(shipOccupyingTheSquare == null){
             return '_';
         }
-        if(shipOccupyingTheSuare.getSize() == 0){
-            return 'X';
+        switch(shipOccupyingTheSquare.getSize()) {
+            case -1:
+                return 'X';
+            case -2:
+                return 'O';
+            default:
+                return '#';
         }
-        return 'O';
+    }
+
+    public boolean processFireCommand(String squareCoordinates){
+        int[] coords = tranformCoordinatesForReading(squareCoordinates);
+        int x = coords[0];
+        int y = coords[1];
+        try {
+            if (!coordinatesAreValid(x, y)) {
+                return false;
+            }
+            if (boardOfDeployments[x][y] == null) {
+                System.out.println("Miss!");
+                boardOfDeployments[x][y] = missedShip;
+                return true;
+            }
+            if (boardOfDeployments[x][y].getSize() < 0) {
+                System.out.println("Can't fire there");
+                return false;
+            }
+            boardOfDeployments[x][y].takeOneHit();
+            boardOfDeployments[x][y] = damagedShip;
+
+            return true;
+        }catch(NullPointerException exc){
+            System.out.println("Something messed up with firing at targets; NULLPTR");
+            return false;
+        }
+    }
+
+    /**
+     * Transforms coordinates of the [A-J][1-10] format to [0-9][0-9] format. Using this
+     * method implies the coordinates have been validated to the said initial format.
+     * @param squareCoordinates [A-J][1-10] format
+     * @return returns an int[2] array, where arr[0] is x and arr[1] is y;
+     */
+    private int[] tranformCoordinatesForReading(String squareCoordinates){
+        char x = squareCoordinates.toUpperCase().charAt(0);
+        String digitsOfCoords = squareCoordinates.substring(1, squareCoordinates.length());
+
+        int y = Integer.parseInt(digitsOfCoords);
+        int[] transformedCoords = new int[2];
+        transformedCoords[0] = x - 'A';
+        transformedCoords[1] = y - 1;
+
+        return transformedCoords;
+    }
+
+
+    /**
+     * Checks if the given coordinates actually fit on the GameTable.
+     * !! WARNING !!
+     * Both x and y need to be reduced to the [0; DIMENTION_LIMIT] interval before being passed on;
+     * e.g.: If the input coordinates are [1;6], they should be passed to the class as [0;5]
+     * @param x height depth
+     * @param y width depth
+     * @return returns if firing at given coordinates is possible/ meaningful; firing at a position
+     * you've already fired will return false
+     */
+    private boolean coordinatesAreValid(int x, int y){
+        return (x < DIMENTION_LIMIT && x >= 0 && y < DIMENTION_LIMIT && y >= 0);
     }
 
     // MEMBER VARIABLES
@@ -143,4 +210,8 @@ public class GameTable {
     private Vector<Ship> ships = new Vector<>();
     private Ship[][] boardOfDeployments = new Ship[DIMENTION_LIMIT][DIMENTION_LIMIT];
     private int deployedShipsCount;
+
+    // LITERALLY TRASH
+    DamagedPartOfShip damagedShip = new DamagedPartOfShip();
+    MissedShip missedShip = new MissedShip();
 }
