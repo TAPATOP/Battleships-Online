@@ -161,8 +161,4 @@ public class Client {
     public static void setBuffer(ByteBuffer buffer) {
         Client.buffer = buffer;
     }
-
-    public static void setPlayerInput(BufferedReader playerInput) {
-        Client.playerInput = playerInput;
-    }
 }
