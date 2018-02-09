@@ -1,8 +1,6 @@
 package Tests;
 
-import Source.MessageType;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import Source.Client;
@@ -10,9 +8,7 @@ import Source.Client;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.*;
 

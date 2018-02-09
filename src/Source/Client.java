@@ -1,5 +1,7 @@
 package Source;
 
+import Source.Game.GameTable;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -111,6 +113,7 @@ public class Client {
     }
 
     public static void main(String args[]){
+        GameTable gt = new GameTable();
         try{
             // INITIALIZE BUFFER AND CHANNEL AND INITIATE THE LOGIN SCREEN
             socket = SocketChannel.open();
