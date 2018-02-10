@@ -31,7 +31,7 @@ public class GameTableTest {
                 {'#', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'#', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
-                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'}
+                {'_', '_', '_', '_', '_', '_', '_', '#', '#' ,'#'}
         };
 
         GameTable gt = new GameTable();
@@ -40,6 +40,8 @@ public class GameTableTest {
         gt.deployNextShip("C3", false);
         gt.deployNextShip("F1", true);
         gt.deployNextShip("E1", false);
+        gt.deployNextShip("J10", false);
+        gt.deployNextShip("J8", false);
         assertTrue(
                 "Deploys ship properly",
                 (Arrays.deepToString(gt.visualizeBoard()).equals(Arrays.deepToString(expectedResult))));
@@ -116,7 +118,7 @@ public class GameTableTest {
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
-                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'}
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'O'}
         };
 
         GameTable gt = new GameTable();
@@ -125,41 +127,44 @@ public class GameTableTest {
 
         GameTable.FireResult result;
 
-        result = GameTable.FireResult.values()[(int)gt.processFireCommand("A2").charAt(0) - 48];
+        result = (GameTable.FireResult)gt.processFireCommand("A2").getEnumValue();
         assertEquals("First miss", result, GameTable.FireResult.MISS);
 
-        result = GameTable.FireResult.values()[(int)gt.processFireCommand("A3").charAt(0) - 48];
+        result = (GameTable.FireResult)gt.processFireCommand("A3").getEnumValue();
         assertEquals("First hit", result, GameTable.FireResult.HIT);
 
-        result = GameTable.FireResult.values()[(int)gt.processFireCommand("A4").charAt(0) - 48];
+        result = (GameTable.FireResult)gt.processFireCommand("A4").getEnumValue();
         assertEquals("Second hit", result, GameTable.FireResult.HIT);
 
-        result = GameTable.FireResult.values()[(int)gt.processFireCommand("A5").charAt(0) - 48];
+        result = (GameTable.FireResult)gt.processFireCommand("A5").getEnumValue();
         assertEquals("Third hit", result, GameTable.FireResult.HIT);
 
-        result = GameTable.FireResult.values()[(int)gt.processFireCommand("A6").charAt(0) - 48];
+        result = (GameTable.FireResult)gt.processFireCommand("A6").getEnumValue();
         assertEquals("Killing hit", result, GameTable.FireResult.DESTROYED);
 
-        result = GameTable.FireResult.values()[(int)gt.processFireCommand("A7").charAt(0) - 48];
+        result = (GameTable.FireResult)gt.processFireCommand("A7").getEnumValue();
         assertEquals("Seconds miss", result, GameTable.FireResult.MISS);
 
-        result = GameTable.FireResult.values()[(int)gt.processFireCommand("A3").charAt(0) - 48];
+        result = (GameTable.FireResult)gt.processFireCommand("A3").getEnumValue();
         assertEquals("Hit on another ship", result, GameTable.FireResult.INVALID);
 
-        result = GameTable.FireResult.values()[(int)gt.processFireCommand("C1").charAt(0) - 48];
+        result = (GameTable.FireResult)gt.processFireCommand("C1").getEnumValue();
         assertEquals("Hit on another ship", result, GameTable.FireResult.HIT);
 
-        result = GameTable.FireResult.values()[(int)gt.processFireCommand("69 XD").charAt(0) - 48];
+        result = (GameTable.FireResult)gt.processFireCommand("69 XD").getEnumValue();
         assertEquals("Passing gibberish as coordinates 1", result, GameTable.FireResult.INVALID);
 
-        result = GameTable.FireResult.values()[(int)gt.processFireCommand("6").charAt(0) - 48];
+        result = (GameTable.FireResult)gt.processFireCommand("6").getEnumValue();
         assertEquals("Passing gibberish as coordinates 2", result, GameTable.FireResult.INVALID);
 
-        result = GameTable.FireResult.values()[(int)gt.processFireCommand("B").charAt(0) - 48];
+        result = (GameTable.FireResult)gt.processFireCommand("B").getEnumValue();
         assertEquals("Passing gibberish as coordinates 3", result, GameTable.FireResult.INVALID);
 
-        result = GameTable.FireResult.values()[(int)gt.processFireCommand("WS").charAt(0) - 48];
+        result = (GameTable.FireResult)gt.processFireCommand("WS").getEnumValue();
         assertEquals("Passing gibberish as coordinates", result, GameTable.FireResult.INVALID);
+
+        result = (GameTable.FireResult)gt.processFireCommand("J10").getEnumValue();
+        assertEquals("Can fire at the corner of the map", result, GameTable.FireResult.MISS);
 
         assertTrue(
                 "Board looks like it should",

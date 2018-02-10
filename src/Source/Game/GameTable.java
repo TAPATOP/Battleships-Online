@@ -62,8 +62,7 @@ public class GameTable {
         int yChange = 0;
         if(isVertical){
             xChange = 1;
-        }
-        else{
+        }else{
             yChange = 1;
         }
 
@@ -84,13 +83,18 @@ public class GameTable {
         int yChange = 0;
         if(isVertical){
             xChange = 1;
-        }
-        else{
+        } else{
             yChange = 1;
         }
-        for(int i = 0; i < ship.getSize(); i++){
+
+        for (int i = 0; i < ship.getSize(); i++) {
+            if (!coordinatesAreValid(x, y)) {
+                System.out.println("Ships aren't supposed to stick outside of the battlefield");
+                return false;
+            }
+
             // if null => can be deployed
-            if(boardOfDeployments[x][y] == null){
+            if (boardOfDeployments[x][y] == null) {
                 x += xChange;
                 y += yChange;
                 continue;
@@ -151,47 +155,54 @@ public class GameTable {
         }
     }
 
-    public String processFireCommand(String squareCoordinates){
+    public EnumStringMessage processFireCommand(String squareCoordinates){
         int[] coords = tranformCoordinatesForReading(squareCoordinates);
         if(coords[0] < 0){
-            return FireResult.INVALID.ordinal() + "Invalid coordinate";
+            return new EnumStringMessage(FireResult.INVALID, "Invalid coordinate");
         }
         int x = coords[0];
         int y = coords[1];
+
         try {
-            return executeFiring(x, y);
+            EnumStringMessage resultMessage = executeFiring(x, y);
+            FireResult result = (FireResult)resultMessage.getEnumValue();
+            if(result.equals(FireResult.DESTROYED) && ships.isEmpty()){
+                return new EnumStringMessage(FireResult.DESTROYED_LAST_SHIP, "Game over");
+            }
+
+            return resultMessage;
         }catch(NullPointerException exc){
             System.out.println("Something messed up with firing at targets; NULLPTR");
-            return FireResult.INVALID.ordinal() + "Invalid coordinate";
+            return new EnumStringMessage(FireResult.INVALID, "Invalid coordinate");
         }
     }
 
-    private String executeFiring(int x, int y){
-        if (!coordinatesAreValid(x, y)) {
-            return FireResult.INVALID.ordinal() + "Invalid Coordinates";
-        }
+    private EnumStringMessage executeFiring(int x, int y){
         if (boardOfDeployments[x][y] == null) {
             System.out.println("Miss!");
             boardOfDeployments[x][y] = missedShip;
-            return FireResult.MISS.ordinal() + "Miss!";
+            return new EnumStringMessage(FireResult.MISS, "Miss!");
         }
         // e.g. if the field has already been fired at
         if (boardOfDeployments[x][y].getSize() < 0) {
             System.out.println("Can't fire there again");
-            return FireResult.INVALID.ordinal() + "You've already fired there";
+            return new EnumStringMessage(FireResult.INVALID, "You've already fired there");
         }
         boolean shipIsDead = boardOfDeployments[x][y].takeOneHit();
 
         if(shipIsDead){
-            String result = seeShipType(boardOfDeployments[x][y]) + " destroyed!";
+            Ship affectedShip = boardOfDeployments[x][y];
+            ships.remove(affectedShip);
+
+            String result = seeShipType(affectedShip) + " destroyed!";
             System.out.println(result);
             boardOfDeployments[x][y] = damagedShip;
-            return FireResult.DESTROYED.ordinal() + result;
+            return new EnumStringMessage(FireResult.DESTROYED, result);
         }
 
         System.out.println("HIT!");
         boardOfDeployments[x][y] = damagedShip;
-        return FireResult.HIT.ordinal() + "HIT!";
+        return new EnumStringMessage(FireResult.HIT, "HIT!");
     }
 
     /**
@@ -199,6 +210,7 @@ public class GameTable {
      * method implies the coordinates have been validated to the said initial format.
      * @param squareCoordinates [A-J][1-10] format
      * @return returns an int[2] array, where arr[0] is x and arr[1] is y;
+     * If the given coordinates are invalid in some way, arr[0] will be -1
      */
     private int[] tranformCoordinatesForReading(String squareCoordinates){
         int[] transformedCoords = new int[2];
@@ -261,12 +273,11 @@ public class GameTable {
         MISS,
         HIT,
         DESTROYED,
-        INVALID
+        INVALID,
+        DESTROYED_LAST_SHIP
     }
 
     // LITERALLY TRASH
-    DamagedPartOfShip damagedShip = new DamagedPartOfShip();
-    MissedShip missedShip = new MissedShip();
+    private DamagedPartOfShip damagedShip = new DamagedPartOfShip();
+    private MissedShip missedShip = new MissedShip();
 }
-
-// TODO: Fix the extra check (x|y)IsIllegal in transformCoordinatesForReading()
