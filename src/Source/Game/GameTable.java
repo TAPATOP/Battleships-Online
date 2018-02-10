@@ -25,7 +25,11 @@ public class GameTable {
      * @return name of ship as String( capitalized)
      */
     public String seeNextShipType(){
-        switch(ships.get(deployedShipsCount).getSize()){
+        return seeShipType(ships.get(deployedShipsCount));
+    }
+
+    private String seeShipType(Ship ship){
+        switch(ship.getSize()){
             case 2:
                 return "Destroyer";
             case 3:
@@ -147,34 +151,45 @@ public class GameTable {
         }
     }
 
-    public boolean processFireCommand(String squareCoordinates){
+    public FireResult processFireCommand(String squareCoordinates){
         int[] coords = tranformCoordinatesForReading(squareCoordinates);
         if(coords[0] < 0){
-            return false;
+            return FireResult.INVALID;
         }
         int x = coords[0];
         int y = coords[1];
         try {
-            if (!coordinatesAreValid(x, y)) {
-                return false;
-            }
-            if (boardOfDeployments[x][y] == null) {
-                System.out.println("Miss!");
-                boardOfDeployments[x][y] = missedShip;
-                return true;
-            }
-            if (boardOfDeployments[x][y].getSize() < 0) {
-                System.out.println("Can't fire there");
-                return false;
-            }
-            boardOfDeployments[x][y].takeOneHit();
-            boardOfDeployments[x][y] = damagedShip;
-
-            return true;
+            return executeFiring(x, y);
         }catch(NullPointerException exc){
             System.out.println("Something messed up with firing at targets; NULLPTR");
-            return false;
+            return FireResult.INVALID;
         }
+    }
+
+    private FireResult executeFiring(int x, int y){
+        if (!coordinatesAreValid(x, y)) {
+            return FireResult.INVALID;
+        }
+        if (boardOfDeployments[x][y] == null) {
+            System.out.println("Miss!");
+            boardOfDeployments[x][y] = missedShip;
+            return FireResult.MISS;
+        }
+        // e.g. if the field has already been fired at
+        if (boardOfDeployments[x][y].getSize() < 0) {
+            System.out.println("Can't fire there again");
+            return FireResult.INVALID;
+        }
+        boolean shipIsDead = boardOfDeployments[x][y].takeOneHit();
+
+        if(shipIsDead){
+            System.out.println(seeShipType(boardOfDeployments[x][y]) + " destroyed!");
+            boardOfDeployments[x][y] = damagedShip;
+            return FireResult.DESTROYED;
+        }
+        System.out.println("HIT!");
+        boardOfDeployments[x][y] = damagedShip;
+        return FireResult.HIT;
     }
 
     /**
@@ -221,6 +236,13 @@ public class GameTable {
     private Vector<Ship> ships = new Vector<>();
     private Ship[][] boardOfDeployments = new Ship[DIMENTION_LIMIT][DIMENTION_LIMIT];
     private int deployedShipsCount;
+
+    public enum FireResult{
+        MISS,
+        HIT,
+        DESTROYED,
+        INVALID
+    }
 
     // LITERALLY TRASH
     DamagedPartOfShip damagedShip = new DamagedPartOfShip();

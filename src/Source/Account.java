@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.nio.ByteBuffer;
 
 public class Account {
     Account(){
@@ -80,9 +81,15 @@ public class Account {
         return f.isFile();
     }
 
+    public ByteBuffer getInputFromServerBuffer(){
+        return inputFromServerBuffer;
+    }
+
+    // MEMBER VARIABLES
     private String name;
     private String password;
     private int currentGameID;
+    private ByteBuffer inputFromServerBuffer = ByteBuffer.allocate(1024);
 
     private String pathName;
 

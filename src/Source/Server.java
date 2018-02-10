@@ -8,7 +8,6 @@ import java.net.InetSocketAddress;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -23,8 +22,10 @@ public class Server {
         System.out.println("We have a new connection!");
     }
 
-    private static boolean readFromClient(ByteBuffer buffer, SocketChannel chan, SelectionKey key) throws IOException {
-        buffer.clear();
+    private static boolean readFromClient(SocketChannel chan, SelectionKey key) throws IOException {
+        ByteBuffer buffer = getChannelBuffer(key);
+
+        getChannelBuffer(key).clear();
         try {
             if (chan.read(buffer) <= 0) {
                 return false;
@@ -39,6 +40,14 @@ public class Server {
         System.out.println("Processing this message: " + playerMessage);
         writeToClient(processMessage(mesType, playerMessage, chan, key), buffer, chan);
         return true;
+    }
+
+    private static Account getChannelAccount(SelectionKey key){
+        return ((Account)key.attachment());
+    }
+
+    private static ByteBuffer getChannelBuffer(SelectionKey key){
+        return getChannelAccount(key).getInputFromServerBuffer();
     }
 
     private static MessageType readClientMessageType(ByteBuffer buffer) {
@@ -198,10 +207,9 @@ public class Server {
                     } else if (key.isReadable()) {
                         // DO THE ACTUAL WORK
                         SocketChannel chan = (SocketChannel) key.channel();
-                        ByteBuffer buffer = ByteBuffer.allocate(1024);
                         try {
                             // READ THE CLIENT INPUT
-                            while (readFromClient(buffer, chan, key));
+                            while (readFromClient(chan, key));
                         } catch (IOException | CancelledKeyException exc) {
                             System.out.println("Connection to client lost!");
                             logChannelOut(key);
