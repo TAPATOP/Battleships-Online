@@ -1,5 +1,6 @@
 package Source;
 
+import Source.Game.EnumStringMessage;
 import Source.Game.GameTable;
 
 import java.io.BufferedReader;
@@ -11,9 +12,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 public class Client {
-    public static void sendMessageToServer(MessageType messageType, String message) throws IOException {
+    public static void sendMessageToServer(ClientMessageType clientMessageType, String message) throws IOException {
         buffer.clear();
-        buffer.put((byte) messageType.ordinal());
+        buffer.put((byte) clientMessageType.ordinal());
         if(message != null) {
             buffer.put((message).getBytes());
         }
@@ -23,13 +24,18 @@ public class Client {
         }
     }
 
-    private static String readMessageFromServer() throws IOException{
+    private static EnumStringMessage readMessageFromServer() throws IOException{
+        ServerResponseType serverResponse = null;
+
         StringBuilder messageFromServer = new StringBuilder();
         char c;
         do {
             buffer.clear();
             socket.read(buffer);
             buffer.flip();
+            if(serverResponse == null){
+                serverResponse = ServerResponseType.values()[(int) buffer.get()];
+            }
             while (buffer.limit() > buffer.position()) {
                 c = (char) buffer.get();
                 System.out.print(c);
@@ -37,61 +43,53 @@ public class Client {
             }
             System.out.println();
         }while(buffer.limit() >= buffer.capacity());
-        return messageFromServer.toString();
+        return new EnumStringMessage(serverResponse, messageFromServer.toString());
     }
 
-    private static String login(String playerMessage) throws IOException {
-        sendMessageToServer(MessageType.LOGIN, playerMessage);
+    private static EnumStringMessage login(String playerMessage) throws IOException {
+        sendMessageToServer(ClientMessageType.LOGIN, playerMessage);
         return readMessageFromServer();
     }
 
-    private static String register(String playerMessage) throws IOException{
-        sendMessageToServer(MessageType.REGISTER, playerMessage);
+    private static EnumStringMessage register(String playerMessage) throws IOException{
+        sendMessageToServer(ClientMessageType.REGISTER, playerMessage);
         return readMessageFromServer();
     }
 
-    private static String logout() throws IOException{
-        sendMessageToServer(MessageType.LOGOUT, null);
+    private static EnumStringMessage logout() throws IOException{
+        sendMessageToServer(ClientMessageType.LOGOUT, null);
         return readMessageFromServer();
     }
-//    private static String[] splitUsernameAndPassword(String input) {
-//        String[] usernameAndPassword = input.split(" ");
-//        if (usernameAndPassword.length != 2) {
-//            System.out.println("Username and password not validated...");
-//            return null;
-//        }
-//        return usernameAndPassword;
-//    }
 
     public static boolean processPlayerCommand(String playerMessage) throws IOException{
         String playerMessageType = playerMessage.split(" ")[0];
-        MessageType messageType = findMessageTypeOut(playerMessageType);
+        ClientMessageType clientMessageType = findMessageTypeOut(playerMessageType);
         String remainingMessage = null;
         if(playerMessageType.length() + 1 < playerMessage.length()){
             remainingMessage = playerMessage.substring(playerMessageType.length() + 1, playerMessage.length());
         }
 
-        String result = callCommand(messageType, remainingMessage);
+        EnumStringMessage result = callCommand(clientMessageType, remainingMessage);
 
         // return false if result is null or message starts with '0'
-        return !(result == null || result.charAt(0) == '0');
+        return !(result == null || result.getEnumValue().equals(ServerResponseType.INVALID));
     }
 
-    private static MessageType findMessageTypeOut(String string){
+    private static ClientMessageType findMessageTypeOut(String string){
         switch(string){
             case "login":
-                return MessageType.LOGIN;
+                return ClientMessageType.LOGIN;
             case "register":
-                return MessageType.REGISTER;
+                return ClientMessageType.REGISTER;
             case "logout":
-                return MessageType.LOGOUT;
+                return ClientMessageType.LOGOUT;
             default:
-                return MessageType.CUSTOM_MESSAGE;
+                return ClientMessageType.CUSTOM_MESSAGE;
         }
     }
 
-    private static String callCommand(MessageType messageType, String remainingMessage) throws IOException{
-        switch(messageType){
+    private static EnumStringMessage callCommand(ClientMessageType clientMessageType, String remainingMessage) throws IOException{
+        switch(clientMessageType){
             case LOGIN:
                 if(remainingMessage == null){
                     System.out.println("Username and password format is not okay");
@@ -117,9 +115,9 @@ public class Client {
         gt.deployNextShip("A1", true);
         gt.deployNextShip("A3", false);
         gt.deployNextShip("C3", false);
-        gt.processFireCommand("A1");
-        gt.processFireCommand("B1");
-        gt.processFireCommand("D1");
+        gt.fireAt("A1");
+        gt.fireAt("B1");
+        gt.fireAt("D1");
         gt.stylizeAndPrintBoard();
         try{
             // INITIALIZE BUFFER AND CHANNEL AND INITIATE THE LOGIN SCREEN

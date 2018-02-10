@@ -1,6 +1,6 @@
 package Source;
 
-public enum MessageType {
+public enum ClientMessageType {
     LOGIN,
     REGISTER,
     LOGOUT,

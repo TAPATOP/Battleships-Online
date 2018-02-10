@@ -1,9 +1,8 @@
 package Source;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import Source.Game.EnumStringMessage;
+
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
@@ -34,7 +33,8 @@ public class Server {
             System.out.println("Client message too long!");
         }
         buffer.flip();
-        MessageType mesType = readClientMessageType(buffer);
+
+        ClientMessageType mesType = readClientMessageType(buffer);
         System.out.println("Processing a " + mesType + " message");
         String playerMessage = readClientMessage(buffer);
         System.out.println("Processing this message: " + playerMessage);
@@ -50,8 +50,8 @@ public class Server {
         return getChannelAccount(key).getInputFromServerBuffer();
     }
 
-    private static MessageType readClientMessageType(ByteBuffer buffer) {
-        return MessageType.values()[(int) buffer.get()];
+    private static ClientMessageType readClientMessageType(ByteBuffer buffer) {
+        return ClientMessageType.values()[(int) buffer.get()];
     }
 
     private static String readClientMessage(ByteBuffer buffer) {
@@ -63,7 +63,7 @@ public class Server {
         return new String(playerInput);
     }
 
-    private static String processMessage(MessageType mesType, String message, SocketChannel chan, SelectionKey key) throws IOException {
+    private static EnumStringMessage processMessage(ClientMessageType mesType, String message, SocketChannel chan, SelectionKey key) throws IOException {
         switch (mesType) {
             case LOGIN:
                 return loginAccount(message, key);
@@ -73,35 +73,37 @@ public class Server {
                 return logoutAccount(key);
             default:
                 System.out.println("I don't know how to handle this :c");
-                return "I have no idea what to do with this so I will just repeat it: " + message;
+                return new EnumStringMessage(
+                        ServerResponseType.NOTHING_OF_IMPORTANCE,
+                        "I have no idea what to do with this so I will just repeat it: " + message);
         }
     }
 
-    private static String logoutAccount(SelectionKey key){
+    private static EnumStringMessage logoutAccount(SelectionKey key){
         if(channelIsLoggedIn(key)){
             System.out.println(((Account)key.attachment()).getName() + " has logged out");
             logChannelOut(key);
-            return 1 + "Successful logout. Bye!";
+            return new EnumStringMessage(ServerResponseType.OK, "Successful logout. Bye!");
         }
-        return 0 + "You need to have logged in to log out...";
+        return new EnumStringMessage(ServerResponseType.INVALID, "You need to have logged in to log out...");
     }
 
-    private static String registerAccount(String message, SelectionKey key){
+    private static EnumStringMessage registerAccount(String message, SelectionKey key){
         String[] usernameAndPassword = splitUsernameAndPassword(message);
         if (usernameAndPassword == null) {
-            return 0 + "Unverified username/ password";
+            return new EnumStringMessage(ServerResponseType.INVALID, "Unverified username/ password");
         }
         Account acc = new Account(usernameAndPassword[0], usernameAndPassword[1]);
         if(accountExists(acc)){
             System.out.println(acc.getName() + " already exists");
-            return 0 + "User already exists...";
+            return new EnumStringMessage(ServerResponseType.INVALID, "User already exists...");
         }
         if(channelIsLoggedIn(key)){
             System.out.println("This channel is already logged in");
-            return 0 + "You need to log out before you can log in";
+            return new EnumStringMessage(ServerResponseType.INVALID, "You need to log out before you can log in");
         }
         acc.registerAccount();
-        return 1 + "Successful registration! Welcome aboard, " + acc.getName();
+    return new EnumStringMessage(ServerResponseType.OK, "Successful registration! Welcome aboard, " + acc.getName());
     }
 
     private static boolean accountExists(Account acc) {
@@ -113,24 +115,24 @@ public class Server {
         key.attach(new Account());
     }
 
-    private static String loginAccount(String message, SelectionKey key) throws IOException{
+    private static EnumStringMessage loginAccount(String message, SelectionKey key) throws IOException{
         if(channelIsLoggedIn(key)){
             System.out.println("This channel is already logged in");
-            return 0 + "You need to log out before you can log in";
+            return new EnumStringMessage(ServerResponseType.INVALID, "You need to log out before you can log in");
         }
         String[] usernameAndPassword = splitUsernameAndPassword(message);
         if (usernameAndPassword == null) {
-            return 0 + "Unverified username/ password";
+            return new EnumStringMessage(ServerResponseType.INVALID, "Unverified username/ password");
         }
         Account acc = new Account(usernameAndPassword[0], usernameAndPassword[1]);
         if(accountIsLoggedIn(acc)){
             System.out.println(acc.getName() + " is already logged in");
-            return 0 + "User already logged in...";
+            return new EnumStringMessage(ServerResponseType.INVALID, "User already logged in...");
         }
         return verifyLoginDataAndLogin(acc, (Account)(key.attachment()));
     }
 
-    private static String verifyLoginDataAndLogin(Account requestedAcc, Account savedAcc) throws IOException{
+    private static EnumStringMessage verifyLoginDataAndLogin(Account requestedAcc, Account savedAcc) throws IOException{
         if (requestedAcc.exists()) {
             String savedPass = loadPassword(requestedAcc);
             if(savedPass.equals(requestedAcc.getPassword())){
@@ -138,13 +140,13 @@ public class Server {
                 savedAcc.setPassword(requestedAcc.getPassword());
                 System.out.println("Successful login!");
                 loggedInUsers.add(requestedAcc.getName());
-                return 1 + "Successful login!";
+                return new EnumStringMessage(ServerResponseType.OK, "Successful login!");
             }
             System.out.println("Incorrect pass");
-            return 0 + "Incorrect password...";
+            return new EnumStringMessage(ServerResponseType.INVALID, "Incorrect password...");
         } else{
             System.out.println("Account not found.");
-            return 0 + "Account doesn't exist";
+            return new EnumStringMessage(ServerResponseType.INVALID, "Account doesn't exist");
         }
     }
 
@@ -172,9 +174,10 @@ public class Server {
         return usernameAndPassword;
     }
 
-    private static void writeToClient(String message, ByteBuffer buffer, SocketChannel chan) throws IOException {
+    private static void writeToClient(EnumStringMessage message, ByteBuffer buffer, SocketChannel chan) throws IOException {
         buffer.clear();
-        buffer.put(message.getBytes());
+        buffer.put(((byte) message.getEnumValue().ordinal()));
+        buffer.put(message.getMessage().getBytes());
         buffer.flip();
         chan.write(buffer);
     }

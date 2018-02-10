@@ -156,7 +156,7 @@ public class GameTable {
         }
     }
 
-    public EnumStringMessage processFireCommand(String squareCoordinates){
+    public EnumStringMessage fireAt(String squareCoordinates){
         int[] coords = tranformCoordinatesForReading(squareCoordinates);
         if(coords[0] < 0){
             return new EnumStringMessage(FireResult.INVALID, "Invalid coordinate");
