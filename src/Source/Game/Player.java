@@ -3,11 +3,7 @@ package Source.Game;
 import Source.Account;
 
 public class Player {
-    Player(){
-
-    }
-
-    Player(Account acc){
+    public Player(Account acc){
         this.acc = acc;
     }
 

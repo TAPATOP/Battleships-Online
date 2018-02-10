@@ -1,12 +1,15 @@
 package Source;
 
 import Source.Game.EnumStringMessage;
+import Source.Game.Game;
+import Source.Game.Player;
 
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -71,12 +74,61 @@ public class Server {
                 return registerAccount(message, key);
             case LOGOUT:
                 return logoutAccount(key);
+            case CREATE_GAME:
+                return createGame(message, key);
+            case EXIT_GAME:
+                //return exitGame(key);
             default:
                 System.out.println("I don't know how to handle this :c");
                 return new EnumStringMessage(
                         ServerResponseType.NOTHING_OF_IMPORTANCE,
-                        "I have no idea what to do with this so I will just repeat it: " + message);
+                        "I have no idea what to do with this so I will just repeat it: " + message
+                );
         }
+    }
+
+    private static EnumStringMessage createGame(String gameName, SelectionKey key){
+        boolean channelIsLoggedIn = channelIsLoggedIn(key);
+        if(!channelIsLoggedIn){
+            return new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "You need to be logged in to create a game"
+            );
+        }
+
+        boolean channelIsAlreadyInAGame = getChannelAccount(key).getCurrentGameID() != 0;
+        if(channelIsAlreadyInAGame){
+            return new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "Cannot create a game while you're in one"
+            );
+        }
+
+        gameName = removeLastCharacter(gameName);
+        if(!validateGameName(gameName)){
+            return new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "Invalid game name; It must start with a letter and only contain letters, digits and underscores"
+            );
+        }
+
+        if(gameExists(gameName)){
+            return new EnumStringMessage(ServerResponseType.INVALID, "Game already exists, try another name");
+        }
+
+        return initializeGameCreation(gameName, key);
+    }
+
+    private static EnumStringMessage initializeGameCreation(String gameName, SelectionKey key){
+        Player hostingPlayer = new Player(getChannelAccount(key));
+        Game newGame = new Game(allGamesEverCount++, hostingPlayer);
+        pendingGames.put(gameName, newGame);
+
+        return new EnumStringMessage(ServerResponseType.OK, "Game created successfully!");
+    }
+
+    private static boolean gameExists(String gameName){
+        return pendingGames.get(gameName) != null || runningGames.get(gameName) != null;
     }
 
     private static EnumStringMessage logoutAccount(SelectionKey key){
@@ -170,8 +222,12 @@ public class Server {
             System.out.println("Username and password not validated...");
             return null;
         }
-        usernameAndPassword[1] = usernameAndPassword[1].substring(0, usernameAndPassword[1].length() - 1);
+        usernameAndPassword[1] = removeLastCharacter(usernameAndPassword[1]);
         return usernameAndPassword;
+    }
+
+    private static String removeLastCharacter(String input){
+        return input.substring(0, input.length() - 1);
     }
 
     private static void writeToClient(EnumStringMessage message, ByteBuffer buffer, SocketChannel chan) throws IOException {
@@ -180,6 +236,10 @@ public class Server {
         buffer.put(message.getMessage().getBytes());
         buffer.flip();
         chan.write(buffer);
+    }
+
+    private static boolean validateGameName(String gameName){
+        return gameName.matches("[a-zA-Z][\\w\\d_]*");
     }
 
     @SuppressWarnings("InfiniteLoopStatement")
@@ -193,7 +253,6 @@ public class Server {
             selector = Selector.open();
             serverSocketChannel.configureBlocking(false);
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-            loggedInUsers = new HashSet<>();
 
             // CHANNEL PROCESSING
             while (true) {
@@ -215,7 +274,7 @@ public class Server {
                             while (readFromClient(chan, key));
                         } catch (IOException | CancelledKeyException exc) {
                             System.out.println("Connection to client lost!");
-                            logChannelOut(key);
+                            logoutAccount(key);
                             chan.close();
                         }
                     }
@@ -226,8 +285,12 @@ public class Server {
             System.out.println("IOException");
         }
     }
+
     // MEMBER VARIABLES
-    private static HashSet<String> loggedInUsers;
+    private static HashSet<String> loggedInUsers = new HashSet<>();
+    private static HashMap<String, Game> pendingGames = new HashMap<>();
+    private static HashMap<String, Game> runningGames = new HashMap<>();
+    private static int allGamesEverCount = 1;
     private static ServerSocketChannel serverSocketChannel;
     private static Selector selector;
 }

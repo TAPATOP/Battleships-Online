@@ -38,10 +38,8 @@ public class Client {
             }
             while (buffer.limit() > buffer.position()) {
                 c = (char) buffer.get();
-                System.out.print(c);
                 messageFromServer.append(c);
             }
-            System.out.println();
         }while(buffer.limit() >= buffer.capacity());
         return new EnumStringMessage(serverResponse, messageFromServer.toString());
     }
@@ -61,17 +59,26 @@ public class Client {
         return readMessageFromServer();
     }
 
+    private static EnumStringMessage createGame(String gameName) throws IOException {
+       sendMessageToServer(ClientMessageType.CREATE_GAME, gameName);
+       return readMessageFromServer();
+    }
+
     public static boolean processPlayerCommand(String playerMessage) throws IOException{
         String playerMessageType = playerMessage.split(" ")[0];
         ClientMessageType clientMessageType = findMessageTypeOut(playerMessageType);
         String remainingMessage = null;
         if(playerMessageType.length() + 1 < playerMessage.length()){
             remainingMessage = playerMessage.substring(playerMessageType.length() + 1, playerMessage.length());
+            remainingMessage = remainingMessage.trim().replaceAll(" +", " ");
         }
 
         EnumStringMessage result = callCommand(clientMessageType, remainingMessage);
+        if(result != null){
+            System.out.println(result.getMessage());
+        }
 
-        // return false if result is null or message starts with '0'
+        // return false if result is null or message returns a "bad" message code
         return !(result == null || result.getEnumValue().equals(ServerResponseType.INVALID));
     }
 
@@ -83,9 +90,18 @@ public class Client {
                 return ClientMessageType.REGISTER;
             case "logout":
                 return ClientMessageType.LOGOUT;
+            case "create_game":
+                return ClientMessageType.CREATE_GAME;
+            case "exit_game":
+                return ClientMessageType.EXIT_GAME;
             default:
                 return ClientMessageType.CUSTOM_MESSAGE;
         }
+    }
+
+    private static EnumStringMessage exitGame() throws IOException{
+        sendMessageToServer(ClientMessageType.EXIT_GAME, null);
+        return readMessageFromServer();
     }
 
     private static EnumStringMessage callCommand(ClientMessageType clientMessageType, String remainingMessage) throws IOException{
@@ -104,6 +120,10 @@ public class Client {
                 return register(remainingMessage);
             case LOGOUT:
                 return logout();
+            case CREATE_GAME:
+                return createGame(remainingMessage);
+            case EXIT_GAME:
+                return exitGame();
             default:
                 System.out.println("No idea what to do with this");
                 return null;
@@ -111,14 +131,6 @@ public class Client {
     }
 
     public static void main(String args[]){
-        GameTable gt = new GameTable();
-        gt.deployNextShip("A1", true);
-        gt.deployNextShip("A3", false);
-        gt.deployNextShip("C3", false);
-        gt.fireAt("A1");
-        gt.fireAt("B1");
-        gt.fireAt("D1");
-        gt.stylizeAndPrintBoard();
         try{
             // INITIALIZE BUFFER AND CHANNEL AND INITIATE THE LOGIN SCREEN
             socket = SocketChannel.open();
@@ -144,14 +156,14 @@ public class Client {
             System.out.println("Cannot connect to server");
         }
     }
+
     // MEMBER VARIABLES
-    static final int BUFFER_SIZE = 1024;
+    private static final int BUFFER_SIZE = 1024;
     private static SocketChannel socket;
     private static ByteBuffer buffer;
     private static BufferedReader playerInput;
 
     // MEMBER VARIABLES- RELATED STUFF( shouldn't be needed outside of Testing)
-
     public static void setSocket(SocketChannel socket) {
         Client.socket = socket;
     }
@@ -160,3 +172,5 @@ public class Client {
         Client.buffer = buffer;
     }
 }
+
+// TODO: Remove ANY verifications by the client

@@ -1,6 +1,12 @@
 package Source.Game;
 
 public class Game {
+    /**
+     * Game constructor
+     * @param gameID the corresponding ID of the game according to the server
+     * @param host player that requested the creation of the game; he is
+     *             automatically logged into the game
+     */
     public Game(int gameID, Player host){
         player1 = host;
         this.gameID = gameID;
