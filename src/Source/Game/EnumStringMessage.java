@@ -23,6 +23,6 @@ public class EnumStringMessage {
     }
 
     // MEMBER VARIABLES
-    Enum enumValue;
-    String message;
+    private Enum enumValue;
+    private String message;
 }

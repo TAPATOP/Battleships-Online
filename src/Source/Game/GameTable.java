@@ -5,19 +5,19 @@ import java.util.Vector;
 public class GameTable {
     public GameTable(){
         deployedShipsCount = 0;
-        ships.add(new Carrier());
+        allShips.add(new Carrier());
 
-        ships.add(new Battleship());
-        ships.add(new Battleship());
+        allShips.add(new Battleship());
+        allShips.add(new Battleship());
 
-        ships.add(new Cruiser());
-        ships.add(new Cruiser());
-        ships.add(new Cruiser());
+        allShips.add(new Cruiser());
+        allShips.add(new Cruiser());
+        allShips.add(new Cruiser());
 
-        ships.add(new Destroyer());
-        ships.add(new Destroyer());
-        ships.add(new Destroyer());
-        ships.add(new Destroyer());
+        allShips.add(new Destroyer());
+        allShips.add(new Destroyer());
+        allShips.add(new Destroyer());
+        allShips.add(new Destroyer());
     }
 
     /**
@@ -25,7 +25,7 @@ public class GameTable {
      * @return name of ship as String( capitalized)
      */
     public String seeNextShipType(){
-        return seeShipType(ships.get(deployedShipsCount));
+        return seeShipType(allShips.get(deployedShipsCount));
     }
 
     private String seeShipType(Ship ship){
@@ -50,7 +50,7 @@ public class GameTable {
         }
         int x = coords[0];
         int y = coords[1];
-        return deployShip(ships.get(deployedShipsCount), x, y, isVertical);
+        return deployShip(allShips.get(deployedShipsCount), x, y, isVertical);
     }
 
     private boolean deployShip(Ship ship, int x, int y, boolean isVertical){
@@ -72,6 +72,7 @@ public class GameTable {
                 x += xChange;
                 y += yChange;
             }
+            deployedShips.add(allShips.get(deployedShipsCount));
             deployedShipsCount++;
             return true;
         }
@@ -166,7 +167,7 @@ public class GameTable {
         try {
             EnumStringMessage resultMessage = executeFiring(x, y);
             FireResult result = (FireResult)resultMessage.getEnumValue();
-            if(result.equals(FireResult.DESTROYED) && ships.isEmpty()){
+            if(result.equals(FireResult.DESTROYED) && deployedShips.isEmpty()){
                 return new EnumStringMessage(FireResult.DESTROYED_LAST_SHIP, "Game over");
             }
 
@@ -192,7 +193,7 @@ public class GameTable {
 
         if(shipIsDead){
             Ship affectedShip = boardOfDeployments[x][y];
-            ships.remove(affectedShip);
+            deployedShips.remove(affectedShip);
 
             String result = seeShipType(affectedShip) + " destroyed!";
             System.out.println(result);
@@ -265,7 +266,8 @@ public class GameTable {
     // MEMBER VARIABLES
     private final int TOTAL_NUMBER_OF_SHIPS = 10;
     private final int DIMENTION_LIMIT = 10;
-    private Vector<Ship> ships = new Vector<>();
+    private Vector<Ship> deployedShips = new Vector<>();
+    private Vector<Ship> allShips = new Vector<>();
     private Ship[][] boardOfDeployments = new Ship[DIMENTION_LIMIT][DIMENTION_LIMIT];
     private int deployedShipsCount;
 
