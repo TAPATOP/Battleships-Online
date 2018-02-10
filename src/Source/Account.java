@@ -81,15 +81,30 @@ public class Account {
         return f.isFile();
     }
 
-    public ByteBuffer getInputFromServerBuffer(){
-        return inputFromServerBuffer;
+    public ByteBuffer getBufferForCommunicationWithServer(){
+        return bufferForCommunicationWithServer;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Account account = (Account) o;
+
+        return name.equals(account.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 
     // MEMBER VARIABLES
     private String name;
     private String password;
     private int currentGameID;
-    private ByteBuffer inputFromServerBuffer = ByteBuffer.allocate(1024);
+    private ByteBuffer bufferForCommunicationWithServer = ByteBuffer.allocate(1024);
 
     private String pathName;
 

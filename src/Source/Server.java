@@ -41,6 +41,8 @@ public class Server {
         System.out.println("Processing a " + mesType + " message");
         String playerMessage = readClientMessage(buffer);
         System.out.println("Processing this message: " + playerMessage);
+
+        // No reason not to notify the client about what's going on as soon as possible
         writeToClient(processMessage(mesType, playerMessage, chan, key), buffer, chan);
         return true;
     }
@@ -50,7 +52,7 @@ public class Server {
     }
 
     private static ByteBuffer getChannelBuffer(SelectionKey key){
-        return getChannelAccount(key).getInputFromServerBuffer();
+        return getChannelAccount(key).getBufferForCommunicationWithServer();
     }
 
     private static ClientMessageType readClientMessageType(ByteBuffer buffer) {
@@ -73,11 +75,11 @@ public class Server {
             case REGISTER:
                 return registerAccount(message, key);
             case LOGOUT:
-                return logoutAccount(key);
+                return logoutAccount(key, chan);
             case CREATE_GAME:
-                return createGame(message, key);
+                return createGame(message, key, chan);
             case EXIT_GAME:
-                //return exitGame(key);
+                return exitGame(key, chan);
             default:
                 System.out.println("I don't know how to handle this :c");
                 return new EnumStringMessage(
@@ -87,20 +89,69 @@ public class Server {
         }
     }
 
-    private static EnumStringMessage createGame(String gameName, SelectionKey key){
+    /**
+     * When any player exits a game, the game gets terminated because there is no "start game"
+     * option; the game starts the moment both players enter the room. Therefore, there is no
+     * reason for a player to be replaced with another one after leaving, thus making the room
+     * no longer needed.
+     * @param key the channel the player uses to communicate with the server on
+     * @return an EnumStringMessage informing the player of whether he exited successfully
+     */
+    private static EnumStringMessage exitGame(SelectionKey key, SocketChannel channel) throws IOException{
+        Account channelAccount = getChannelAccount(key);
+        if(channelAccount.getCurrentGameID() == 0){
+            return new EnumStringMessage(ServerResponseType.INVALID, "You're not in a game");
+        }
+
+        String gameToBeClosedName = gameIDtoGameNameHash.get(channelAccount.getCurrentGameID());
+        Game gameToBeClosed = pendingGames.get(gameToBeClosedName);
+        if(gameToBeClosed == null){
+            gameToBeClosed = runningGames.get(gameToBeClosedName);
+        }
+
+        // body shouldn't be executed, unless there is a bug
+        if(gameToBeClosed == null){
+            return new EnumStringMessage(ServerResponseType.INVALID, "Cannot find the game you're in ??");
+        }
+        return initializeGameExit(key, channel, gameToBeClosed);
+    }
+
+    private static EnumStringMessage initializeGameExit(
+            SelectionKey key,
+            SocketChannel channel,
+            Game currentGame
+    ) throws IOException {
+        Account channelAccount = getChannelAccount(key);
+
+        if(pendingGames.containsKey(currentGame.getGameName())){
+            pendingGames.remove(currentGame.getGameName());
+        }
+        else{
+            runningGames.remove(currentGame.getGameName());
+        }
+        currentGame.end();
+
+        EnumStringMessage messageToOppponent = new EnumStringMessage(
+                ServerResponseType.DISCONNECTED,
+                "Other player disconnected from the game"
+        );
+        Player opponent = currentGame.getOtherPlayer(channelAccount);
+        if(opponent != null){
+            writeToClient(messageToOppponent, opponent.getAccount().getBufferForCommunicationWithServer(), channel);
+        }
+
+        return new EnumStringMessage(
+                ServerResponseType.DISCONNECTED,
+                "You have been disconnected from the game"
+        );
+    }
+
+    private static EnumStringMessage createGame(String gameName, SelectionKey key, SocketChannel channel){
         boolean channelIsLoggedIn = channelIsLoggedIn(key);
         if(!channelIsLoggedIn){
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "You need to be logged in to create a game"
-            );
-        }
-
-        boolean channelIsAlreadyInAGame = getChannelAccount(key).getCurrentGameID() != 0;
-        if(channelIsAlreadyInAGame){
-            return new EnumStringMessage(
-                    ServerResponseType.INVALID,
-                    "Cannot create a game while you're in one"
             );
         }
 
@@ -116,14 +167,22 @@ public class Server {
             return new EnumStringMessage(ServerResponseType.INVALID, "Game already exists, try another name");
         }
 
-        return initializeGameCreation(gameName, key);
+        return initializeGameCreation(gameName, key, channel);
     }
 
-    private static EnumStringMessage initializeGameCreation(String gameName, SelectionKey key){
-        Player hostingPlayer = new Player(getChannelAccount(key));
-        Game newGame = new Game(allGamesEverCount++, hostingPlayer);
+    private static EnumStringMessage initializeGameCreation(String gameName, SelectionKey key, SocketChannel channel){
+        Player hostingPlayer = new Player(getChannelAccount(key), channel);
+        Game newGame = new Game(gameName, allGamesEverCount, hostingPlayer);
         pendingGames.put(gameName, newGame);
+        gameIDtoGameNameHash.put(allGamesEverCount, gameName);
+        if(!hostingPlayer.joinAGame(newGame.getGameID())){
+            return new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "Cannot join a game while being in another one!"
+            );
+        }
 
+        ++allGamesEverCount;
         return new EnumStringMessage(ServerResponseType.OK, "Game created successfully!");
     }
 
@@ -131,10 +190,10 @@ public class Server {
         return pendingGames.get(gameName) != null || runningGames.get(gameName) != null;
     }
 
-    private static EnumStringMessage logoutAccount(SelectionKey key){
+    private static EnumStringMessage logoutAccount(SelectionKey key, SocketChannel channel) throws IOException{
         if(channelIsLoggedIn(key)){
-            System.out.println(((Account)key.attachment()).getName() + " has logged out");
-            logChannelOut(key);
+            System.out.println(getChannelAccount(key).getName() + " has logged out");
+            logChannelOut(key, channel);
             return new EnumStringMessage(ServerResponseType.OK, "Successful logout. Bye!");
         }
         return new EnumStringMessage(ServerResponseType.INVALID, "You need to have logged in to log out...");
@@ -162,8 +221,9 @@ public class Server {
         return (new File(acc.getPathName()).isFile());
     }
 
-    private static void logChannelOut(SelectionKey key){
-        loggedInUsers.remove(((Account)key.attachment()).getName());
+    private static void logChannelOut(SelectionKey key, SocketChannel channel) throws IOException{
+        exitGame(key, channel);
+        loggedInUsers.remove(getChannelAccount(key).getName());
         key.attach(new Account());
     }
 
@@ -253,6 +313,7 @@ public class Server {
             selector = Selector.open();
             serverSocketChannel.configureBlocking(false);
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+            SocketChannel chan;
 
             // CHANNEL PROCESSING
             while (true) {
@@ -268,13 +329,13 @@ public class Server {
                         acceptConnections(selector, key);
                     } else if (key.isReadable()) {
                         // DO THE ACTUAL WORK
-                        SocketChannel chan = (SocketChannel) key.channel();
+                        chan = (SocketChannel) key.channel();
                         try {
                             // READ THE CLIENT INPUT
                             while (readFromClient(chan, key));
                         } catch (IOException | CancelledKeyException exc) {
                             System.out.println("Connection to client lost!");
-                            logoutAccount(key);
+                            logoutAccount(key, chan);
                             chan.close();
                         }
                     }
@@ -290,6 +351,7 @@ public class Server {
     private static HashSet<String> loggedInUsers = new HashSet<>();
     private static HashMap<String, Game> pendingGames = new HashMap<>();
     private static HashMap<String, Game> runningGames = new HashMap<>();
+    private static HashMap<Integer, String> gameIDtoGameNameHash = new HashMap<>();
     private static int allGamesEverCount = 1;
     private static ServerSocketChannel serverSocketChannel;
     private static Selector selector;

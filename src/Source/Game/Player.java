@@ -2,7 +2,19 @@ package Source.Game;
 
 import Source.Account;
 
+import java.nio.channels.SelectionKey;
+import java.nio.channels.SocketChannel;
+
 public class Player {
+    public Player(Account acc, SocketChannel channel){
+        this.acc = acc;
+        this.channel = channel;
+    }
+
+    /**
+     * Used when comparing an Account with a Player
+     * @param acc account we already know
+     */
     public Player(Account acc){
         this.acc = acc;
     }
@@ -20,6 +32,30 @@ public class Player {
         return gameTable;
     }
 
+    public void removeFromGame(){
+        acc.setCurrentGameID(0);
+    }
+
+    public Account getAccount(){
+        return acc;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Player player = (Player) o;
+
+        return acc.equals(player.acc);
+    }
+
+    @Override
+    public int hashCode() {
+        return acc.hashCode();
+    }
+
     private Account acc;
     private GameTable gameTable;
+    private SocketChannel channel;
 }

@@ -1,5 +1,6 @@
 package Tests;
 
+import Source.ServerResponseType;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -43,14 +44,6 @@ public class ClientTest {
         }
     }
 
-//    @Test
-//    public void runTestsInOrder() throws IOException{
-//        loginShouldWorkWithValidAndInvalidLogins();
-//        logoutShouldLogoutIfNotLoggedOut();
-//        shouldBeAbleToLogInAndOutMultipleTimes();
-//        registeringShouldRegisteredUnregisteredAndNotRegisterRegistered();
-//    }
-
     @Test
     public void loginShouldWorkWithValidAndInvalidLogins() throws IOException {
         assertFalse(
@@ -78,8 +71,7 @@ public class ClientTest {
 
     @Test
     public void shouldLogoutIfNotLoggedOut() throws IOException{
-        // This test will probably have issues if it gets executed after another
-        // test that requires the client to be logged in
+        Client.processPlayerCommand("logout");
         assertFalse(
                 "Doesn't mess up when trying to log out without even having been logged in",
                 Client.processPlayerCommand("logout"));
@@ -140,7 +132,7 @@ public class ClientTest {
     @Test
     public void shouldNotBlowUpWhenGivenRandomMessage() throws IOException{
         // Logic: If you can send this three times in a row without throwing an IOException
-        // and be able to login and logout, then the server is not dead
+        // and be able to login and logout, then you didn't kill the server
         Client.processPlayerCommand("hello mamma mia");
         Client.processPlayerCommand("hello mamma mia");
         Client.processPlayerCommand("hello mamma mia");
@@ -148,5 +140,48 @@ public class ClientTest {
         Client.processPlayerCommand("logout");
         assertTrue(Client.processPlayerCommand("login TAPATOP peswerdlmao"));
         assertTrue(Client.processPlayerCommand("logout"));
+    }
+
+    @Test
+    public void shouldBeAbleToCreateLegalGames() throws IOException{
+        Client.processPlayerCommand("logout");
+        assertFalse(
+                "Doesn't create game without having logged in first",
+                Client.processPlayerCommand("create_game hi")
+
+        );
+
+        Client.processPlayerCommand("login hi hi");
+
+        assertFalse(
+                "Doesn't create a game with invalid input",
+                Client.processPlayerCommand("create_game")
+
+        );
+        assertFalse(
+                "Doesn't create a game with invalid input",
+                Client.processPlayerCommand("create_game w q w")
+
+        );
+        assertFalse(
+                "Doesn't create a game with invalid input",
+                Client.processPlayerCommand("create_game wwwwwwwww q")
+
+        );
+        assertFalse(
+                "Doesn't create a game with invalid input",
+                Client.processPlayerCommand("create_game 9hello")
+
+        );
+        assertTrue(
+                "Creates a game just fine",
+                Client.processPlayerCommand("create_game hi")
+
+        );
+        assertFalse(
+                "Doesn't create a game while being in another one",
+                Client.processPlayerCommand("create_game hi")
+
+        );
     }
 }
