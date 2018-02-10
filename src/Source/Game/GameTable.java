@@ -201,22 +201,40 @@ public class GameTable {
      * @return returns an int[2] array, where arr[0] is x and arr[1] is y;
      */
     private int[] tranformCoordinatesForReading(String squareCoordinates){
+        int[] transformedCoords = new int[2];
+        if(!validateCoordinatesString(squareCoordinates)){
+            transformedCoords[0] = -1;
+            return transformedCoords;
+        }
+
         char x = squareCoordinates.toUpperCase().charAt(0);
         String digitsOfCoords = squareCoordinates.substring(1, squareCoordinates.length());
 
         int y = Integer.parseInt(digitsOfCoords);
-        int[] transformedCoords = new int[2];
+
         transformedCoords[0] = x - 'A';
         transformedCoords[1] = y - 1;
 
-        boolean xIsIllegal = transformedCoords[0] >= DIMENTION_LIMIT || transformedCoords[0] < 0;
-        boolean yIsIllegal = transformedCoords[1] >= DIMENTION_LIMIT || transformedCoords[1] < 0;
-        if(xIsIllegal || yIsIllegal){
-            transformedCoords[0] = -1;
-        }
         return transformedCoords;
     }
 
+    private boolean validateCoordinatesString(String squareCoordinates){
+        if(squareCoordinates.length() > 3 || squareCoordinates.length() < 2){
+            return false;
+        }
+        if(squareCoordinates.charAt(0) < 'A' || squareCoordinates.charAt(0) >= 'A' + DIMENTION_LIMIT){
+            return false;
+        }
+
+        String supposedNumericValue = squareCoordinates.substring(1, squareCoordinates.length());
+        if(supposedNumericValue.matches("[0-9]*")){
+            int number = Integer.parseInt(supposedNumericValue);
+            if(number > 0 && number <= DIMENTION_LIMIT){
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * Checks if the given coordinates actually fit on the GameTable.
