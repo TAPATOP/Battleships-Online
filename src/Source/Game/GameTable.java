@@ -180,17 +180,29 @@ public class GameTable {
 
     private EnumStringMessage executeFiring(int x, int y){
         if (boardOfDeployments[x][y] == null) {
-            System.out.println("Miss!");
+            // System.out.println("Miss!");
             boardOfDeployments[x][y] = missedShip;
             return new EnumStringMessage(FireResult.MISS, "Miss!");
         }
+
         // e.g. if the field has already been fired at
         if (boardOfDeployments[x][y].getSize() < 0) {
-            System.out.println("Can't fire there again");
+            // System.out.println("Can't fire there again");
             return new EnumStringMessage(FireResult.INVALID, "You've already fired there");
         }
         boolean shipIsDead = boardOfDeployments[x][y].takeOneHit();
 
+        EnumStringMessage result = checkIfShipDied(shipIsDead, x, y);
+        if(result != null){
+            return result;
+        }
+
+        // System.out.println("HIT!");
+        boardOfDeployments[x][y] = damagedShip;
+        return new EnumStringMessage(FireResult.HIT, "HIT!");
+    }
+
+    private EnumStringMessage checkIfShipDied(boolean shipIsDead, int x, int y){
         if(shipIsDead){
             Ship affectedShip = boardOfDeployments[x][y];
             deployedShips.remove(affectedShip);
@@ -200,15 +212,13 @@ public class GameTable {
             boardOfDeployments[x][y] = damagedShip;
             return new EnumStringMessage(FireResult.DESTROYED, result);
         }
-
-        System.out.println("HIT!");
-        boardOfDeployments[x][y] = damagedShip;
-        return new EnumStringMessage(FireResult.HIT, "HIT!");
+        return null;
     }
 
     /**
-     * Transforms coordinates of the [A-J][1-10] format to [0-9][0-9] format. Using this
-     * method implies the coordinates have been validated to the said initial format.
+     * Transforms coordinates of the [A-J][1-10] format to [0-9][0-9] format. The method
+     * uses another method to validate it's own parameters, so if the given parameter isn't
+     * in the format above, a handled error will occur
      * @param squareCoordinates [A-J][1-10] format
      * @return returns an int[2] array, where arr[0] is x and arr[1] is y;
      * If the given coordinates are invalid in some way, arr[0] will be -1

@@ -187,7 +187,11 @@ public class GameTableTest {
         assertEquals("Passing gibberish as coordinates 3", GameTable.FireResult.INVALID, result);
 
         result = (GameTable.FireResult)gt.processFireCommand("WS").getEnumValue();
-        assertEquals("Passing gibberish as coordinates", GameTable.FireResult.INVALID, result);
+        assertEquals("Passing gibberish as coordinates 4", GameTable.FireResult.INVALID, result);
+
+
+        result = (GameTable.FireResult)gt.processFireCommand("B4 54").getEnumValue();
+        assertEquals("Passing gibberish as coordinates 5", GameTable.FireResult.INVALID, result);
 
         assertEquals(
                 "Board looks like it should",
