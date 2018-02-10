@@ -151,10 +151,10 @@ public class GameTable {
         }
     }
 
-    public FireResult processFireCommand(String squareCoordinates){
+    public String processFireCommand(String squareCoordinates){
         int[] coords = tranformCoordinatesForReading(squareCoordinates);
         if(coords[0] < 0){
-            return FireResult.INVALID;
+            return FireResult.INVALID.ordinal() + "Invalid coordinate";
         }
         int x = coords[0];
         int y = coords[1];
@@ -162,34 +162,36 @@ public class GameTable {
             return executeFiring(x, y);
         }catch(NullPointerException exc){
             System.out.println("Something messed up with firing at targets; NULLPTR");
-            return FireResult.INVALID;
+            return FireResult.INVALID.ordinal() + "Invalid coordinate";
         }
     }
 
-    private FireResult executeFiring(int x, int y){
+    private String executeFiring(int x, int y){
         if (!coordinatesAreValid(x, y)) {
-            return FireResult.INVALID;
+            return FireResult.INVALID.ordinal() + "Invalid Coordinates";
         }
         if (boardOfDeployments[x][y] == null) {
             System.out.println("Miss!");
             boardOfDeployments[x][y] = missedShip;
-            return FireResult.MISS;
+            return FireResult.MISS.ordinal() + "Miss!";
         }
         // e.g. if the field has already been fired at
         if (boardOfDeployments[x][y].getSize() < 0) {
             System.out.println("Can't fire there again");
-            return FireResult.INVALID;
+            return FireResult.INVALID.ordinal() + "You've already fired there";
         }
         boolean shipIsDead = boardOfDeployments[x][y].takeOneHit();
 
         if(shipIsDead){
-            System.out.println(seeShipType(boardOfDeployments[x][y]) + " destroyed!");
+            String result = seeShipType(boardOfDeployments[x][y]) + " destroyed!";
+            System.out.println(result);
             boardOfDeployments[x][y] = damagedShip;
-            return FireResult.DESTROYED;
+            return FireResult.DESTROYED.ordinal() + result;
         }
+
         System.out.println("HIT!");
         boardOfDeployments[x][y] = damagedShip;
-        return FireResult.HIT;
+        return FireResult.HIT.ordinal() + "HIT!";
     }
 
     /**
@@ -248,3 +250,5 @@ public class GameTable {
     DamagedPartOfShip damagedShip = new DamagedPartOfShip();
     MissedShip missedShip = new MissedShip();
 }
+
+// TODO: Fix the extra check (x|y)IsIllegal in transformCoordinatesForReading()

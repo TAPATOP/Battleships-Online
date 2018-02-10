@@ -25,7 +25,7 @@ public class Server {
     private static boolean readFromClient(SocketChannel chan, SelectionKey key) throws IOException {
         ByteBuffer buffer = getChannelBuffer(key);
 
-        getChannelBuffer(key).clear();
+        buffer.clear();
         try {
             if (chan.read(buffer) <= 0) {
                 return false;
@@ -215,7 +215,6 @@ public class Server {
                             logChannelOut(key);
                             chan.close();
                         }
-
                     }
                     keyIterator.remove();
                 }
