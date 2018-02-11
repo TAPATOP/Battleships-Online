@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
@@ -29,7 +28,7 @@ public class Account {
         return name;
     }
 
-    public String getPassword() {
+    String getPassword() {
         return password;
     }
 
@@ -37,11 +36,11 @@ public class Account {
         return currentGameID;
     }
 
-    public String getPathName() {
+    String getPathName() {
         return pathName;
     }
 
-    public SocketChannel getChannel() {
+    SocketChannel getChannel() {
         return channel;
     }
 
@@ -72,7 +71,7 @@ public class Account {
         return Errors.SUCCESS;
     }
 
-    public Errors registerAccount() {
+    Errors registerAccount() {
         File f = new File(pathName);
         if(f.isFile()) {
             System.out.println("Account already exists");
@@ -92,7 +91,7 @@ public class Account {
         return f.isFile();
     }
 
-    public ByteBuffer getBufferForCommunicationWithServer(){
+    ByteBuffer getBufferForCommunicationWithServer(){
         return bufferForCommunicationWithServer;
     }
 

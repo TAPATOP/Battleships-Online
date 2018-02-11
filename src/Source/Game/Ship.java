@@ -1,6 +1,6 @@
 package Source.Game;
 
-abstract public class Ship {
+abstract class Ship {
     Ship(){
         healthPoints = 0;
         size = 0;
@@ -21,7 +21,7 @@ abstract public class Ship {
      * @return true if the ship got destroyed and false if it
      * was already destroyed( should only reach this in a case of a bug) or survived
      */
-    public boolean takeOneHit(){
+    boolean takeOneHit(){
         if(healthPoints <= 0){
             System.out.println("Why are you firing at a dead ship??");
             return false;
@@ -29,7 +29,7 @@ abstract public class Ship {
         return --healthPoints <= 0;
     }
 
-    public int getSize() {
+    int getSize() {
         return size;
     }
 

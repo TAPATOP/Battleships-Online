@@ -19,15 +19,6 @@ public class GameTable {
         allShips.add(new Destroyer());
         allShips.add(new Destroyer());
     }
-
-    /**
-     * Used only to inform the players what ship they're about to deploy
-     * @return name of ship as String( capitalized)
-     */
-    public String seeNextShipType(){
-        return getShipType(allShips.get(deployedShipsCount)).toString();
-    }
-
     /**
      * Deploys the next ship in line
      * @param squareCoordinates the coordinates of the ship in the format: [A-J][1-10]
@@ -122,11 +113,6 @@ public class GameTable {
             }
         }
         return visualizedBoard;
-    }
-
-    public void stylizeAndPrintBoard(){
-        char[][] visualizedBoard = visualizeBoard();
-        stylizeAndPrintMatrix(visualizedBoard);
     }
 
     private char visualizeSquare(Ship shipOccupyingTheSquare){
@@ -318,8 +304,8 @@ public class GameTable {
     }
 
     // CONSTANTS
-    private static final int TOTAL_NUMBER_OF_SHIPS = 1;
-    public static final int DIMENTION_LIMIT = 10;
+    private static final int TOTAL_NUMBER_OF_SHIPS = 10;
+    private static final int DIMENTION_LIMIT = 10;
 
     // MEMBER VARIABLES
     private Vector<Ship> deployedShips = new Vector<>();

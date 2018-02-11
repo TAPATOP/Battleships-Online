@@ -13,7 +13,7 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.TimeUnit;
 
 public class Client {
-    public static void sendMessageToServer(ClientMessageType clientMessageType, String message) throws IOException {
+    private static void sendMessageToServer(ClientMessageType clientMessageType, String message) throws IOException {
         buffer.clear();
         buffer.put((byte) clientMessageType.ordinal());
         if(message != null) {
@@ -249,7 +249,7 @@ public class Client {
 
         boolean shotIsNotInvalid = !result.getEnumValue().equals(ServerResponseType.INVALID);
         boolean shotIsProbablyIndeedAShot = !result.getEnumValue().equals(ServerResponseType.NOTHING_OF_IMPORTANCE);
-        boolean shotKilledLastShip = result.getEnumValue().equals(ServerResponseType.DESTROYED_LAST_SHIP);;
+        boolean shotKilledLastShip = result.getEnumValue().equals(ServerResponseType.DESTROYED_LAST_SHIP);
 
         if(shotIsNotInvalid && shotIsProbablyIndeedAShot){
             int[] coords = GameTable.tranformCoordinatesForReading(coordinates);
@@ -348,7 +348,7 @@ public class Client {
             socket = SocketChannel.open();
             socket.connect(new InetSocketAddress("localhost", 6969));
             buffer = ByteBuffer.allocate(BUFFER_SIZE);
-            playerInput = new BufferedReader(new InputStreamReader(System.in));
+            BufferedReader playerInput = new BufferedReader(new InputStreamReader(System.in));
             String playerMessage;
             final int refreshRate = 150;
 
@@ -387,11 +387,10 @@ public class Client {
     private static final int BUFFER_SIZE = 1024;
     private static SocketChannel socket;
     private static ByteBuffer buffer;
-    private static BufferedReader playerInput;
 
     // GAME VISUALIZATION
-    static char[][] yourGameTable = GameTable.initializeTabulaRasa();
-    static char[][] opponentGameTable = GameTable.initializeTabulaRasa();
+    private static char[][] yourGameTable = GameTable.initializeTabulaRasa();
+    private static char[][] opponentGameTable = GameTable.initializeTabulaRasa();
 
     // MEMBER VARIABLES- RELATED STUFF( shouldn't be needed outside of Testing)
     public static void setSocket(SocketChannel socket) {

@@ -2,14 +2,7 @@ package Source.Game;
 
 import Source.Account;
 
-import java.nio.channels.SocketChannel;
-
 public class Player {
-    public Player(Account acc, SocketChannel channel){
-        this.acc = acc;
-        gameTable = new GameTable();
-    }
-
     /**
      * Used when comparing an Account with a Player
      * @param acc account we already know
@@ -32,7 +25,7 @@ public class Player {
         return gameTable;
     }
 
-    public void removeFromGame(){
+    void removeFromGame(){
         acc.setCurrentGameID(0);
     }
 

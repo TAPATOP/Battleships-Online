@@ -7,7 +7,6 @@ import Source.Game.Player;
 
 import java.io.*;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
@@ -79,11 +78,11 @@ public class Server {
             case LOGOUT:
                 return logoutAccount(key, chan);
             case CREATE_GAME:
-                return createGame(message, key, chan);
+                return createGame(message, key);
             case EXIT_GAME:
-                return exitGame(key, chan);
+                return exitGame(key);
             case JOIN_GAME:
-                return joinGame(message, key, chan);
+                return joinGame(message, key);
             case DEPLOY:
                 return deployShip(message, key);
             case FIRE:
@@ -305,8 +304,7 @@ public class Server {
 
     private static EnumStringMessage joinGame(
             String message,
-            SelectionKey key,
-            SocketChannel channel
+            SelectionKey key
     ) throws IOException{
         boolean channelIsLoggedIn = channelIsLoggedIn(key);
         if(!channelIsLoggedIn){
@@ -332,7 +330,7 @@ public class Server {
             );
         }
 
-        boolean additionWasSuccessful = desiredGame.addPlayer(new Player(getChannelAccount(key), channel));
+        boolean additionWasSuccessful = desiredGame.addPlayer(new Player(getChannelAccount(key)));
         if(!additionWasSuccessful){
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
@@ -368,7 +366,7 @@ public class Server {
      * @param key the channel the player uses to communicate with the server on
      * @return an EnumStringMessage informing the player of whether he exited successfully
      */
-    private static EnumStringMessage exitGame(SelectionKey key, SocketChannel channel) throws IOException{
+    private static EnumStringMessage exitGame(SelectionKey key) throws IOException{
         Account channelAccount = getChannelAccount(key);
         if(channelAccount.getCurrentGameID() == 0){
             return new EnumStringMessage(ServerResponseType.INVALID, "You're not in a game");
@@ -384,12 +382,11 @@ public class Server {
         if(gameToBeClosed == null){
             return new EnumStringMessage(ServerResponseType.INVALID, "Cannot find the game you're in ??");
         }
-        return initializeGameExit(key, channel, gameToBeClosed);
+        return initializeGameExit(key, gameToBeClosed);
     }
 
     private static EnumStringMessage initializeGameExit(
             SelectionKey key,
-            SocketChannel channel,
             Game currentGame
     ) throws IOException {
         Account channelAccount = getChannelAccount(key);
@@ -411,7 +408,7 @@ public class Server {
         );
     }
 
-    private static EnumStringMessage createGame(String gameName, SelectionKey key, SocketChannel channel){
+    private static EnumStringMessage createGame(String gameName, SelectionKey key){
         boolean channelIsLoggedIn = channelIsLoggedIn(key);
         if(!channelIsLoggedIn){
             return new EnumStringMessage(
@@ -432,11 +429,11 @@ public class Server {
             return new EnumStringMessage(ServerResponseType.INVALID, "Game already exists, try another name");
         }
 
-        return initializeGameCreation(gameName, key, channel);
+        return initializeGameCreation(gameName, key);
     }
 
-    private static EnumStringMessage initializeGameCreation(String gameName, SelectionKey key, SocketChannel channel){
-        Player hostingPlayer = new Player(getChannelAccount(key), channel);
+    private static EnumStringMessage initializeGameCreation(String gameName, SelectionKey key){
+        Player hostingPlayer = new Player(getChannelAccount(key));
         Game newGame = new Game(gameName, allGamesEverCount, hostingPlayer);
         pendingGames.put(gameName, newGame);
         gameIDtoGameNameHash.put(allGamesEverCount, gameName);
@@ -487,7 +484,7 @@ public class Server {
     }
 
     private static void logChannelOut(SelectionKey key, SocketChannel channel) throws IOException{
-        exitGame(key, channel);
+        exitGame(key);
         loggedInUsers.remove(getChannelAccount(key).getName());
         key.attach(new Account(channel));
     }
@@ -584,12 +581,12 @@ public class Server {
     @SuppressWarnings("InfiniteLoopStatement")
     public static void main(String args[]) {
         System.out.println("Server is working");
-        SelectionKey key = null;
+        SelectionKey key;
         try {
             // SERVER INITIALIZATION
-            serverSocketChannel = ServerSocketChannel.open();
+            ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
             serverSocketChannel.socket().bind(new InetSocketAddress(6969));
-            selector = Selector.open();
+            Selector selector = Selector.open();
             serverSocketChannel.configureBlocking(false);
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
             SocketChannel chan;
@@ -632,6 +629,4 @@ public class Server {
     private static HashMap<String, Game> runningGames = new HashMap<>();
     private static HashMap<Integer, String> gameIDtoGameNameHash = new HashMap<>();
     private static int allGamesEverCount = 1;
-    private static ServerSocketChannel serverSocketChannel;
-    private static Selector selector;
 }

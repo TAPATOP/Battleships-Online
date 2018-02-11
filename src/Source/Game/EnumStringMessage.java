@@ -10,16 +10,8 @@ public class EnumStringMessage {
         return enumValue;
     }
 
-    public void setEnumValue(Enum enumValue) {
-        this.enumValue = enumValue;
-    }
-
     public String getMessage() {
         return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 
     // MEMBER VARIABLES

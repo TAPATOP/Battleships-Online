@@ -30,15 +30,8 @@ public class Game {
         return true;
     }
 
-    public boolean roomIsFull(){
-        return (player1 != null && player2 != null);
-    }
-
-    public boolean isInDeploymentPhase(){
-        if(player2 == null){
-            return false;
-        }
-        return !(player1.getGameTable().allShipsAreDeployed() && player2.getGameTable().allShipsAreDeployed());
+    public boolean isInDeploymentPhase() {
+        return player2 != null && !(player1.getGameTable().allShipsAreDeployed() && player2.getGameTable().allShipsAreDeployed());
     }
 
     public Player getOtherPlayer(Player playerWeAlreadyKnow){
@@ -137,5 +130,5 @@ public class Game {
     private Player playerInTurn;
     private int gameID;
     private String gameName;
-    boolean gameOver = false;
+    private boolean gameOver = false;
 }
