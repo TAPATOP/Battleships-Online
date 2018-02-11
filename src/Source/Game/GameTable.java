@@ -227,7 +227,7 @@ public class GameTable {
      * @return returns an int[2] array, where arr[0] is x and arr[1] is y;
      * If the given coordinates are invalid in some way, arr[0] will be -1
      */
-    private int[] tranformCoordinatesForReading(String squareCoordinates){
+    public static int[] tranformCoordinatesForReading(String squareCoordinates){
         int[] transformedCoords = new int[2];
         if(!validateCoordinatesString(squareCoordinates)){
             transformedCoords[0] = -1;
@@ -245,7 +245,7 @@ public class GameTable {
         return transformedCoords;
     }
 
-    private boolean validateCoordinatesString(String squareCoordinates){
+    private static boolean validateCoordinatesString(String squareCoordinates){
         if(squareCoordinates.length() > 3 || squareCoordinates.length() < 2){
             return false;
         }
@@ -299,6 +299,21 @@ public class GameTable {
                 return ShipType.AIRCRAFT_CARRIER;
             default:
                 return ShipType.UNKNOWN;
+        }
+    }
+
+    public static int getShipSizeByType(ShipType shipType){
+        switch(shipType){
+            case DESTROYER:
+                return 2;
+            case CRUISER:
+                return 3;
+            case BATTLESHIP:
+                return 4;
+            case AIRCRAFT_CARRIER:
+                return 5;
+            default:
+                return 0;
         }
     }
 

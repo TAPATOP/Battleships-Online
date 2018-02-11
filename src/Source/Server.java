@@ -171,8 +171,13 @@ public class Server {
             SelectionKey key,
             SocketChannel channel
     ) throws IOException{
-        System.out.println("Coordinates:" + coordinates + " isVertical: " + isVertical);
-        return gameInQuestion.deployShip(thisPlayer, coordinates, isVertical);
+        EnumStringMessage result = gameInQuestion.deployShip(thisPlayer, coordinates, isVertical);
+        result = new EnumStringMessage(
+                transformDeployedShipTypeToServerResponseType((GameTable.ShipType)result.getEnumValue()),
+                result.getMessage()
+        );
+
+        return result;
     }
 
     private static void seeIfDeploymentIsFinalized(Game game, Player thisPlayer) throws IOException{
@@ -183,7 +188,21 @@ public class Server {
             );
 
             writeToOpponent(game.getOtherPlayer(thisPlayer), messageToTheOpponent);
-            GameTable.stylizeAndPrintMatrix(thisPlayer.getGameTable().visualizeBoard());
+        }
+    }
+
+    private static ServerResponseType transformDeployedShipTypeToServerResponseType(GameTable.ShipType original){
+        switch(original){
+            case DESTROYER:
+                return ServerResponseType.DEPLOYED_DESTROYER;
+            case CRUISER:
+                return ServerResponseType.DEPLOYED_CRUISER;
+            case BATTLESHIP:
+                return ServerResponseType.DEPLOYED_BATTLESHIP;
+            case AIRCRAFT_CARRIER:
+                return ServerResponseType.DEPLOYED_CARRIER;
+            default:
+                return ServerResponseType.INVALID;
         }
     }
 
@@ -458,13 +477,12 @@ public class Server {
             Account targetOfMessage
     ) throws IOException {
         ByteBuffer buffer = targetOfMessage.getBufferForCommunicationWithServer();
-        SocketChannel chan = channel;
 
         buffer.clear();
         buffer.put(((byte) message.getEnumValue().ordinal()));
         buffer.put(message.getMessage().getBytes());
         buffer.flip();
-        chan.write(buffer);
+        channel.write(buffer);
     }
 
     private static void writeToOpponent(Player opponent, EnumStringMessage messageToOpponent) throws IOException{
@@ -474,6 +492,7 @@ public class Server {
             writeToClient(messageToOpponent, opponentChannel, opponentAccount);
         }
     }
+
     private static boolean validateGameName(String gameName){
         return gameName.matches("[a-zA-Z][\\w\\d_]*");
     }

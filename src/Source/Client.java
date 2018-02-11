@@ -69,6 +69,16 @@ public class Client {
        return readMessageFromServer();
     }
 
+    private static EnumStringMessage exitGame() throws IOException{
+        sendMessageToServer(ClientMessageType.EXIT_GAME, null);
+        return readMessageFromServer();
+    }
+
+    private static EnumStringMessage joinGame(String gameName) throws IOException{
+        sendMessageToServer(ClientMessageType.JOIN_GAME, gameName);
+        return readMessageFromServer();
+    }
+
     /**
      * Send coordinates of where to start deploying the ship from
      * @param coordinates of where the ship is starting to deploy from( it deploys from left to right
@@ -79,7 +89,84 @@ public class Client {
      */
     private static EnumStringMessage deploy(String coordinates) throws IOException{
         sendMessageToServer(ClientMessageType.DEPLOY, coordinates);
-        return readMessageFromServer();
+
+        // the enum of this should always be GameTable.ShipType, since that's the command
+        EnumStringMessage result = readMessageFromServer();
+
+        if(result == null){
+            return null;
+        }
+
+        GameTable.ShipType shipType;
+        try {
+            ServerResponseType serverResponseAsRead = (ServerResponseType)result.getEnumValue();
+            shipType = revertServerResponseTypeToShipType(serverResponseAsRead);
+        }catch(ClassCastException exc){
+            return result;
+        }
+
+        if(!shipType.equals(GameTable.ShipType.INVALID)) {
+            tryDrawingDeployedShip(shipType, coordinates);
+        }
+
+        return new EnumStringMessage(ServerResponseType.OK, result.getMessage());
+    }
+
+    private static void tryDrawingDeployedShip(GameTable.ShipType shipType, String coordinates){
+        char c = coordinates.charAt(0);
+        boolean isVertical;
+        switch(c){
+            case 'h':
+                isVertical = false;
+                break;
+            case 'v':
+                isVertical = true;
+                break;
+            default:
+                return;
+        }
+        String restOfCoordinates = coordinates.substring(1, coordinates.length());
+
+        int[] coords = GameTable.tranformCoordinatesForReading(restOfCoordinates);
+        if(coords[0] == -1){
+            System.out.println("Something's wrong with the coordinates");
+            return;
+        }
+        drawDeployedShip(shipType, coords[0], coords[1], isVertical);
+    }
+
+    private static void drawDeployedShip(GameTable.ShipType shipType, int x, int y, boolean isVertical){
+        int shipSize = GameTable.getShipSizeByType(shipType);
+
+        int xChange = 0;
+        int yChange = 0;
+        if(isVertical){
+            xChange = 1;
+        }else{
+            yChange = 1;
+        }
+
+        for(int i = 0; i < shipSize; i++){
+            yourGameTable[x][y] = '#';
+            x += xChange;
+            y += yChange;
+        }
+        GameTable.stylizeAndPrintMatrix(yourGameTable);
+    }
+
+    private static GameTable.ShipType revertServerResponseTypeToShipType(ServerResponseType original){
+        switch(original){
+            case DEPLOYED_DESTROYER:
+                return GameTable.ShipType.DESTROYER;
+            case DEPLOYED_CRUISER:
+                return GameTable.ShipType.CRUISER;
+            case DEPLOYED_BATTLESHIP:
+                return GameTable.ShipType.BATTLESHIP;
+            case DEPLOYED_CARRIER:
+                return GameTable.ShipType.AIRCRAFT_CARRIER;
+            default:
+                return GameTable.ShipType.INVALID;
+        }
     }
 
     private static EnumStringMessage callCommand(ClientMessageType clientMessageType, String remainingMessage) throws IOException{
@@ -157,16 +244,6 @@ public class Client {
         }
     }
 
-    private static EnumStringMessage exitGame() throws IOException{
-        sendMessageToServer(ClientMessageType.EXIT_GAME, null);
-        return readMessageFromServer();
-    }
-
-    private static EnumStringMessage joinGame(String gameName) throws IOException{
-        sendMessageToServer(ClientMessageType.JOIN_GAME, gameName);
-        return readMessageFromServer();
-    }
-
     public static void main(String args[]){
         try{
             // INITIALIZE CLIENT STUFF
@@ -216,8 +293,8 @@ public class Client {
     private static BufferedReader playerInput;
 
     // GAME VISUALIZATION
-    char[][] yourGameTable = GameTable.initializeTabulaRasa();
-    char[][] opponentGameTable = GameTable.initializeTabulaRasa();
+    static char[][] yourGameTable = GameTable.initializeTabulaRasa();
+    static char[][] opponentGameTable = GameTable.initializeTabulaRasa();
 
     // MEMBER VARIABLES- RELATED STUFF( shouldn't be needed outside of Testing)
     public static void setSocket(SocketChannel socket) {
