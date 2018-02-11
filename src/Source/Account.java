@@ -4,11 +4,18 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 
 public class Account {
-    Account(){
+//    Account(){
+//        currentGameID = 0;
+//    }
+
+    Account(SocketChannel channel){
         currentGameID = 0;
+        this.channel = channel;
     }
 
     Account(String name, String password){
@@ -32,6 +39,10 @@ public class Account {
 
     public String getPathName() {
         return pathName;
+    }
+
+    public SocketChannel getChannel() {
+        return channel;
     }
 
     void setName(String name) {
@@ -105,6 +116,7 @@ public class Account {
     private String password;
     private int currentGameID;
     private ByteBuffer bufferForCommunicationWithServer = ByteBuffer.allocate(1024);
+    private SocketChannel channel;
 
     private String pathName;
 

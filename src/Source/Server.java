@@ -6,6 +6,7 @@ import Source.Game.Player;
 
 import java.io.*;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
@@ -20,7 +21,7 @@ public class Server {
         ServerSocketChannel ssc = (ServerSocketChannel) key.channel();
         SocketChannel sc = ssc.accept();
         sc.configureBlocking(false);
-        sc.register(selector, SelectionKey.OP_READ, new Account());
+        sc.register(selector, SelectionKey.OP_READ, new Account(sc));
         System.out.println("We have a new connection!");
     }
 
@@ -43,7 +44,7 @@ public class Server {
         System.out.println("Processing this message: " + playerMessage);
 
         // No reason not to notify the client about what's going on as soon as possible
-        writeToClient(processMessage(mesType, playerMessage, chan, key), buffer, chan);
+        writeToClient(processMessage(mesType, playerMessage, chan, key), chan, getChannelAccount(key));
         return true;
     }
 
@@ -96,6 +97,14 @@ public class Server {
             SelectionKey key,
             SocketChannel channel
     ) throws IOException{
+        boolean channelIsLoggedIn = channelIsLoggedIn(key);
+        if(!channelIsLoggedIn){
+            return new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "You need to be logged in to join a game"
+            );
+        }
+
         message = removeLastCharacter(message);
         if(!validateGameName(message)){
             return new EnumStringMessage(
@@ -112,11 +121,24 @@ public class Server {
                     "You're already in another game"
             );
         }
-        Player opponent = desiredGame.getOtherPlayer(getChannelAccount(key));
-        //writeToClient(opponent.getAccount().getBufferForCommunicationWithServer(), opponent.getAccount().ge
+        return initializeGameJoin(key, desiredGame);
+    }
+
+    private static EnumStringMessage initializeGameJoin(
+            SelectionKey currentPlayerKey,
+            Game desiredGame
+    ) throws IOException{
+
+        Player opponent = desiredGame.getOtherPlayer(getChannelAccount(currentPlayerKey));
+        EnumStringMessage messageToOpponent = new EnumStringMessage(
+                ServerResponseType.OTHER_PLAYER_CONNECTED,
+                opponent.getName() + " just joined your game!"
+        );
+        writeToOpponent(opponent, messageToOpponent);
+
         return new EnumStringMessage(
                 ServerResponseType.OK,
-                "You've just joined a game!"
+                "You've just joined a game! Your opponent is " + opponent.getName()
         );
     }
 
@@ -167,9 +189,7 @@ public class Server {
                 "Other player disconnected from the game"
         );
         Player opponent = currentGame.getOtherPlayer(channelAccount);
-        if(opponent != null){
-            writeToClient(messageToOppponent, opponent.getAccount().getBufferForCommunicationWithServer(), channel);
-        }
+        writeToOpponent(opponent, messageToOppponent);
 
         return new EnumStringMessage(
                 ServerResponseType.DISCONNECTED,
@@ -255,7 +275,7 @@ public class Server {
     private static void logChannelOut(SelectionKey key, SocketChannel channel) throws IOException{
         exitGame(key, channel);
         loggedInUsers.remove(getChannelAccount(key).getName());
-        key.attach(new Account());
+        key.attach(new Account(channel));
     }
 
     private static EnumStringMessage loginAccount(String message, SelectionKey key) throws IOException{
@@ -321,7 +341,14 @@ public class Server {
         return input.substring(0, input.length() - 1);
     }
 
-    private static void writeToClient(EnumStringMessage message, ByteBuffer buffer, SocketChannel chan) throws IOException {
+    private static void writeToClient(
+            EnumStringMessage message,
+            SocketChannel channel,
+            Account targetOfMessage
+    ) throws IOException {
+        ByteBuffer buffer = targetOfMessage.getBufferForCommunicationWithServer();
+        SocketChannel chan = channel;
+
         buffer.clear();
         buffer.put(((byte) message.getEnumValue().ordinal()));
         buffer.put(message.getMessage().getBytes());
@@ -329,6 +356,13 @@ public class Server {
         chan.write(buffer);
     }
 
+    private static void writeToOpponent(Player opponent, EnumStringMessage messageToOpponent) throws IOException{
+        if(opponent != null){
+            Account opponentAccount = opponent.getAccount();
+            SocketChannel opponentChannel = opponentAccount.getChannel();
+            writeToClient(messageToOpponent, opponentChannel, opponentAccount);
+        }
+    }
     private static boolean validateGameName(String gameName){
         return gameName.matches("[a-zA-Z][\\w\\d_]*");
     }

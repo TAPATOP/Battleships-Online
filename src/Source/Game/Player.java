@@ -2,13 +2,11 @@ package Source.Game;
 
 import Source.Account;
 
-import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
 public class Player {
     public Player(Account acc, SocketChannel channel){
         this.acc = acc;
-        this.channel = channel;
     }
 
     /**
@@ -40,6 +38,10 @@ public class Player {
         return acc;
     }
 
+    public String getName(){
+        return acc.getName();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -57,5 +59,4 @@ public class Player {
 
     private Account acc;
     private GameTable gameTable;
-    private SocketChannel channel;
 }
