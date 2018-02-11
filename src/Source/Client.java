@@ -65,6 +65,10 @@ public class Client {
 
     private static void recordShotFromOpponent(EnumStringMessage message) throws IOException{
         int[] coords = findCoordinatesOfOpponentShotOut(message.getMessage());
+        if(coords[0] == -1){
+            return;
+        }
+
         int x = coords[0];
         int y = coords[1];
         char c = visualizeOpponentShot(x, y);
