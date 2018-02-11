@@ -120,26 +120,9 @@ public class GameTable {
         return visualizedBoard;
     }
 
-    public void stylizeAndPrintBoard(char[][] visualizedBoard ){
-        System.out.print("/|");
-        for(int i = 1; i <= DIMENTION_LIMIT; i++){
-            System.out.print(i + "|");
-        }
-        System.out.println();
-
-        for(int i = 0; i < DIMENTION_LIMIT; i++){
-            System.out.print((char)(i + 65) + "|");
-            for (char c :
-                    visualizedBoard[i]) {
-                System.out.print(c + "|");
-            }
-            System.out.println();
-        }
-    }
-
     public void stylizeAndPrintBoard(){
         char[][] visualizedBoard = visualizeBoard();
-        stylizeAndPrintBoard(visualizedBoard);
+        stylizeAndPrintMatrix(visualizedBoard);
     }
 
     private char visualizeSquare(Ship shipOccupyingTheSquare){
@@ -215,6 +198,23 @@ public class GameTable {
         return null;
     }
 
+    public static void stylizeAndPrintMatrix(char[][] visualizedBoard ){
+        System.out.print("/|");
+        for(int i = 1; i <= DIMENTION_LIMIT; i++){
+            System.out.print(i + "|");
+        }
+        System.out.println();
+
+        for(int i = 0; i < DIMENTION_LIMIT; i++){
+            System.out.print((char)(i + 65) + "|");
+            for (char c :
+                    visualizedBoard[i]) {
+                System.out.print(c + "|");
+            }
+            System.out.println();
+        }
+    }
+
     /**
      * Transforms coordinates of the [A-J][1-10] format to [0-9][0-9] format. The method
      * uses another method to validate it's own parameters, so if the given parameter isn't
@@ -273,9 +273,21 @@ public class GameTable {
         return (x < DIMENTION_LIMIT && x >= 0 && y < DIMENTION_LIMIT && y >= 0);
     }
 
+    public static char[][] initializeTabulaRasa(){
+        char[][] table = new char[DIMENTION_LIMIT][DIMENTION_LIMIT];
+        for(int i = 0; i < DIMENTION_LIMIT; i++){
+            for (int j = 0; j < DIMENTION_LIMIT; j++){
+                table[i][j] = '_';
+            }
+        }
+        return table;
+    }
+
+    // CONSTANTS
+    private static final int TOTAL_NUMBER_OF_SHIPS = 10;
+    public static final int DIMENTION_LIMIT = 10;
+
     // MEMBER VARIABLES
-    private final int TOTAL_NUMBER_OF_SHIPS = 10;
-    private final int DIMENTION_LIMIT = 10;
     private Vector<Ship> deployedShips = new Vector<>();
     private Vector<Ship> allShips = new Vector<>();
     private Ship[][] boardOfDeployments = new Ship[DIMENTION_LIMIT][DIMENTION_LIMIT];

@@ -7,7 +7,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -31,6 +30,7 @@ public class Client {
 
         StringBuilder messageFromServer = new StringBuilder();
         char c;
+
         do {
             buffer.clear();
             socket.read(buffer);
@@ -101,6 +101,8 @@ public class Client {
                 return ClientMessageType.EXIT_GAME;
             case "join_game":
                 return ClientMessageType.JOIN_GAME;
+            case "exit":
+                return ClientMessageType.EXIT_CLIENT;
             default:
                 return ClientMessageType.CUSTOM_MESSAGE;
         }
@@ -138,6 +140,10 @@ public class Client {
                 return exitGame();
             case JOIN_GAME:
                 return joinGame(remainingMessage);
+            case EXIT_CLIENT:
+                logout();
+                socket.close();
+                return null;
             default:
                 System.out.println("No idea what to do with this");
                 return null;
@@ -146,31 +152,35 @@ public class Client {
 
     public static void main(String args[]){
         try{
-            // INITIALIZE BUFFER AND CHANNEL AND INITIATE THE LOGIN SCREEN
+            // INITIALIZE CLIENT STUFF
             socket = SocketChannel.open();
             socket.connect(new InetSocketAddress("localhost", 6969));
-            socket.configureBlocking(false);
             buffer = ByteBuffer.allocate(BUFFER_SIZE);
             playerInput = new BufferedReader(new InputStreamReader(System.in));
             String playerMessage;
-            int refreshRate = 150;
+            final int refreshRate = 150;
+
             System.out.println("Welcome to BattleshipsOnline!");
 
             // START OF CLIENT- SERVER MESSAGE EXCHANGE
             while(true) {
-                try {
-                    TimeUnit.MILLISECONDS.sleep(refreshRate);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 if(playerInput.ready()){
+                    socket.configureBlocking(true);
                     playerMessage = playerInput.readLine();
                     // SENDS THE INPUT MESSAGE TO THE SERVER
                     processPlayerCommand(playerMessage);
                 }
 
+                try {
+                    TimeUnit.MILLISECONDS.sleep(refreshRate);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                socket.configureBlocking(false);
                 EnumStringMessage message = readMessageFromServer();
                 if(message != null){
+                    System.out.println("This is a server- initiated message:");
                     System.out.println(message.getMessage());
                 }
             }
@@ -187,6 +197,10 @@ public class Client {
     private static SocketChannel socket;
     private static ByteBuffer buffer;
     private static BufferedReader playerInput;
+
+    // GAME VISUALIZATION
+    char[][] yourGameTable = GameTable.initializeTabulaRasa();
+    char[][] opponentGameTable = GameTable.initializeTabulaRasa();
 
     // MEMBER VARIABLES- RELATED STUFF( shouldn't be needed outside of Testing)
     public static void setSocket(SocketChannel socket) {

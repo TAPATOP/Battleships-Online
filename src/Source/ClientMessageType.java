@@ -16,5 +16,6 @@ public enum ClientMessageType {
     SHOW_PLAYER_STATISTICS,
     DEPLOY,
     FIRE,
+    EXIT_CLIENT,
     CUSTOM_MESSAGE
 }
