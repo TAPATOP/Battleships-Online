@@ -12,5 +12,11 @@ public enum ServerResponseType {
     DEPLOYED_BATTLESHIP,
     DEPLOYED_CARRIER,
 
+    MISS,
+    HIT,
+    DESTROYED,
+    DESTROYED_LAST_SHIP,
+    RECORD_SHOT,
+
     NOTHING_OF_IMPORTANCE
 }

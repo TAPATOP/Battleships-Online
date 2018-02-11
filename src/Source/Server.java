@@ -85,7 +85,9 @@ public class Server {
             case JOIN_GAME:
                 return joinGame(message, key, chan);
             case DEPLOY:
-                return deployShip(message, key, chan);
+                return deployShip(message, key);
+            case FIRE:
+                return fire(message, key);
             default:
                 System.out.println("I don't know how to handle this :c");
                 return new EnumStringMessage(
@@ -95,10 +97,83 @@ public class Server {
         }
     }
 
-    private static EnumStringMessage deployShip(
+    private static EnumStringMessage fire(String coordinates, SelectionKey key) throws IOException{
+        if(!channelIsInGame(key)){
+            return new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "Please don't fire in the lobby... Join a game first"
+            );
+        }
+
+        Game channelGame = getGameByAccount(getChannelAccount(key));
+
+        // this shouldn't really execute but warnings are annoying
+        if(channelGame == null){
+            return new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "You're not in a game, please join one first"
+            );
+        }
+
+        if(channelGame.isInDeploymentPhase()){
+            return new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "Game is still in deployment mode"
+            );
+        }
+
+        String coordsForWork = removeLastCharacter(coordinates);
+        return executeFiring(coordsForWork, key, channelGame);
+    }
+
+    private static EnumStringMessage executeFiring(
             String coordinates,
             SelectionKey key,
-            SocketChannel channel
+            Game channelGame
+    ) throws IOException{
+        Player channelPlayer = channelGame.getPlayerByAccount(getChannelAccount(key));
+        EnumStringMessage result = channelGame.executeFiring(channelPlayer, coordinates);
+        ServerResponseType SRT =
+                convertGameTableFireResultToServerResponseType(
+                        (GameTable.FireResult)result.getEnumValue()
+                );
+        result = new EnumStringMessage(SRT, result.getMessage());
+
+        if(!SRT.equals(ServerResponseType.INVALID)){
+            EnumStringMessage messageToOponent = new EnumStringMessage(
+                    ServerResponseType.RECORD_SHOT,
+                    channelPlayer.getName() + " fired at: " + coordinates + '\n'
+            );
+            writeToOpponent(
+                    channelGame.getOtherPlayer(channelPlayer),
+                    messageToOponent
+            );
+        }
+
+        return result;
+    }
+
+    private static boolean channelIsInGame(SelectionKey key){
+        return getChannelAccount(key) != null && getChannelAccount(key).getCurrentGameID() != 0;
+    }
+
+    private static ServerResponseType convertGameTableFireResultToServerResponseType(GameTable.FireResult fireResult){
+        switch(fireResult){
+            case MISS:
+                return ServerResponseType.MISS;
+            case HIT:
+                return ServerResponseType.HIT;
+            case DESTROYED:
+                return ServerResponseType.DESTROYED;
+            case DESTROYED_LAST_SHIP:
+                return ServerResponseType.DESTROYED_LAST_SHIP;
+            default:
+                return ServerResponseType.INVALID;
+        }
+    }
+    private static EnumStringMessage deployShip(
+            String coordinates,
+            SelectionKey key
     ) throws IOException{
         if(coordinates == null || coordinates.length() == 0){
             return new EnumStringMessage(
@@ -157,7 +232,7 @@ public class Server {
         }
         String remainsOfCoordinates = removeLastCharacter(coordinates.substring(1, coordinates.length()));
         EnumStringMessage result =
-                initiateShipDeployment(remainsOfCoordinates, isVertical, gameInQuestion, thisPlayer, key, channel);
+                initiateShipDeployment(remainsOfCoordinates, isVertical, gameInQuestion, thisPlayer);
         seeIfDeploymentIsFinalized(gameInQuestion, thisPlayer);
 
         return result;
@@ -167,9 +242,7 @@ public class Server {
             String coordinates,
             boolean isVertical,
             Game gameInQuestion,
-            Player thisPlayer,
-            SelectionKey key,
-            SocketChannel channel
+            Player thisPlayer
     ) throws IOException{
         EnumStringMessage result = gameInQuestion.deployShip(thisPlayer, coordinates, isVertical);
         result = new EnumStringMessage(

@@ -46,7 +46,45 @@ public class Client {
                 messageFromServer.append(c);
             }
         }while(buffer.limit() >= buffer.capacity());
-        return new EnumStringMessage(serverResponse, messageFromServer.toString());
+
+        EnumStringMessage result = new EnumStringMessage(serverResponse, messageFromServer.toString());
+        if(serverResponse.equals(ServerResponseType.RECORD_SHOT)){
+            recordShotFromOpponent(result);
+        }
+
+        return result;
+    }
+
+    private static void recordShotFromOpponent(EnumStringMessage message){
+        int[] coords = findCoordinatesOfOpponentShotOut(message.getMessage());
+        int x = coords[0];
+        int y = coords[1];
+        char c = visualizeOpponentShot(x, y);
+
+        yourGameTable[x][y] = c;
+        GameTable.stylizeAndPrintMatrix(yourGameTable);
+    }
+
+    private static int[] findCoordinatesOfOpponentShotOut(String coordinates){
+        String possibleCoords = coordinates.substring(coordinates.length() - 4, coordinates.length() - 1);
+        int[] coords = GameTable.tranformCoordinatesForReading(possibleCoords);
+
+        if(coords[0] == -1){
+            possibleCoords = possibleCoords.substring(1, possibleCoords.length());
+            coords = GameTable.tranformCoordinatesForReading(possibleCoords);
+        }
+        return coords;
+    }
+
+    private static char visualizeOpponentShot(int x, int y){
+        switch(yourGameTable[x][y]){
+            case '#':
+                return 'X';
+            case '_':
+                return 'O';
+            default:
+                return '_';
+        }
     }
 
     private static EnumStringMessage login(String playerMessage) throws IOException {
@@ -169,6 +207,13 @@ public class Client {
         }
     }
 
+    private static EnumStringMessage fire(String coordinates) throws IOException{
+        sendMessageToServer(ClientMessageType.FIRE, coordinates);
+        EnumStringMessage result = readMessageFromServer();
+
+        return result;
+    }
+
     private static EnumStringMessage callCommand(ClientMessageType clientMessageType, String remainingMessage) throws IOException{
         switch(clientMessageType){
             case LOGIN:
@@ -197,6 +242,8 @@ public class Client {
                 return null;
             case DEPLOY:
                 return deploy(remainingMessage);
+            case FIRE:
+                return fire(remainingMessage);
             default:
                 System.out.println("No idea what to do with this");
                 return null;
@@ -239,6 +286,8 @@ public class Client {
                 return ClientMessageType.EXIT_CLIENT;
             case "deploy":
                 return ClientMessageType.DEPLOY;
+            case "fire":
+                return ClientMessageType.FIRE;
             default:
                 return ClientMessageType.CUSTOM_MESSAGE;
         }

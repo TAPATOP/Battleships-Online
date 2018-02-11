@@ -21,8 +21,11 @@ public class Game {
             return false;
         }
         player2 = joinedPlayer;
+
+        // TODO:
         // player1.getAccount().updateAccountStatistics(gameID);
         // player2.getAccount().updateAccountStatistics(gameID);
+        playerInTurn = player1;
         System.out.println("Deployment phase for game " + gameName + " has just started!");
         return true;
     }
@@ -76,6 +79,31 @@ public class Game {
         return owner.getGameTable().deployNextShip(coordinates, isVertical);
     }
 
+    public EnumStringMessage executeFiring(Player attacker, String coordinates){
+        if(!attacker.equals(playerInTurn)){
+            return new EnumStringMessage(
+                    GameTable.FireResult.INVALID,
+                    "It's not your turn to fire yet"
+            );
+        }
+
+        EnumStringMessage result = getOtherPlayer(attacker).getGameTable().fireAt(coordinates);
+        boolean firingWasLegal = !(result.getEnumValue().equals(GameTable.FireResult.INVALID));
+        if(firingWasLegal){
+            switchTurns();
+        }
+
+        return result;
+    }
+
+    private void switchTurns(){
+        if(player1.equals(playerInTurn)){
+            playerInTurn = player2;
+        } else{
+            playerInTurn = player1;
+        }
+    }
+
     public int getGameID() {
         return gameID;
     }
@@ -96,6 +124,7 @@ public class Game {
 
     private Player player1;
     private Player player2;
+    private Player playerInTurn;
     private int gameID;
     private String gameName;
 }
