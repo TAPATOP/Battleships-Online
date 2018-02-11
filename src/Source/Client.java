@@ -48,14 +48,22 @@ public class Client {
         }while(buffer.limit() >= buffer.capacity());
 
         EnumStringMessage result = new EnumStringMessage(serverResponse, messageFromServer.toString());
-        if(serverResponse.equals(ServerResponseType.RECORD_SHOT)){
-            recordShotFromOpponent(result);
-        }
+        processServerResponse(result);
 
         return result;
     }
 
-    private static void recordShotFromOpponent(EnumStringMessage message){
+    private static void processServerResponse(EnumStringMessage serverMessage) throws IOException{
+        ServerResponseType responseType = (ServerResponseType)serverMessage.getEnumValue();
+        switch(responseType){
+            case GAME_OVER:
+            case RECORD_SHOT:
+                recordShotFromOpponent(serverMessage);
+                break;
+        }
+    }
+
+    private static void recordShotFromOpponent(EnumStringMessage message) throws IOException{
         int[] coords = findCoordinatesOfOpponentShotOut(message.getMessage());
         int x = coords[0];
         int y = coords[1];
@@ -63,6 +71,13 @@ public class Client {
 
         yourGameTable[x][y] = c;
         GameTable.stylizeAndPrintMatrix(yourGameTable);
+
+        if(message.getEnumValue().equals(ServerResponseType.GAME_OVER)) {
+            System.out.println("You win!");
+            //processPlayerCommand("exit_game");
+            yourGameTable = GameTable.initializeTabulaRasa();
+            opponentGameTable = GameTable.initializeTabulaRasa();
+        }
     }
 
     private static int[] findCoordinatesOfOpponentShotOut(String coordinates){
@@ -76,6 +91,23 @@ public class Client {
         return coords;
     }
 
+    private static void recordShotAtOpponent(int x, int y, ServerResponseType resultOfShot){
+        char c = shotAtOpponentVisualization(resultOfShot);
+        opponentGameTable[x][y] = c;
+        GameTable.stylizeAndPrintMatrix(opponentGameTable);
+    }
+
+    private static char shotAtOpponentVisualization(ServerResponseType resultOfShot){
+        switch(resultOfShot){
+            case HIT:
+                return 'X';
+            case MISS:
+                return 'O';
+            default:
+                return '?';
+        }
+    }
+
     private static char visualizeOpponentShot(int x, int y){
         switch(yourGameTable[x][y]){
             case '#':
@@ -83,7 +115,7 @@ public class Client {
             case '_':
                 return 'O';
             default:
-                return '_';
+                return '?';
         }
     }
 
@@ -211,6 +243,23 @@ public class Client {
         sendMessageToServer(ClientMessageType.FIRE, coordinates);
         EnumStringMessage result = readMessageFromServer();
 
+        if(result == null){
+            return null;
+        }
+
+        boolean shotIsNotInvalid = !result.getEnumValue().equals(ServerResponseType.INVALID);
+        boolean shotIsProbablyIndeedAShot = !result.getEnumValue().equals(ServerResponseType.NOTHING_OF_IMPORTANCE);
+        boolean shotKilledLastShip = result.getEnumValue().equals(ServerResponseType.DESTROYED_LAST_SHIP);;
+
+        if(shotIsNotInvalid && shotIsProbablyIndeedAShot){
+            int[] coords = GameTable.tranformCoordinatesForReading(coordinates);
+            recordShotAtOpponent(coords[0], coords[1], (ServerResponseType)result.getEnumValue());
+            if(shotKilledLastShip){
+                yourGameTable = GameTable.initializeTabulaRasa();
+                opponentGameTable = GameTable.initializeTabulaRasa();
+                // processPlayerCommand("exit_game");
+            }
+        }
         return result;
     }
 
@@ -323,7 +372,6 @@ public class Client {
                 socket.configureBlocking(false);
                 EnumStringMessage message = readMessageFromServer();
                 if(message != null){
-                    System.out.println("This is a server- initiated message:");
                     System.out.println(message.getMessage());
                 }
             }

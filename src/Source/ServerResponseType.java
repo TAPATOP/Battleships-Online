@@ -17,6 +17,7 @@ public enum ServerResponseType {
     DESTROYED,
     DESTROYED_LAST_SHIP,
     RECORD_SHOT,
+    GAME_OVER,
 
     NOTHING_OF_IMPORTANCE
 }

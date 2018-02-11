@@ -80,6 +80,13 @@ public class Game {
     }
 
     public EnumStringMessage executeFiring(Player attacker, String coordinates){
+        if(gameOver){
+            return new EnumStringMessage(
+                    GameTable.FireResult.INVALID,
+                    "Game is over, no need to keep firing..."
+            );
+        }
+
         if(!attacker.equals(playerInTurn)){
             return new EnumStringMessage(
                     GameTable.FireResult.INVALID,
@@ -91,6 +98,9 @@ public class Game {
         boolean firingWasLegal = !(result.getEnumValue().equals(GameTable.FireResult.INVALID));
         if(firingWasLegal){
             switchTurns();
+            if(result.getEnumValue().equals(GameTable.FireResult.DESTROYED_LAST_SHIP)){
+                gameOver = true;
+            }
         }
 
         return result;
@@ -127,4 +137,5 @@ public class Game {
     private Player playerInTurn;
     private int gameID;
     private String gameName;
+    boolean gameOver = false;
 }

@@ -137,7 +137,6 @@ public class Server {
                 convertGameTableFireResultToServerResponseType(
                         (GameTable.FireResult)result.getEnumValue()
                 );
-        result = new EnumStringMessage(SRT, result.getMessage());
 
         if(!SRT.equals(ServerResponseType.INVALID)){
             EnumStringMessage messageToOponent = new EnumStringMessage(
@@ -148,7 +147,19 @@ public class Server {
                     channelGame.getOtherPlayer(channelPlayer),
                     messageToOponent
             );
+            if(SRT.equals(ServerResponseType.DESTROYED_LAST_SHIP)){
+                messageToOponent = new EnumStringMessage(
+                        ServerResponseType.GAME_OVER,
+                        channelPlayer.getName() + " wins!"
+                );
+                writeToOpponent(
+                        channelGame.getOtherPlayer(channelPlayer),
+                        messageToOponent
+                );
+            }
         }
+
+        result = new EnumStringMessage(SRT, result.getMessage());
 
         return result;
     }
