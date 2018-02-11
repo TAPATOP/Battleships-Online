@@ -2,6 +2,7 @@ package Source;
 
 import Source.Game.EnumStringMessage;
 import Source.Game.Game;
+import Source.Game.GameTable;
 import Source.Game.Player;
 
 import java.io.*;
@@ -83,6 +84,8 @@ public class Server {
                 return exitGame(key, chan);
             case JOIN_GAME:
                 return joinGame(message, key, chan);
+            case DEPLOY:
+                return deployShip(message, key, chan);
             default:
                 System.out.println("I don't know how to handle this :c");
                 return new EnumStringMessage(
@@ -90,6 +93,111 @@ public class Server {
                         "I have no idea what to do with this so I will just repeat it: " + message
                 );
         }
+    }
+
+    private static EnumStringMessage deployShip(
+            String coordinates,
+            SelectionKey key,
+            SocketChannel channel
+    ) throws IOException{
+        if(coordinates == null || coordinates.length() == 0){
+            return new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "Please send coordinates in the required format"
+            );
+        }
+        boolean isVertical;
+        char c = coordinates.charAt(0);
+        switch(c){
+            case 'v':
+                isVertical = true;
+                break;
+            case 'h':
+                isVertical = false;
+                break;
+            default:
+                return new EnumStringMessage(
+                        ServerResponseType.INVALID,
+                        "First letter of coordinates must be h or v," +
+                                " representing whether the ship is deployed horizontally or vertically."
+                );
+        }
+
+        Game gameInQuestion = getGameByAccount(getChannelAccount(key));
+        if(gameInQuestion == null){
+            return new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "You're not in a game"
+            );
+        }
+
+        Player thisPlayer = gameInQuestion.getPlayerByAccount(getChannelAccount(key));
+
+        // I don't think this body should ever be executed?
+        if(thisPlayer == null){
+            return new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "You're not part of this game"
+            );
+        }
+
+        if(thisPlayer.getGameTable().allShipsAreDeployed()){
+            return new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "You have already deployed all of your ships. I guess you should wait" +
+                            " for the other player to deploy theirs"
+            );
+        }
+
+        if(!gameInQuestion.isInDeploymentPhase()){
+            return new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "Game isn't in deployment phase"
+            );
+        }
+        String remainsOfCoordinates = removeLastCharacter(coordinates.substring(1, coordinates.length()));
+        EnumStringMessage result =
+                initiateShipDeployment(remainsOfCoordinates, isVertical, gameInQuestion, thisPlayer, key, channel);
+        seeIfDeploymentIsFinalized(gameInQuestion, thisPlayer);
+
+        return result;
+    }
+
+    private static EnumStringMessage initiateShipDeployment(
+            String coordinates,
+            boolean isVertical,
+            Game gameInQuestion,
+            Player thisPlayer,
+            SelectionKey key,
+            SocketChannel channel
+    ) throws IOException{
+        System.out.println("Coordinates:" + coordinates + " isVertical: " + isVertical);
+        return gameInQuestion.deployShip(thisPlayer, coordinates, isVertical);
+    }
+
+    private static void seeIfDeploymentIsFinalized(Game game, Player thisPlayer) throws IOException{
+        if(thisPlayer.getGameTable().allShipsAreDeployed()){
+            EnumStringMessage messageToTheOpponent = new EnumStringMessage(
+                    ServerResponseType.NOTHING_OF_IMPORTANCE,
+                    "Your opponent has just deployed their last ship."
+            );
+
+            writeToOpponent(game.getOtherPlayer(thisPlayer), messageToTheOpponent);
+            GameTable.stylizeAndPrintMatrix(thisPlayer.getGameTable().visualizeBoard());
+        }
+    }
+
+    private static Game getGameByAccount(Account acc){
+        String nameOfGame = gameIDtoGameNameHash.get(acc.getCurrentGameID());
+        Game theGame = pendingGames.get(nameOfGame);
+        if(theGame != null){
+            return theGame;
+        }
+        theGame = runningGames.get(nameOfGame);
+        if(theGame != null){
+            return theGame;
+        }
+        return null;
     }
 
     private static EnumStringMessage joinGame(
@@ -114,6 +222,13 @@ public class Server {
         }
 
         Game desiredGame = pendingGames.get(message);
+        if(desiredGame == null){
+            return new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "Either this game doesn't exist or it's already full"
+            );
+        }
+
         boolean additionWasSuccessful = desiredGame.addPlayer(new Player(getChannelAccount(key), channel));
         if(!additionWasSuccessful){
             return new EnumStringMessage(
@@ -176,12 +291,8 @@ public class Server {
     ) throws IOException {
         Account channelAccount = getChannelAccount(key);
 
-        if(pendingGames.containsKey(currentGame.getGameName())){
-            pendingGames.remove(currentGame.getGameName());
-        }
-        else{
-            runningGames.remove(currentGame.getGameName());
-        }
+        pendingGames.remove(currentGame.getGameName());
+        runningGames.remove(currentGame.getGameName());
         currentGame.end();
 
         EnumStringMessage messageToOppponent = new EnumStringMessage(

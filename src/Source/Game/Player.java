@@ -7,6 +7,7 @@ import java.nio.channels.SocketChannel;
 public class Player {
     public Player(Account acc, SocketChannel channel){
         this.acc = acc;
+        gameTable = new GameTable();
     }
 
     /**
@@ -15,6 +16,7 @@ public class Player {
      */
     public Player(Account acc){
         this.acc = acc;
+        gameTable = new GameTable();
     }
 
     public boolean joinAGame(int gameID){

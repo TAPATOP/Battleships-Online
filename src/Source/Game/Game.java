@@ -60,17 +60,20 @@ public class Game {
     }
 
 
-//    /**
-//     * Returns an array containing two ESMs. Use this when a game should finish,
-//     * which is either when it ends naturally by one of the players winning or by
-//     * being terminated due to one player exiting prematurely
-//     * @return contains an array of two ESMs- [0] is for the host and [1] is for the guest
-//     */
+    /**
+     * Use this when a game should finish, which is either when it ends naturally by
+     * one of the players winning or by being terminated due to one player
+     * exiting prematurely
+     */
     public void end(){
         player1.removeFromGame();
         if(player2 != null){
             player2.removeFromGame();
         }
+    }
+
+    public EnumStringMessage deployShip(Player owner, String coordinates, boolean isVertical){
+        return owner.getGameTable().deployNextShip(coordinates, isVertical);
     }
 
     public int getGameID() {
@@ -79,6 +82,16 @@ public class Game {
 
     public String getGameName() {
         return gameName;
+    }
+
+    public Player getPlayerByAccount(Account acc){
+        if(player1.getAccount().equals(acc)){
+            return player1;
+        }
+        if(player2.getAccount().equals(acc)){
+            return player2;
+        }
+        return null;
     }
 
     private Player player1;

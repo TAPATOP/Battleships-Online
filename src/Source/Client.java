@@ -69,6 +69,53 @@ public class Client {
        return readMessageFromServer();
     }
 
+    /**
+     * Send coordinates of where to start deploying the ship from
+     * @param coordinates of where the ship is starting to deploy from( it deploys from left to right
+     *                    or from up to bottom). Must be in the [h|v][A-J][1-10] format, where
+     *                    h = horizontal and v = vertical
+     * @return returns the report of what happenned
+     * @throws IOException connection is lost with the server
+     */
+    private static EnumStringMessage deploy(String coordinates) throws IOException{
+        sendMessageToServer(ClientMessageType.DEPLOY, coordinates);
+        return readMessageFromServer();
+    }
+
+    private static EnumStringMessage callCommand(ClientMessageType clientMessageType, String remainingMessage) throws IOException{
+        switch(clientMessageType){
+            case LOGIN:
+                if(remainingMessage == null){
+                    System.out.println("Username and password format is not okay");
+                    return null;
+                }
+                return login(remainingMessage);
+            case REGISTER:
+                if(remainingMessage == null){
+                    System.out.println("There is nothing to register...");
+                    return null;
+                }
+                return register(remainingMessage);
+            case LOGOUT:
+                return logout();
+            case CREATE_GAME:
+                return createGame(remainingMessage);
+            case EXIT_GAME:
+                return exitGame();
+            case JOIN_GAME:
+                return joinGame(remainingMessage);
+            case EXIT_CLIENT:
+                logout();
+                socket.close();
+                return null;
+            case DEPLOY:
+                return deploy(remainingMessage);
+            default:
+                System.out.println("No idea what to do with this");
+                return null;
+        }
+    }
+
     public static boolean processPlayerCommand(String playerMessage) throws IOException{
         String playerMessageType = playerMessage.split(" ")[0];
         ClientMessageType clientMessageType = findMessageTypeOut(playerMessageType);
@@ -103,6 +150,8 @@ public class Client {
                 return ClientMessageType.JOIN_GAME;
             case "exit":
                 return ClientMessageType.EXIT_CLIENT;
+            case "deploy":
+                return ClientMessageType.DEPLOY;
             default:
                 return ClientMessageType.CUSTOM_MESSAGE;
         }
@@ -116,38 +165,6 @@ public class Client {
     private static EnumStringMessage joinGame(String gameName) throws IOException{
         sendMessageToServer(ClientMessageType.JOIN_GAME, gameName);
         return readMessageFromServer();
-    }
-
-    private static EnumStringMessage callCommand(ClientMessageType clientMessageType, String remainingMessage) throws IOException{
-        switch(clientMessageType){
-            case LOGIN:
-                if(remainingMessage == null){
-                    System.out.println("Username and password format is not okay");
-                    return null;
-                }
-                return login(remainingMessage);
-            case REGISTER:
-                if(remainingMessage == null){
-                    System.out.println("There is nothing to register...");
-                    return null;
-                }
-                return register(remainingMessage);
-            case LOGOUT:
-                return logout();
-            case CREATE_GAME:
-                return createGame(remainingMessage);
-            case EXIT_GAME:
-                return exitGame();
-            case JOIN_GAME:
-                return joinGame(remainingMessage);
-            case EXIT_CLIENT:
-                logout();
-                socket.close();
-                return null;
-            default:
-                System.out.println("No idea what to do with this");
-                return null;
-        }
     }
 
     public static void main(String args[]){

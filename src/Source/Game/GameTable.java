@@ -25,39 +25,37 @@ public class GameTable {
      * @return name of ship as String( capitalized)
      */
     public String seeNextShipType(){
-        return seeShipType(allShips.get(deployedShipsCount));
+        return getShipType(allShips.get(deployedShipsCount)).toString();
     }
 
-    private String seeShipType(Ship ship){
-        switch(ship.getSize()){
-            case 2:
-                return "Destroyer";
-            case 3:
-                return "Cruiser";
-            case 4:
-                return "Battleship";
-            case 5:
-                return "Aircraft Carrier";
-            default:
-                return "Unknown ship type??";
-        }
-    }
-
-    public boolean deployNextShip(String squareCoordinates, boolean isVertical){
+    /**
+     * Deploys the next ship in line
+     * @param squareCoordinates the coordinates of the ship in the format: [A-J][1-10]
+     * @param isVertical whether the ship is vertically deployed or not
+     * @return returns true if the ship was successfully deployed
+     */
+    public EnumStringMessage deployNextShip(String squareCoordinates, boolean isVertical){
         int[] coords = tranformCoordinatesForReading(squareCoordinates);
         if(coords[0] < 0){
-            return false;
+            return new EnumStringMessage(
+                    ShipType.INVALID,
+                    "Invalid coordinates"
+            );
         }
         int x = coords[0];
         int y = coords[1];
         return deployShip(allShips.get(deployedShipsCount), x, y, isVertical);
     }
 
-    private boolean deployShip(Ship ship, int x, int y, boolean isVertical){
+    private EnumStringMessage deployShip(Ship ship, int x, int y, boolean isVertical){
         if(allShipsAreDeployed()){
             System.out.println("All ships are already deployed");
-            return false;
+            return new EnumStringMessage(
+                    ShipType.INVALID,
+                    "All ships are already deployed"
+            );
         }
+
         int xChange = 0;
         int yChange = 0;
         if(isVertical){
@@ -74,9 +72,15 @@ public class GameTable {
             }
             deployedShips.add(allShips.get(deployedShipsCount));
             deployedShipsCount++;
-            return true;
+            return new EnumStringMessage(
+                    getShipType(ship),
+                    "You just deployed one of your " + getShipType(ship).toString()
+            );
         }
-        return false;
+        return new EnumStringMessage(
+                ShipType.INVALID,
+                "You can't position this " + getShipType(ship) + " here like this"
+        );
     }
 
     private boolean canDeployShip(Ship ship, int x, int y, boolean isVertical){
@@ -105,7 +109,7 @@ public class GameTable {
         return true;
     }
 
-    boolean allShipsAreDeployed(){
+    public boolean allShipsAreDeployed(){
         return deployedShipsCount >= TOTAL_NUMBER_OF_SHIPS;
     }
 
@@ -190,7 +194,7 @@ public class GameTable {
             Ship affectedShip = boardOfDeployments[x][y];
             deployedShips.remove(affectedShip);
 
-            String result = seeShipType(affectedShip) + " destroyed!";
+            String result = getShipType(affectedShip) + " destroyed!";
             System.out.println(result);
             boardOfDeployments[x][y] = damagedShip;
             return new EnumStringMessage(FireResult.DESTROYED, result);
@@ -283,8 +287,23 @@ public class GameTable {
         return table;
     }
 
+    private static ShipType getShipType(Ship ship){
+        switch(ship.getSize()){
+            case 2:
+                return ShipType.DESTROYER;
+            case 3:
+                return ShipType.CRUISER;
+            case 4:
+                return ShipType.BATTLESHIP;
+            case 5:
+                return ShipType.AIRCRAFT_CARRIER;
+            default:
+                return ShipType.UNKNOWN;
+        }
+    }
+
     // CONSTANTS
-    private static final int TOTAL_NUMBER_OF_SHIPS = 10;
+    private static final int TOTAL_NUMBER_OF_SHIPS = 2;
     public static final int DIMENTION_LIMIT = 10;
 
     // MEMBER VARIABLES
@@ -299,6 +318,15 @@ public class GameTable {
         DESTROYED,
         INVALID,
         DESTROYED_LAST_SHIP
+    }
+
+    public enum ShipType{
+        INVALID,
+        DESTROYER,
+        CRUISER,
+        BATTLESHIP,
+        AIRCRAFT_CARRIER,
+        UNKNOWN,
     }
 
     // LITERALLY TRASH
