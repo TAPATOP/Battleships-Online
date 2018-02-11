@@ -184,4 +184,28 @@ public class ClientTest {
 
         );
     }
+
+    @Test
+    public void shouldExitGameProperlyWhenAloneInRoom()throws IOException{
+        Client.processPlayerCommand("logout");
+        Client.processPlayerCommand("login hi hi");
+
+        Client.processPlayerCommand("create_game hi");
+        assertTrue(
+                "Exits the already created game",
+                Client.processPlayerCommand("exit_game")
+        );
+        assertTrue(
+                "Creates a game with the same name, implying the old one was removed",
+                Client.processPlayerCommand("create_game hi")
+        );
+        assertTrue(
+                "Exits the new game",
+                Client.processPlayerCommand("exit_game")
+        );
+        assertFalse(
+                "Knows you can't exit a room if you're not in one",
+                Client.processPlayerCommand("exit_game")
+        );
+    }
 }

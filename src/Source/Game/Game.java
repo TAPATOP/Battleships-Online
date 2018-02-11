@@ -15,9 +15,16 @@ public class Game {
         this.gameName = gameName;
     }
 
-    public void addPlayer(Player joinedPlayer){
-        joinedPlayer.joinAGame(gameID);
+    public boolean addPlayer(Player joinedPlayer){
+        boolean joinSuccessful = joinedPlayer.joinAGame(gameID);
+        if(!joinSuccessful){
+            return false;
+        }
         player2 = joinedPlayer;
+        // player1.getAccount().updateAccountStatistics(gameID);
+        // player2.getAccount().updateAccountStatistics(gameID);
+        System.out.println("Deployment phase for game " + gameName + " has just started!");
+        return true;
     }
 
     public boolean roomIsFull(){

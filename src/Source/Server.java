@@ -80,6 +80,8 @@ public class Server {
                 return createGame(message, key, chan);
             case EXIT_GAME:
                 return exitGame(key, chan);
+            case JOIN_GAME:
+                return joinGame(message, key, chan);
             default:
                 System.out.println("I don't know how to handle this :c");
                 return new EnumStringMessage(
@@ -87,6 +89,35 @@ public class Server {
                         "I have no idea what to do with this so I will just repeat it: " + message
                 );
         }
+    }
+
+    private static EnumStringMessage joinGame(
+            String message,
+            SelectionKey key,
+            SocketChannel channel
+    ) throws IOException{
+        message = removeLastCharacter(message);
+        if(!validateGameName(message)){
+            return new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "Invalid game name"
+            );
+        }
+
+        Game desiredGame = pendingGames.get(message);
+        boolean additionWasSuccessful = desiredGame.addPlayer(new Player(getChannelAccount(key), channel));
+        if(!additionWasSuccessful){
+            return new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "You're already in another game"
+            );
+        }
+        Player opponent = desiredGame.getOtherPlayer(getChannelAccount(key));
+        //writeToClient(opponent.getAccount().getBufferForCommunicationWithServer(), opponent.getAccount().ge
+        return new EnumStringMessage(
+                ServerResponseType.OK,
+                "You've just joined a game!"
+        );
     }
 
     /**

@@ -94,6 +94,8 @@ public class Client {
                 return ClientMessageType.CREATE_GAME;
             case "exit_game":
                 return ClientMessageType.EXIT_GAME;
+            case "join_game":
+                return ClientMessageType.JOIN_GAME;
             default:
                 return ClientMessageType.CUSTOM_MESSAGE;
         }
@@ -101,6 +103,11 @@ public class Client {
 
     private static EnumStringMessage exitGame() throws IOException{
         sendMessageToServer(ClientMessageType.EXIT_GAME, null);
+        return readMessageFromServer();
+    }
+
+    private static EnumStringMessage joinGame(String gameName) throws IOException{
+        sendMessageToServer(ClientMessageType.JOIN_GAME, gameName);
         return readMessageFromServer();
     }
 
@@ -124,6 +131,8 @@ public class Client {
                 return createGame(remainingMessage);
             case EXIT_GAME:
                 return exitGame();
+            case JOIN_GAME:
+                return joinGame(remainingMessage);
             default:
                 System.out.println("No idea what to do with this");
                 return null;
