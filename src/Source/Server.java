@@ -132,7 +132,7 @@ public class Server {
         Player opponent = desiredGame.getOtherPlayer(getChannelAccount(currentPlayerKey));
         EnumStringMessage messageToOpponent = new EnumStringMessage(
                 ServerResponseType.OTHER_PLAYER_CONNECTED,
-                opponent.getName() + " just joined your game!"
+                getChannelAccount(currentPlayerKey).getName() + " just joined your game!"
         );
         writeToOpponent(opponent, messageToOpponent);
 

@@ -7,9 +7,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.TimeUnit;
 
 public class Client {
     public static void sendMessageToServer(ClientMessageType clientMessageType, String message) throws IOException {
@@ -32,6 +34,9 @@ public class Client {
         do {
             buffer.clear();
             socket.read(buffer);
+            if(buffer.position() == 0){
+                return null;
+            }
             buffer.flip();
             if(serverResponse == null){
                 serverResponse = ServerResponseType.values()[(int) buffer.get()];
@@ -144,19 +149,30 @@ public class Client {
             // INITIALIZE BUFFER AND CHANNEL AND INITIATE THE LOGIN SCREEN
             socket = SocketChannel.open();
             socket.connect(new InetSocketAddress("localhost", 6969));
+            socket.configureBlocking(false);
             buffer = ByteBuffer.allocate(BUFFER_SIZE);
             playerInput = new BufferedReader(new InputStreamReader(System.in));
             String playerMessage;
-
+            int refreshRate = 150;
             System.out.println("Welcome to BattleshipsOnline!");
 
             // START OF CLIENT- SERVER MESSAGE EXCHANGE
             while(true) {
-                System.out.println("Ready to send a command to the server...");
-                playerMessage = playerInput.readLine();
+                try {
+                    TimeUnit.MILLISECONDS.sleep(refreshRate);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if(playerInput.ready()){
+                    playerMessage = playerInput.readLine();
+                    // SENDS THE INPUT MESSAGE TO THE SERVER
+                    processPlayerCommand(playerMessage);
+                }
 
-                // SENDS THE INPUT MESSAGE TO THE SERVER
-                processPlayerCommand(playerMessage);
+                EnumStringMessage message = readMessageFromServer();
+                if(message != null){
+                    System.out.println(message.getMessage());
+                }
             }
 
         }catch(UnknownHostException exc){
