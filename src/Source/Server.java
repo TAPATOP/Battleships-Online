@@ -373,6 +373,9 @@ public class Server {
 
     private static String getRandomPendingGame(){
         Random r = new Random();
+        if(pendingGamesArrayList.size() < 1){
+            return null;
+        }
         String randomGame = pendingGamesArrayList.get(r.nextInt(pendingGamesArrayList.size()));
         System.out.println("Fetching random game: " + randomGame);
         return randomGame;
