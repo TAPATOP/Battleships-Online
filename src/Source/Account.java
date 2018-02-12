@@ -16,7 +16,7 @@ public class Account {
         this.channel = channel;
     }
 
-    Account(String name, String password){
+    public Account(String name, String password){
         this.name = name;
         this.password = password;
         pathName = ".\\Accounts\\" + name + ".txt";
@@ -35,7 +35,7 @@ public class Account {
         return currentGameID;
     }
 
-    String getPathName() {
+    public String getPathName() {
         return pathName;
     }
 
@@ -56,19 +56,17 @@ public class Account {
         this.currentGameID = currentGameID;
     }
 
-    public Errors updateAccountStatistics(int gameID){
+    public void updateAccountStatistics(int gameID){
         File f = new File(pathName);
         if(!f.isFile()) {
             System.out.println("Account doesn't exist");
-            return Errors.CANNOT_LOCATE_ACCOUNT;
+            return;
         }
         try( PrintWriter out = new PrintWriter( new FileOutputStream( new File(pathName), true))  ){
             out.println(gameID);
             }catch (FileNotFoundException e) {
             System.out.println("Couldn't locate account");
-            return Errors.CANNOT_LOCATE_ACCOUNT;
         }
-        return Errors.SUCCESS;
     }
 
     public int[] loadStatistics(){
@@ -101,26 +99,24 @@ public class Account {
         return gameIDArray;
     }
 
-    Errors registerAccount() {
+    void registerAccount() {
         if(exists()) {
             System.out.println("Account already exists");
-            return Errors.ACCOUNT_ALREADY_EXISTS;
+            return ;
         }
         try( PrintWriter out = new PrintWriter(  new FileOutputStream(new File(pathName )))  ){
             out.println(password);
         } catch (FileNotFoundException e) {
             System.out.println("Error registering account");
-            return Errors.CANNOT_REGISTER_ACCOUNT;
         }
-        return Errors.SUCCESS;
     }
 
-    boolean exists(){
+    public boolean exists(){
         File f = new File(pathName);
         return f.isFile();
     }
 
-    String loadPassword() throws IOException{
+    public String loadPassword() throws IOException{
         File f = new File(pathName);
         BufferedReader reader = new BufferedReader(new FileReader(f));
         return reader.readLine();
@@ -153,11 +149,4 @@ public class Account {
     private SocketChannel channel;
 
     private String pathName;
-
-    enum Errors{
-        SUCCESS,
-        CANNOT_REGISTER_ACCOUNT,
-        ACCOUNT_ALREADY_EXISTS,
-        CANNOT_LOCATE_ACCOUNT
-    }
 }
