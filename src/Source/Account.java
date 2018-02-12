@@ -1,11 +1,10 @@
 package Source;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.Scanner;
+import java.util.Vector;
 
 public class Account {
 //    Account(){
@@ -72,9 +71,38 @@ public class Account {
         return Errors.SUCCESS;
     }
 
+    public int[] loadStatistics(){
+        if(!exists()){
+            System.out.println("Account doesn't exist");
+            return null;
+        }
+        Vector<Integer> gameIDs = new Vector<>();
+
+        Scanner scanner;
+        try {
+            scanner = new Scanner(new File(pathName));
+
+            // skips the password
+            scanner.nextLine();
+            while(scanner.hasNextInt()){
+                gameIDs.add(scanner.nextInt());
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        int[] gameIDArray = new int[gameIDs.size()];
+        int i = 0;
+        for (Integer element :
+                gameIDs) {
+            gameIDArray[i++] = element;
+        }
+
+        return gameIDArray;
+    }
+
     Errors registerAccount() {
-        File f = new File(pathName);
-        if(f.isFile()) {
+        if(exists()) {
             System.out.println("Account already exists");
             return Errors.ACCOUNT_ALREADY_EXISTS;
         }
@@ -90,6 +118,12 @@ public class Account {
     boolean exists(){
         File f = new File(pathName);
         return f.isFile();
+    }
+
+    String loadPassword() throws IOException{
+        File f = new File(pathName);
+        BufferedReader reader = new BufferedReader(new FileReader(f));
+        return reader.readLine();
     }
 
     ByteBuffer getBufferForCommunicationWithServer(){

@@ -90,6 +90,8 @@ public class Server {
                 return fire(message, key);
             case SEARCH_GAMES:
                 return searchGames(key, chan);
+            case SHOW_PLAYER_STATISTICS:
+                return showPlayerStatistics(key, chan);
             default:
                 System.out.println("I don't know how to handle this :c");
                 return new EnumStringMessage(
@@ -106,6 +108,16 @@ public class Server {
         );
         writeToClient(queryReturn, chan, getChannelAccount(key));
 
+        bufferVolatileGameListSend(chan, key);
+
+        return null;
+    }
+
+    private static void bufferSafeGameListSend(
+            SocketChannel chan,
+            SelectionKey key
+    ) throws IOException {
+        EnumStringMessage queryReturn;
         for (String gameName :
                 pendingGamesArrayList) {
             queryReturn = new EnumStringMessage(
@@ -124,6 +136,61 @@ public class Server {
             );
             writeToClient(queryReturn, chan, getChannelAccount(key));
         }
+    }
+
+    private static void bufferVolatileGameListSend(
+            SocketChannel chan,
+            SelectionKey key
+    ) throws IOException {
+        EnumStringMessage queryReturn;
+        StringBuilder messageBuilder = new StringBuilder();
+        for (String gameName :
+                pendingGamesArrayList) {
+            messageBuilder.append(gameName).append(" PENDING\n");
+        }
+
+        for (Map.Entry<String, Game> entry :
+                runningGames.entrySet()) {
+            Game game = entry.getValue();
+            messageBuilder.append(game.getGameName()).append(" RUNNING\n");
+        }
+
+        String message = removeLastCharacter(messageBuilder.toString());
+        queryReturn = new EnumStringMessage(
+                ServerResponseType.NOTHING_OF_IMPORTANCE,
+                message
+        );
+
+        writeToClient(queryReturn, chan, getChannelAccount(key));
+    }
+
+    private static EnumStringMessage showPlayerStatistics(SelectionKey key, SocketChannel chan) throws IOException{
+        EnumStringMessage messageToClient;
+
+        if(!channelIsLoggedIn(key)){
+            messageToClient = new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "You're not logged in"
+            );
+            return messageToClient;
+        }
+
+        int[] statistics = getChannelAccount(key).loadStatistics();
+
+        StringBuilder messageFromServer = new StringBuilder();
+
+        for (int num :
+                statistics) {
+            messageFromServer.append(Integer.toString(num)).append('\n');
+        }
+
+        String stringToSend = removeLastCharacter(messageFromServer.toString());
+
+        messageToClient = new EnumStringMessage(
+                ServerResponseType.NOTHING_OF_IMPORTANCE,
+                stringToSend
+        );
+        writeToClient(messageToClient, chan, getChannelAccount(key));
 
         return null;
     }
@@ -568,7 +635,7 @@ public class Server {
 
     private static EnumStringMessage verifyLoginDataAndLogin(Account requestedAcc, Account savedAcc) throws IOException{
         if (requestedAcc.exists()) {
-            String savedPass = loadPassword(requestedAcc);
+            String savedPass = requestedAcc.loadPassword();
             if(savedPass.equals(requestedAcc.getPassword())){
                 savedAcc.setName(requestedAcc.getName());
                 savedAcc.setPassword(requestedAcc.getPassword());
@@ -592,12 +659,6 @@ public class Server {
         return loggedInUsers.contains(acc.getName());
     }
 
-    private static String loadPassword(Account acc) throws IOException{
-        File f = new File(acc.getPathName());
-        BufferedReader reader = new BufferedReader(new FileReader(f));
-        return reader.readLine();
-    }
-
     private static String[] splitUsernameAndPassword(String input) {
         String[] usernameAndPassword = input.split(" ");
         if (usernameAndPassword.length != 2) {
@@ -608,7 +669,7 @@ public class Server {
         return usernameAndPassword;
     }
 
-    static String removeLastCharacter(String input){
+    private static String removeLastCharacter(String input){
         return input.substring(0, input.length() - 1);
     }
 
