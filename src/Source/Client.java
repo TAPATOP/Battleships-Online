@@ -156,7 +156,7 @@ public class Client {
     /**
      * Send coordinates of where to start deploying the ship from
      * @param coordinates of where the ship is starting to deploy from( it deploys from left to right
-     *                    or from up to bottom). Must be in the [h|v][A-J][1-10] format, where
+     *                    or from top to bottom). Must be in the [h|v][A-J][1-10] format, where
      *                    h = horizontal and v = vertical
      * @return returns the report of what happenned
      * @throws IOException connection is lost with the server

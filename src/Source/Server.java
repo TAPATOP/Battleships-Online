@@ -10,10 +10,7 @@ import java.net.InetSocketAddress;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 public class Server {
 
@@ -181,6 +178,7 @@ public class Server {
                 return ServerResponseType.INVALID;
         }
     }
+
     private static EnumStringMessage deployShip(
             String coordinates,
             SelectionKey key
@@ -315,7 +313,19 @@ public class Server {
         }
 
         message = removeLastCharacter(message);
+
+        if(message.length() == 0){
+            message = getRandomPendingGame();
+            if(message == null){
+                return new EnumStringMessage(
+                        ServerResponseType.INVALID,
+                        "No games are waiting for players at the moment"
+                );
+            }
+        }
+
         if(!validateGameName(message)){
+            System.out.println(message);
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "Invalid game name"
@@ -326,7 +336,7 @@ public class Server {
         if(desiredGame == null){
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
-                    "Either this game doesn't exist or it's already full"
+                    "No game with this name is waiting for a second player"
             );
         }
 
@@ -344,6 +354,9 @@ public class Server {
             SelectionKey currentPlayerKey,
             Game desiredGame
     ) throws IOException{
+        pendingGames.remove(desiredGame.getGameName());
+        pendingGamesArrayList.remove(desiredGame.getGameName());
+        runningGames.put(desiredGame.getGameName(), desiredGame);
 
         Player opponent = desiredGame.getOtherPlayer(getChannelAccount(currentPlayerKey));
         EnumStringMessage messageToOpponent = new EnumStringMessage(
@@ -358,6 +371,12 @@ public class Server {
         );
     }
 
+    private static String getRandomPendingGame(){
+        Random r = new Random();
+        String randomGame = pendingGamesArrayList.get(r.nextInt(pendingGamesArrayList.size()));
+        System.out.println("Fetching random game: " + randomGame);
+        return randomGame;
+    }
     /**
      * When any player exits a game, the game gets terminated because there is no "start game"
      * option; the game starts the moment both players enter the room. Therefore, there is no
@@ -392,6 +411,7 @@ public class Server {
         Account channelAccount = getChannelAccount(key);
 
         pendingGames.remove(currentGame.getGameName());
+        pendingGamesArrayList.remove(currentGame.getGameName());
         runningGames.remove(currentGame.getGameName());
         currentGame.end();
 
@@ -436,6 +456,7 @@ public class Server {
         Player hostingPlayer = new Player(getChannelAccount(key));
         Game newGame = new Game(gameName, allGamesEverCount, hostingPlayer);
         pendingGames.put(gameName, newGame);
+        pendingGamesArrayList.add(gameName);
         gameIDtoGameNameHash.put(allGamesEverCount, gameName);
         if(!hostingPlayer.joinAGame(newGame.getGameID())){
             return new EnumStringMessage(
@@ -628,5 +649,6 @@ public class Server {
     private static HashMap<String, Game> pendingGames = new HashMap<>();
     private static HashMap<String, Game> runningGames = new HashMap<>();
     private static HashMap<Integer, String> gameIDtoGameNameHash = new HashMap<>();
+    private static List<String> pendingGamesArrayList = new ArrayList<>();
     private static int allGamesEverCount = 1;
 }
