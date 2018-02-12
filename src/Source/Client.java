@@ -267,6 +267,11 @@ public class Client {
         return result;
     }
 
+    private static EnumStringMessage searchGames() throws IOException{
+        sendMessageToServer(ClientMessageType.SEARCH_GAMES, null);
+        return readMessageFromServer();
+    }
+
     private static EnumStringMessage callCommand(ClientMessageType clientMessageType, String remainingMessage) throws IOException{
         switch(clientMessageType){
             case LOGIN:
@@ -297,6 +302,8 @@ public class Client {
                 return deploy(remainingMessage);
             case FIRE:
                 return fire(remainingMessage);
+            case SEARCH_GAMES:
+                return searchGames();
             default:
                 System.out.println("No idea what to do with this");
                 return null;
@@ -341,6 +348,8 @@ public class Client {
                 return ClientMessageType.DEPLOY;
             case "fire":
                 return ClientMessageType.FIRE;
+            case "search_game":
+                return ClientMessageType.SEARCH_GAMES;
             default:
                 return ClientMessageType.CUSTOM_MESSAGE;
         }

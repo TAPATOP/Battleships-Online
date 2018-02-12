@@ -304,7 +304,7 @@ public class GameTable {
     }
 
     // CONSTANTS
-    private static final int TOTAL_NUMBER_OF_SHIPS = 1;
+    private static final int TOTAL_NUMBER_OF_SHIPS = 10;
     private static final int DIMENTION_LIMIT = 10;
 
     // MEMBER VARIABLES

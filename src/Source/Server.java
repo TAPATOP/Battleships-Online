@@ -41,7 +41,11 @@ public class Server {
         System.out.println("Processing this message: " + playerMessage);
 
         // No reason not to notify the client about what's going on as soon as possible
-        writeToClient(processMessage(mesType, playerMessage, chan, key), chan, getChannelAccount(key));
+        EnumStringMessage result = processMessage(mesType, playerMessage, chan, key);
+        if(result == null){
+            return true;
+        }
+        writeToClient(result, chan, getChannelAccount(key));
         return true;
     }
 
@@ -84,6 +88,8 @@ public class Server {
                 return deployShip(message, key);
             case FIRE:
                 return fire(message, key);
+            case SEARCH_GAMES:
+                return searchGames(key, chan);
             default:
                 System.out.println("I don't know how to handle this :c");
                 return new EnumStringMessage(
@@ -91,6 +97,35 @@ public class Server {
                         "I have no idea what to do with this so I will just repeat it: " + message
                 );
         }
+    }
+
+    private static  EnumStringMessage searchGames(SelectionKey  key, SocketChannel chan) throws IOException{
+        EnumStringMessage queryReturn = new EnumStringMessage(
+                ServerResponseType.NOTHING_OF_IMPORTANCE,
+                "Here you go your list of all games"
+        );
+        writeToClient(queryReturn, chan, getChannelAccount(key));
+
+        for (String gameName :
+                pendingGamesArrayList) {
+            queryReturn = new EnumStringMessage(
+                    ServerResponseType.NOTHING_OF_IMPORTANCE,
+                    gameName + " PENDING\n"
+            );
+            writeToClient(queryReturn, chan, getChannelAccount(key));
+        }
+
+        for (Map.Entry<String, Game> entry:
+                runningGames.entrySet()) {
+            Game game = entry.getValue();
+            queryReturn = new EnumStringMessage(
+                    ServerResponseType.NOTHING_OF_IMPORTANCE,
+                    game.getGameName() + " RUNNING\n"
+            );
+            writeToClient(queryReturn, chan, getChannelAccount(key));
+        }
+
+        return null;
     }
 
     private static EnumStringMessage fire(String coordinates, SelectionKey key) throws IOException{
@@ -367,7 +402,8 @@ public class Server {
 
         return new EnumStringMessage(
                 ServerResponseType.OK,
-                "You've just joined a game! Your opponent is " + opponent.getName()
+                "You've just joined the game room " + desiredGame.getGameName() +
+                        "! Your opponent is " + opponent.getName()
         );
     }
 
@@ -572,7 +608,7 @@ public class Server {
         return usernameAndPassword;
     }
 
-    private static String removeLastCharacter(String input){
+    static String removeLastCharacter(String input){
         return input.substring(0, input.length() - 1);
     }
 
