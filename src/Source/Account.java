@@ -46,6 +46,7 @@ public class Account {
 
     void setName(String name) {
         this.name = name;
+        pathName = ".\\Accounts\\" + name + ".txt";
     }
 
     void setPassword(String password) {
