@@ -4,7 +4,6 @@ public enum ClientMessageType {
     LOGIN,
     REGISTER,
     LOGOUT,
-    // GAME_COMMAND,
     JOIN_GAME,
     JOIN_RANDOM_GAME,
     EXIT_GAME,
