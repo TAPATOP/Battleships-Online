@@ -371,6 +371,13 @@ public class Client {
         buffer = ByteBuffer.allocate(BUFFER_SIZE);
     }
 
+    public void initialize() throws IOException{
+        // INITIALIZE CLIENT STUFF
+        socket = SocketChannel.open();
+        socket.connect(new InetSocketAddress("localhost", 6969));
+        buffer = ByteBuffer.allocate(BUFFER_SIZE);
+    }
+
     public void blockSocket() throws IOException{
         socket.configureBlocking(true);
     }
