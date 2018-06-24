@@ -13,6 +13,101 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.TimeUnit;
 
 public class Client {
+    // Constructors //
+    public Client() throws IOException{
+        // INITIALIZE CLIENT STUFF
+        socket = SocketChannel.open();
+        socket.connect(new InetSocketAddress("localhost", 6969));
+        buffer = ByteBuffer.allocate(BUFFER_SIZE);
+    }
+
+    public Client(String host, int port) throws IOException{
+        // INITIALIZE CLIENT STUFF
+        socket = SocketChannel.open();
+        socket.connect(new InetSocketAddress(host, port));
+        buffer = ByteBuffer.allocate(BUFFER_SIZE);
+    }
+
+    // Public interface //
+    public static void main(String args[]) {
+        try {
+            Client client = new Client("localhost", 6969);
+
+            BufferedReader playerInput = new BufferedReader(new InputStreamReader(System.in));
+            String playerMessage;
+            final int timeBetweenRefreshes = 150;
+
+            System.out.println("Welcome to BattleshipsOnline!");
+
+            // START OF CLIENT- SERVER MESSAGE EXCHANGE
+            //noinspection InfiniteLoopStatement
+            while(true) {
+                if(playerInput.ready()) {
+                    client.blockSocket();
+                    playerMessage = playerInput.readLine();
+                    client.processPlayerCommand(playerMessage);
+                }
+
+                try {
+                    TimeUnit.MILLISECONDS.sleep(timeBetweenRefreshes);
+                } catch(InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                client.unblockSocket();
+                client.checkForAndPrintMessageFromServer();
+            }
+        } catch(UnknownHostException exc) {
+            System.out.println("Issues locating the server");
+        } catch(IOException exc) {
+            System.out.println("Cannot connect to server");
+        }
+    }
+
+    public boolean processPlayerCommand(String playerMessage) throws IOException{
+        // checkForAndPrintMessageFromServer is mostly used in cases where the user gives commands
+        // so fast, that the client doesn't have time to print the recently received message,
+        // e.g. mostly useful for making the Unit Tests works properly
+        //
+        // Reading is usually a blocking operation, so we have to unblock the socket
+        // in order for the program to keep flowing even if no message is present
+        unblockSocket();
+        checkForAndPrintMessageFromServer();
+        blockSocket();
+
+        String[] splitMessage = splitPlayerMessage(playerMessage);
+        ClientMessageType clientMessageType = findMessageTypeOut(splitMessage[0]);
+        String remainingMessage = splitMessage[1];
+
+        EnumStringMessage result = callCommand(clientMessageType, remainingMessage);
+        if(result != null) {
+            System.out.println(result.getMessage());
+        }
+
+        // return if the result is "bad", return false
+        return !(result == null || result.getEnumValue().equals(ServerResponseType.INVALID));
+    }
+
+    // Private methods //
+    private void checkForAndPrintMessageFromServer() throws IOException{
+        EnumStringMessage message = readMessageFromServer();
+        if(message != null) {
+            System.out.println(message.getMessage());
+        }
+    }
+
+    private String[] splitPlayerMessage(String playerMessage){
+        String playerMessageType = playerMessage.split(" ")[0];
+        String remainingMessage = null;
+
+        if(playerMessageType.length() + 1 < playerMessage.length()) {
+            remainingMessage = playerMessage.substring(playerMessageType.length() + 1, playerMessage.length());
+            remainingMessage = remainingMessage.trim().replaceAll(" +", " ");
+        }
+
+        return new String[]{playerMessageType, remainingMessage};
+    }
+
     private void sendMessageToServer(ClientMessageType clientMessageType, String message) throws IOException {
         buffer.clear();
         buffer.put((byte) clientMessageType.ordinal());
@@ -63,6 +158,36 @@ public class Client {
         }
     }
 
+    private EnumStringMessage login(String playerMessage) throws IOException {
+        sendMessageToServer(ClientMessageType.LOGIN, playerMessage);
+        return readMessageFromServer();
+    }
+
+    private EnumStringMessage register(String playerMessage) throws IOException{
+        sendMessageToServer(ClientMessageType.REGISTER, playerMessage);
+        return readMessageFromServer();
+    }
+
+    private EnumStringMessage logout() throws IOException{
+        sendMessageToServer(ClientMessageType.LOGOUT, null);
+        return readMessageFromServer();
+    }
+
+    private EnumStringMessage createGame(String gameName) throws IOException {
+       sendMessageToServer(ClientMessageType.CREATE_GAME, gameName);
+       return readMessageFromServer();
+    }
+
+    private EnumStringMessage exitGame() throws IOException{
+        sendMessageToServer(ClientMessageType.EXIT_GAME, null);
+        return readMessageFromServer();
+    }
+
+    private EnumStringMessage joinGame(String gameName) throws IOException{
+        sendMessageToServer(ClientMessageType.JOIN_GAME, gameName);
+        return readMessageFromServer();
+    }
+
     private void recordShotFromOpponent(EnumStringMessage message) throws IOException{
         int[] coords = findCoordinatesOfOpponentShotOut(message.getMessage());
         if(coords[0] == -1) {
@@ -95,6 +220,97 @@ public class Client {
         return coords;
     }
 
+    private EnumStringMessage searchGames() throws IOException{
+        sendMessageToServer(ClientMessageType.SEARCH_GAMES, null);
+        return readMessageFromServer();
+    }
+
+    private EnumStringMessage showPlayerStatistics() throws IOException{
+        sendMessageToServer(ClientMessageType.SHOW_PLAYER_STATISTICS, null);
+        return null;
+    }
+
+    private EnumStringMessage callCommand(
+            ClientMessageType clientMessageType,
+            String remainingMessage
+    ) throws IOException{
+        switch(clientMessageType) {
+            case LOGIN:
+                if(remainingMessage == null) {
+                    System.out.println("Username and password format is not okay");
+                    return null;
+                }
+                return login(remainingMessage);
+            case REGISTER:
+                if(remainingMessage == null) {
+                    System.out.println("There is nothing to register...");
+                    return null;
+                }
+                return register(remainingMessage);
+            case LOGOUT:
+                return logout();
+            case CREATE_GAME:
+                return createGame(remainingMessage);
+            case EXIT_GAME:
+                return exitGame();
+            case JOIN_GAME:
+                return joinGame(remainingMessage);
+            case EXIT_CLIENT:
+                logout();
+                socket.close();
+                return null;
+            case DEPLOY:
+                return deploy(remainingMessage);
+            case FIRE:
+                return fire(remainingMessage);
+            case SEARCH_GAMES:
+                return searchGames();
+            case SHOW_PLAYER_STATISTICS:
+                return showPlayerStatistics();
+            default:
+                System.out.println("No idea what to do with this");
+                return null;
+        }
+    }
+
+    private ClientMessageType findMessageTypeOut(String string) {
+        switch(string) {
+            case "login":
+                return ClientMessageType.LOGIN;
+            case "register":
+                return ClientMessageType.REGISTER;
+            case "logout":
+                return ClientMessageType.LOGOUT;
+            case "create_game":
+                return ClientMessageType.CREATE_GAME;
+            case "exit_game":
+                return ClientMessageType.EXIT_GAME;
+            case "join_game":
+                return ClientMessageType.JOIN_GAME;
+            case "exit":
+                return ClientMessageType.EXIT_CLIENT;
+            case "deploy":
+                return ClientMessageType.DEPLOY;
+            case "fire":
+                return ClientMessageType.FIRE;
+            case "search_games":
+                return ClientMessageType.SEARCH_GAMES;
+            case "statistics":
+                return ClientMessageType.SHOW_PLAYER_STATISTICS;
+            default:
+                return ClientMessageType.CUSTOM_MESSAGE;
+        }
+    }
+
+    private void blockSocket() throws IOException{
+        socket.configureBlocking(true);
+    }
+
+    private void unblockSocket() throws IOException{
+        socket.configureBlocking(false);
+    }
+
+    // Battle- related, these should go to a "Game" class or something like that
     private void recordShotAtOpponent(int x, int y, ServerResponseType resultOfShot) {
         char c = shotAtOpponentVisualization(resultOfShot);
         opponentGameTable[x][y] = c;
@@ -121,36 +337,6 @@ public class Client {
             default:
                 return '?';
         }
-    }
-
-    private EnumStringMessage login(String playerMessage) throws IOException {
-        sendMessageToServer(ClientMessageType.LOGIN, playerMessage);
-        return readMessageFromServer();
-    }
-
-    private EnumStringMessage register(String playerMessage) throws IOException{
-        sendMessageToServer(ClientMessageType.REGISTER, playerMessage);
-        return readMessageFromServer();
-    }
-
-    private EnumStringMessage logout() throws IOException{
-        sendMessageToServer(ClientMessageType.LOGOUT, null);
-        return readMessageFromServer();
-    }
-
-    private EnumStringMessage createGame(String gameName) throws IOException {
-       sendMessageToServer(ClientMessageType.CREATE_GAME, gameName);
-       return readMessageFromServer();
-    }
-
-    private EnumStringMessage exitGame() throws IOException{
-        sendMessageToServer(ClientMessageType.EXIT_GAME, null);
-        return readMessageFromServer();
-    }
-
-    private EnumStringMessage joinGame(String gameName) throws IOException{
-        sendMessageToServer(ClientMessageType.JOIN_GAME, gameName);
-        return readMessageFromServer();
     }
 
     /**
@@ -265,181 +451,6 @@ public class Client {
             }
         }
         return result;
-    }
-
-    private EnumStringMessage searchGames() throws IOException{
-        sendMessageToServer(ClientMessageType.SEARCH_GAMES, null);
-        return readMessageFromServer();
-    }
-
-    private EnumStringMessage showPlayerStatistics() throws IOException{
-        sendMessageToServer(ClientMessageType.SHOW_PLAYER_STATISTICS, null);
-        return null;
-    }
-
-    private EnumStringMessage callCommand(ClientMessageType clientMessageType, String remainingMessage) throws IOException{
-        switch(clientMessageType) {
-            case LOGIN:
-                if(remainingMessage == null) {
-                    System.out.println("Username and password format is not okay");
-                    return null;
-                }
-                return login(remainingMessage);
-            case REGISTER:
-                if(remainingMessage == null) {
-                    System.out.println("There is nothing to register...");
-                    return null;
-                }
-                return register(remainingMessage);
-            case LOGOUT:
-                return logout();
-            case CREATE_GAME:
-                return createGame(remainingMessage);
-            case EXIT_GAME:
-                return exitGame();
-            case JOIN_GAME:
-                return joinGame(remainingMessage);
-            case EXIT_CLIENT:
-                logout();
-                socket.close();
-                return null;
-            case DEPLOY:
-                return deploy(remainingMessage);
-            case FIRE:
-                return fire(remainingMessage);
-            case SEARCH_GAMES:
-                return searchGames();
-            case SHOW_PLAYER_STATISTICS:
-                return showPlayerStatistics();
-            default:
-                System.out.println("No idea what to do with this");
-                return null;
-        }
-    }
-
-    public boolean processPlayerCommand(String playerMessage) throws IOException{
-        // Mostly used in cases where the user gives commands so fast, that
-        // the client doesn't have time to print the recently received message,
-        // e.g. mostly useful for making the Unit Tests works properly
-        //
-        // Reading is usually a blocking operation, so we have to unblock the socket
-        // in order for the program to keep flowing even if no message is present
-        unblockSocket();
-        checkForAndPrintMessageFromServer();
-        blockSocket();
-
-        String playerMessageType = playerMessage.split(" ")[0];
-        ClientMessageType clientMessageType = findMessageTypeOut(playerMessageType);
-        String remainingMessage = null;
-        if(playerMessageType.length() + 1 < playerMessage.length()) {
-            remainingMessage = playerMessage.substring(playerMessageType.length() + 1, playerMessage.length());
-            remainingMessage = remainingMessage.trim().replaceAll(" +", " ");
-        }
-
-        EnumStringMessage result = callCommand(clientMessageType, remainingMessage);
-        if(result != null) {
-            System.out.println(result.getMessage());
-        }
-
-        return !(result == null || result.getEnumValue().equals(ServerResponseType.INVALID));
-    }
-
-    private void checkForAndPrintMessageFromServer() throws IOException{
-        EnumStringMessage message = readMessageFromServer();
-        if(message != null) {
-            System.out.println(message.getMessage());
-        }
-    }
-
-    private ClientMessageType findMessageTypeOut(String string) {
-        switch(string) {
-            case "login":
-                return ClientMessageType.LOGIN;
-            case "register":
-                return ClientMessageType.REGISTER;
-            case "logout":
-                return ClientMessageType.LOGOUT;
-            case "create_game":
-                return ClientMessageType.CREATE_GAME;
-            case "exit_game":
-                return ClientMessageType.EXIT_GAME;
-            case "join_game":
-                return ClientMessageType.JOIN_GAME;
-            case "exit":
-                return ClientMessageType.EXIT_CLIENT;
-            case "deploy":
-                return ClientMessageType.DEPLOY;
-            case "fire":
-                return ClientMessageType.FIRE;
-            case "search_games":
-                return ClientMessageType.SEARCH_GAMES;
-            case "statistics":
-                return ClientMessageType.SHOW_PLAYER_STATISTICS;
-            default:
-                return ClientMessageType.CUSTOM_MESSAGE;
-        }
-    }
-
-    public void initialize(String host, int port) throws IOException{
-        // INITIALIZE CLIENT STUFF
-        socket = SocketChannel.open();
-        socket.connect(new InetSocketAddress(host, port));
-        buffer = ByteBuffer.allocate(BUFFER_SIZE);
-    }
-
-    public void initialize() throws IOException{
-        // INITIALIZE CLIENT STUFF
-        socket = SocketChannel.open();
-        socket.connect(new InetSocketAddress("localhost", 6969));
-        buffer = ByteBuffer.allocate(BUFFER_SIZE);
-    }
-
-    private void blockSocket() throws IOException{
-        socket.configureBlocking(true);
-    }
-
-    private void unblockSocket() throws IOException{
-        socket.configureBlocking(false);
-    }
-
-    public static void main(String args[]) {
-        try{
-            Client client = new Client();
-            client.initialize("localhost", 6969);
-
-            BufferedReader playerInput = new BufferedReader(new InputStreamReader(System.in));
-            String playerMessage;
-            final int refreshRate = 150;
-
-            System.out.println("Welcome to BattleshipsOnline!");
-
-            // START OF CLIENT- SERVER MESSAGE EXCHANGE
-            while(true) {
-                if(playerInput.ready()) {
-                    client.blockSocket();
-                    playerMessage = playerInput.readLine();
-                    // SENDS THE INPUT MESSAGE TO THE SERVER
-                    client.processPlayerCommand(playerMessage);
-                }
-
-                try {
-                    TimeUnit.MILLISECONDS.sleep(refreshRate);
-                } catch(InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                client.unblockSocket();
-                EnumStringMessage message = client.readMessageFromServer();
-                if(message != null) {
-                    System.out.println(message.getMessage());
-                }
-            }
-
-        } catch(UnknownHostException exc) {
-            System.out.println("Issues locating the server");
-        } catch(IOException exc) {
-            System.out.println("Cannot connect to server");
-        }
     }
 
     // MEMBER VARIABLES

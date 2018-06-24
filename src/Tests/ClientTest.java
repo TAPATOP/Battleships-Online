@@ -7,11 +7,11 @@ import java.io.*;
 import static org.junit.Assert.*;
 
 public class ClientTest {
-    private static Client client = new Client();
+    private static Client client;
 
     @BeforeClass
     public static void setup() throws IOException{
-        client.initialize("localhost", 6969);
+        client = new Client("localhost", 6969);
     }
 
     // I have no idea why this exists but am too afraid to delete it( yet)
@@ -208,11 +208,9 @@ public class ClientTest {
         client.processPlayerCommand("login TAPATOP peswerdlmao");
 
         Client secClient = new Client();
-        secClient.initialize();
         secClient.processPlayerCommand("login borat kazahstan");
 
         Client trdClient = new Client();
-        trdClient.initialize();
         trdClient.processPlayerCommand("login hi hi");
 
         secClient.processPlayerCommand("logout");
@@ -224,7 +222,6 @@ public class ClientTest {
     public void canJoinGame()throws IOException{
         client.processPlayerCommand("logout)");
         Client secClient = new Client();
-        secClient.initialize();
         secClient.processPlayerCommand("login borat kazahstan");
 
         client.processPlayerCommand("login TAPATOP peswerdlmao");

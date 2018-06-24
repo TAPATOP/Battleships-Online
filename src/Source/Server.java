@@ -16,7 +16,7 @@ public class Server {
     // Constructors //
     @SuppressWarnings("WeakerAccess")
     public Server() {
-        try{
+        try {
             serverSocketChannel = ServerSocketChannel.open();
             serverSocketChannel.socket().bind(new InetSocketAddress(6969));
             selector = Selector.open();
