@@ -318,6 +318,16 @@ public class Client {
     }
 
     public boolean processPlayerCommand(String playerMessage) throws IOException{
+        // Mostly used in cases where the user gives commands so fast, that
+        // the client doesn't have time to print the recently received message,
+        // e.g. mostly useful for making the Unit Tests works properly
+        //
+        // Reading is usually a blocking operation, so we have to unblock the socket
+        // in order for the program to keep flowing even if no message is present
+        unblockSocket();
+        checkForAndPrintMessageFromServer();
+        blockSocket();
+
         String playerMessageType = playerMessage.split(" ")[0];
         ClientMessageType clientMessageType = findMessageTypeOut(playerMessageType);
         String remainingMessage = null;
@@ -332,6 +342,13 @@ public class Client {
         }
 
         return !(result == null || result.getEnumValue().equals(ServerResponseType.INVALID));
+    }
+
+    private void checkForAndPrintMessageFromServer() throws IOException{
+        EnumStringMessage message = readMessageFromServer();
+        if(message != null) {
+            System.out.println(message.getMessage());
+        }
     }
 
     private ClientMessageType findMessageTypeOut(String string) {
@@ -389,9 +406,6 @@ public class Client {
         try{
             Client client = new Client();
             client.initialize("localhost", 6969);
-
-            Client client2 = new Client();
-            client2.initialize("localhost", 6969);
 
             BufferedReader playerInput = new BufferedReader(new InputStreamReader(System.in));
             String playerMessage;

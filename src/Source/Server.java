@@ -235,7 +235,6 @@ public class Server {
         }
 
         int[] statistics = getChannelAccount(key).loadStatistics();
-
         StringBuilder messageFromServer = new StringBuilder();
 
         for(int num :

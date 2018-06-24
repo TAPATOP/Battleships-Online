@@ -220,7 +220,7 @@ public class ClientTest {
         assertTrue(true);
     }
 
-    //@Test
+    @Test
     public void canJoinGame()throws IOException{
         client.processPlayerCommand("logout)");
         Client secClient = new Client();
