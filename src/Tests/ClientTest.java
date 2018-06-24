@@ -1,34 +1,22 @@
 package Tests;
 
-import Source.ServerResponseType;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import Source.Client;
 
 import java.io.*;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-
 import static org.junit.Assert.*;
 
 public class ClientTest {
-    private final static int BUFFER_SIZE = 1024;
-    private static SocketChannel socket = null;
     private static Client client = new Client();
 
     @BeforeClass
     public static void setup() throws IOException{
-        try{
-            socket = SocketChannel.open();
-            socket.connect(new InetSocketAddress("localhost", 6969));
-        }catch(IOException exc){
-            System.out.println("Server offline");
-        }
         client.initialize("localhost", 6969);
     }
 
+    // I have no idea why this exists but am too afraid to delete it( yet)
     @AfterClass
     public static void deleteTempRegistration(){
         File file = new File(".\\Accounts\\username.txt");
@@ -42,6 +30,11 @@ public class ClientTest {
         if(!a){
             System.out.println("Something messed up while deleting tempregs");
         }
+    }
+
+    @After
+    public void logout() throws IOException {
+        client.processPlayerCommand("logout");
     }
 
     @Test
@@ -87,20 +80,21 @@ public class ClientTest {
 
     @Test
     public void shouldBeAbleToLogInAndOutMultipleTimes() throws IOException{
-        // self- explanationary, no need for the "message" parameter
+        assertTrue("logs in fine", client.processPlayerCommand("login TAPATOP peswerdlmao"));
+        assertTrue("logs out fine", client.processPlayerCommand("logout"));
+        assertFalse(
+                "doesnt log in with wrong credentials",
+                client.processPlayerCommand("login wwww peswerqqqdlmao"));
+        assertTrue("logs in fine",client.processPlayerCommand("login hi hi"));
+        assertTrue("logs out fine", client.processPlayerCommand("logout"));
         assertTrue(client.processPlayerCommand("login TAPATOP peswerdlmao"));
-        assertTrue(client.processPlayerCommand("logout"));
-        assertFalse(client.processPlayerCommand("login wwww peswerqqqdlmao"));
-        assertTrue(client.processPlayerCommand("login hi hi"));
-        assertTrue(client.processPlayerCommand("logout"));
-        assertTrue(client.processPlayerCommand("login TAPATOP peswerdlmao"));
-        assertTrue(client.processPlayerCommand("logout"));
+        assertTrue("logs out fine", client.processPlayerCommand("logout"));
     }
 
     @Test
     public void registeringShouldRegisteredUnregisteredAndNotRegisterRegistered() throws IOException{
         assertTrue(
-                "Registers an inexistant account properly",
+                "Registers a nonexistant account properly",
                 client.processPlayerCommand("register username password"));
         assertTrue(
                 "Registers another legit account",
@@ -130,12 +124,14 @@ public class ClientTest {
     }
 
     @Test
-    public void shouldNotBlowUpWhenGivenRandomMessage() throws IOException{
+    public void shouldNotBlowUpWhenGivenRandomMessages() throws IOException{
         // Logic: If you can send this three times in a row without throwing an IOException
         // and be able to login and logout, then you didn't kill the server
-        client.processPlayerCommand("hello mamma mia");
-        client.processPlayerCommand("hello mamma mia");
-        client.processPlayerCommand("hello mamma mia");
+//        client.processPlayerCommand("hello mamma mia");
+//        client.processPlayerCommand("hello mamma mia");
+//        client.processPlayerCommand("hello mamma mia");
+//        client.processPlayerCommand("server did nothing wrong");
+//        client.processPlayerCommand("black suns and celtic crosses sitting on a tree");
 
         client.processPlayerCommand("logout");
         assertTrue(client.processPlayerCommand("login TAPATOP peswerdlmao"));
@@ -154,7 +150,7 @@ public class ClientTest {
         client.processPlayerCommand("login hi hi");
 
         assertFalse(
-                "Doesn't create a game with invalid input",
+                "Doesn't create a game with no game name",
                 client.processPlayerCommand("create_game")
 
         );
@@ -164,12 +160,12 @@ public class ClientTest {
 
         );
         assertFalse(
-                "Doesn't create a game with invalid input",
+                "Doesn't create a game with invalid input that has intervals in it",
                 client.processPlayerCommand("create_game wwwwwwwww q")
 
         );
         assertFalse(
-                "Doesn't create a game with invalid input",
+                "Doesn't create a game with invalid name such as 9hello",
                 client.processPlayerCommand("create_game 9hello")
 
         );
@@ -207,5 +203,19 @@ public class ClientTest {
                 "Knows you can't exit a room if you're not in one",
                 client.processPlayerCommand("exit_game")
         );
+    }
+
+    //@Test
+    public void canJoinGame()throws IOException{
+        client.processPlayerCommand("logout)");
+        Client secClient = new Client();
+        secClient.initialize();
+        secClient.processPlayerCommand("login borat kazahstan");
+
+        client.processPlayerCommand("login TAPATOP peswerdlmao");
+        client.processPlayerCommand("create_game hi");
+        assertTrue("Second client joins the game", secClient.processPlayerCommand("join_game hi"));
+        //client.processPlayerCommand("logout");
+        secClient.processPlayerCommand("logout");
     }
 }

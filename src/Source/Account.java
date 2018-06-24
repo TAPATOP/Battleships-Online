@@ -7,10 +7,6 @@ import java.util.Scanner;
 import java.util.Vector;
 
 public class Account {
-//    Account(){
-//        currentGameID = 0;
-//    }
-
     Account(SocketChannel channel){
         currentGameID = 0;
         this.channel = channel;
@@ -56,7 +52,7 @@ public class Account {
         this.currentGameID = currentGameID;
     }
 
-    public void updateAccountStatistics(int gameID){
+    public void updateStatistics(int gameID){
         File f = new File(pathName);
         if(!f.isFile()) {
             System.out.println("Account doesn't exist");

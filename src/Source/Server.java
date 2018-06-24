@@ -14,7 +14,7 @@ import java.util.*;
 
 public class Server {
 
-    private static void acceptConnections(Selector selector, SelectionKey key) throws IOException {
+    private void acceptConnections(Selector selector, SelectionKey key) throws IOException {
         ServerSocketChannel ssc = (ServerSocketChannel) key.channel();
         SocketChannel sc = ssc.accept();
         sc.configureBlocking(false);
@@ -22,7 +22,7 @@ public class Server {
         System.out.println("We have a new connection!");
     }
 
-    private static boolean readFromClient(SocketChannel chan, SelectionKey key) throws IOException {
+    private boolean readFromClient(SocketChannel chan, SelectionKey key) throws IOException {
         ByteBuffer buffer = getChannelBuffer(key);
 
         buffer.clear();
@@ -49,19 +49,19 @@ public class Server {
         return true;
     }
 
-    private static Account getChannelAccount(SelectionKey key){
+    private Account getChannelAccount(SelectionKey key){
         return ((Account)key.attachment());
     }
 
-    private static ByteBuffer getChannelBuffer(SelectionKey key){
+    private ByteBuffer getChannelBuffer(SelectionKey key){
         return getChannelAccount(key).getBufferForCommunicationWithServer();
     }
 
-    private static ClientMessageType readClientMessageType(ByteBuffer buffer) {
+    private ClientMessageType readClientMessageType(ByteBuffer buffer) {
         return ClientMessageType.values()[(int) buffer.get()];
     }
 
-    private static String readClientMessage(ByteBuffer buffer) {
+    private String readClientMessage(ByteBuffer buffer) {
         char[] playerInput = new char[buffer.limit()];
         int i = 0;
         while (buffer.limit() > buffer.position()) {
@@ -70,7 +70,7 @@ public class Server {
         return new String(playerInput);
     }
 
-    private static EnumStringMessage processMessage(ClientMessageType mesType, String message, SocketChannel chan, SelectionKey key) throws IOException {
+    private EnumStringMessage processMessage(ClientMessageType mesType, String message, SocketChannel chan, SelectionKey key) throws IOException {
         switch (mesType) {
             case LOGIN:
                 return loginAccount(message, key);
@@ -101,7 +101,7 @@ public class Server {
         }
     }
 
-    private static  EnumStringMessage searchGames(SelectionKey  key, SocketChannel chan) throws IOException{
+    private EnumStringMessage searchGames(SelectionKey  key, SocketChannel chan) throws IOException{
         EnumStringMessage queryReturn = new EnumStringMessage(
                 ServerResponseType.NOTHING_OF_IMPORTANCE,
                 "Here you go your list of all games"
@@ -113,7 +113,7 @@ public class Server {
         return null;
     }
 
-    private static void bufferSafeGameListSend(
+    private void bufferSafeGameListSend(
             SocketChannel chan,
             SelectionKey key
     ) throws IOException {
@@ -138,7 +138,7 @@ public class Server {
         }
     }
 
-    private static void bufferVolatileGameListSend(
+    private void bufferVolatileGameListSend(
             SocketChannel chan,
             SelectionKey key
     ) throws IOException {
@@ -164,7 +164,7 @@ public class Server {
         writeToClient(queryReturn, chan, getChannelAccount(key));
     }
 
-    private static EnumStringMessage showPlayerStatistics(SelectionKey key, SocketChannel chan) throws IOException{
+    private EnumStringMessage showPlayerStatistics(SelectionKey key, SocketChannel chan) throws IOException{
         EnumStringMessage messageToClient;
 
         if(!channelIsLoggedIn(key)){
@@ -195,7 +195,7 @@ public class Server {
         return null;
     }
 
-    private static EnumStringMessage fire(String coordinates, SelectionKey key) throws IOException{
+    private EnumStringMessage fire(String coordinates, SelectionKey key) throws IOException{
         if(!channelIsInGame(key)){
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
@@ -224,7 +224,7 @@ public class Server {
         return executeFiring(coordsForWork, key, channelGame);
     }
 
-    private static EnumStringMessage executeFiring(
+    private EnumStringMessage executeFiring(
             String coordinates,
             SelectionKey key,
             Game channelGame
@@ -262,11 +262,11 @@ public class Server {
         return result;
     }
 
-    private static boolean channelIsInGame(SelectionKey key){
+    private boolean channelIsInGame(SelectionKey key){
         return getChannelAccount(key) != null && getChannelAccount(key).getCurrentGameID() != 0;
     }
 
-    private static ServerResponseType convertGameTableFireResultToServerResponseType(GameTable.FireResult fireResult){
+    private ServerResponseType convertGameTableFireResultToServerResponseType(GameTable.FireResult fireResult){
         switch(fireResult){
             case MISS:
                 return ServerResponseType.MISS;
@@ -281,7 +281,7 @@ public class Server {
         }
     }
 
-    private static EnumStringMessage deployShip(
+    private EnumStringMessage deployShip(
             String coordinates,
             SelectionKey key
     ) throws IOException{
@@ -348,7 +348,7 @@ public class Server {
         return result;
     }
 
-    private static EnumStringMessage initiateShipDeployment(
+    private EnumStringMessage initiateShipDeployment(
             String coordinates,
             boolean isVertical,
             Game gameInQuestion,
@@ -363,7 +363,7 @@ public class Server {
         return result;
     }
 
-    private static void seeIfDeploymentIsFinalized(Game game, Player thisPlayer) throws IOException{
+    private void seeIfDeploymentIsFinalized(Game game, Player thisPlayer) throws IOException{
         if(thisPlayer.getGameTable().allShipsAreDeployed()){
             EnumStringMessage messageToTheOpponent = new EnumStringMessage(
                     ServerResponseType.NOTHING_OF_IMPORTANCE,
@@ -374,7 +374,7 @@ public class Server {
         }
     }
 
-    private static ServerResponseType transformDeployedShipTypeToServerResponseType(GameTable.ShipType original){
+    private ServerResponseType transformDeployedShipTypeToServerResponseType(GameTable.ShipType original){
         switch(original){
             case DESTROYER:
                 return ServerResponseType.DEPLOYED_DESTROYER;
@@ -389,7 +389,7 @@ public class Server {
         }
     }
 
-    private static Game getGameByAccount(Account acc){
+    private Game getGameByAccount(Account acc){
         String nameOfGame = gameIDtoGameNameHash.get(acc.getCurrentGameID());
         Game theGame = pendingGames.get(nameOfGame);
         if(theGame != null){
@@ -402,7 +402,7 @@ public class Server {
         return null;
     }
 
-    private static EnumStringMessage joinGame(
+    private EnumStringMessage joinGame(
             String message,
             SelectionKey key
     ) throws IOException{
@@ -452,7 +452,7 @@ public class Server {
         return initializeGameJoin(key, desiredGame);
     }
 
-    private static EnumStringMessage initializeGameJoin(
+    private EnumStringMessage initializeGameJoin(
             SelectionKey currentPlayerKey,
             Game desiredGame
     ) throws IOException{
@@ -474,7 +474,7 @@ public class Server {
         );
     }
 
-    private static String getRandomPendingGame(){
+    private String getRandomPendingGame(){
         Random r = new Random();
         if(pendingGamesArrayList.size() < 1){
             return null;
@@ -483,6 +483,7 @@ public class Server {
         System.out.println("Fetching random game: " + randomGame);
         return randomGame;
     }
+
     /**
      * When any player exits a game, the game gets terminated because there is no "start game"
      * option; the game starts the moment both players enter the room. Therefore, there is no
@@ -491,7 +492,7 @@ public class Server {
      * @param key the channel the player uses to communicate with the server on
      * @return an EnumStringMessage informing the player of whether he exited successfully
      */
-    private static EnumStringMessage exitGame(SelectionKey key) throws IOException{
+    private EnumStringMessage exitGame(SelectionKey key) throws IOException{
         Account channelAccount = getChannelAccount(key);
         if(channelAccount.getCurrentGameID() == 0){
             return new EnumStringMessage(ServerResponseType.INVALID, "You're not in a game");
@@ -510,7 +511,7 @@ public class Server {
         return initializeGameExit(key, gameToBeClosed);
     }
 
-    private static EnumStringMessage initializeGameExit(
+    private EnumStringMessage initializeGameExit(
             SelectionKey key,
             Game currentGame
     ) throws IOException {
@@ -534,7 +535,7 @@ public class Server {
         );
     }
 
-    private static EnumStringMessage createGame(String gameName, SelectionKey key){
+    private EnumStringMessage createGame(String gameName, SelectionKey key){
         boolean channelIsLoggedIn = channelIsLoggedIn(key);
         if(!channelIsLoggedIn){
             return new EnumStringMessage(
@@ -558,7 +559,7 @@ public class Server {
         return initializeGameCreation(gameName, key);
     }
 
-    private static EnumStringMessage initializeGameCreation(String gameName, SelectionKey key){
+    private EnumStringMessage initializeGameCreation(String gameName, SelectionKey key){
         Player hostingPlayer = new Player(getChannelAccount(key));
         Game newGame = new Game(gameName, allGamesEverCount, hostingPlayer);
         pendingGames.put(gameName, newGame);
@@ -575,11 +576,11 @@ public class Server {
         return new EnumStringMessage(ServerResponseType.OK, "Game created successfully!");
     }
 
-    private static boolean gameExists(String gameName){
+    private boolean gameExists(String gameName){
         return pendingGames.get(gameName) != null || runningGames.get(gameName) != null;
     }
 
-    private static EnumStringMessage logoutAccount(SelectionKey key, SocketChannel channel) throws IOException{
+    private EnumStringMessage logoutAccount(SelectionKey key, SocketChannel channel) throws IOException{
         if(channelIsLoggedIn(key)){
             System.out.println(getChannelAccount(key).getName() + " has logged out");
             logChannelOut(key, channel);
@@ -588,7 +589,7 @@ public class Server {
         return new EnumStringMessage(ServerResponseType.INVALID, "You need to have logged in to log out...");
     }
 
-    private static EnumStringMessage registerAccount(String message, SelectionKey key){
+    private EnumStringMessage registerAccount(String message, SelectionKey key){
         String[] usernameAndPassword = splitUsernameAndPassword(message);
         if (usernameAndPassword == null) {
             return new EnumStringMessage(ServerResponseType.INVALID, "Unverified username/ password");
@@ -606,17 +607,17 @@ public class Server {
     return new EnumStringMessage(ServerResponseType.OK, "Successful registration! Welcome aboard, " + acc.getName());
     }
 
-    private static boolean accountExists(Account acc) {
+    private boolean accountExists(Account acc) {
         return (new File(acc.getPathName()).isFile());
     }
 
-    private static void logChannelOut(SelectionKey key, SocketChannel channel) throws IOException{
+    private void logChannelOut(SelectionKey key, SocketChannel channel) throws IOException{
         exitGame(key);
         loggedInUsers.remove(getChannelAccount(key).getName());
         key.attach(new Account(channel));
     }
 
-    private static EnumStringMessage loginAccount(String message, SelectionKey key) throws IOException{
+    private EnumStringMessage loginAccount(String message, SelectionKey key) throws IOException{
         if(channelIsLoggedIn(key)){
             System.out.println("This channel is already logged in");
             return new EnumStringMessage(ServerResponseType.INVALID, "You need to log out before you can log in");
@@ -633,7 +634,7 @@ public class Server {
         return verifyLoginDataAndLogin(acc, (Account)(key.attachment()));
     }
 
-    private static EnumStringMessage verifyLoginDataAndLogin(Account requestedAcc, Account savedAcc) throws IOException{
+    private EnumStringMessage verifyLoginDataAndLogin(Account requestedAcc, Account savedAcc) throws IOException{
         if (requestedAcc.exists()) {
             String savedPass = requestedAcc.loadPassword();
             if(savedPass.equals(requestedAcc.getPassword())){
@@ -651,15 +652,15 @@ public class Server {
         }
     }
 
-    private static boolean channelIsLoggedIn(SelectionKey key){
+    private boolean channelIsLoggedIn(SelectionKey key){
         return  ((Account)key.attachment()).getName() != null;
     }
 
-    private static boolean accountIsLoggedIn(Account acc){
+    private boolean accountIsLoggedIn(Account acc){
         return loggedInUsers.contains(acc.getName());
     }
 
-    private static String[] splitUsernameAndPassword(String input) {
+    private String[] splitUsernameAndPassword(String input) {
         String[] usernameAndPassword = input.split(" ");
         if (usernameAndPassword.length != 2) {
             System.out.println("Username and password not validated...");
@@ -669,11 +670,11 @@ public class Server {
         return usernameAndPassword;
     }
 
-    private static String removeLastCharacter(String input){
+    private String removeLastCharacter(String input){
         return input.substring(0, input.length() - 1);
     }
 
-    private static void writeToClient(
+    private void writeToClient(
             EnumStringMessage message,
             SocketChannel channel,
             Account targetOfMessage
@@ -685,9 +686,10 @@ public class Server {
         buffer.put(message.getMessage().getBytes());
         buffer.flip();
         channel.write(buffer);
+        System.out.println();
     }
 
-    private static void writeToOpponent(Player opponent, EnumStringMessage messageToOpponent) throws IOException{
+    private void writeToOpponent(Player opponent, EnumStringMessage messageToOpponent) throws IOException{
         if(opponent != null){
             Account opponentAccount = opponent.getAccount();
             SocketChannel opponentChannel = opponentAccount.getChannel();
@@ -695,24 +697,36 @@ public class Server {
         }
     }
 
-    private static boolean validateGameName(String gameName){
+    private boolean validateGameName(String gameName){
         return gameName.matches("[a-zA-Z][\\w\\d_]*");
+    }
+
+    // Constructors //
+    @SuppressWarnings("WeakerAccess")
+    Server(){
+        try{
+            serverSocketChannel = ServerSocketChannel.open();
+            serverSocketChannel.socket().bind(new InetSocketAddress(6969));
+            selector = Selector.open();
+            serverSocketChannel.configureBlocking(false);
+            serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+        } catch (IOException a) {
+            System.out.println("IOException");
+        }
     }
 
     @SuppressWarnings("InfiniteLoopStatement")
     public static void main(String args[]) {
         System.out.println("Server is working");
-        SelectionKey key;
-        try {
-            // SERVER INITIALIZATION
-            ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
-            serverSocketChannel.socket().bind(new InetSocketAddress(6969));
-            Selector selector = Selector.open();
-            serverSocketChannel.configureBlocking(false);
-            serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-            SocketChannel chan;
+        Server server = new Server();
+        server.run();
+    }
 
-            // CHANNEL PROCESSING
+    @SuppressWarnings("WeakerAccess")
+    public void run(){
+        try {
+            SelectionKey key;
+            SocketChannel chan;
             while (true) {
                 int readyChannels = selector.select();
                 if (readyChannels == 0) continue;
@@ -745,10 +759,13 @@ public class Server {
     }
 
     // MEMBER VARIABLES
-    private static HashSet<String> loggedInUsers = new HashSet<>();
-    private static HashMap<String, Game> pendingGames = new HashMap<>();
-    private static HashMap<String, Game> runningGames = new HashMap<>();
-    private static HashMap<Integer, String> gameIDtoGameNameHash = new HashMap<>();
-    private static List<String> pendingGamesArrayList = new ArrayList<>();
-    private static int allGamesEverCount = 1;
+    private ServerSocketChannel serverSocketChannel;
+    private Selector selector;
+
+    private HashSet<String> loggedInUsers = new HashSet<>();
+    private HashMap<String, Game> pendingGames = new HashMap<>();
+    private HashMap<String, Game> runningGames = new HashMap<>();
+    private HashMap<Integer, String> gameIDtoGameNameHash = new HashMap<>();
+    private List<String> pendingGamesArrayList = new ArrayList<>();
+    private int allGamesEverCount = 1;
 }

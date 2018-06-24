@@ -1,8 +1,6 @@
 package Tests;
 
 import Source.Account;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.*;
@@ -14,7 +12,7 @@ public class AccountTest {
 
     private Account acc = null;
 
-    private String getLastLine(){
+    private String readLastLineOfPlayerStatistics(){
         try {
             BufferedReader input = new BufferedReader(new FileReader(acc.getPathName()));
             String last = "";
@@ -48,17 +46,17 @@ public class AccountTest {
     @Test
     public void shouldUpdateAccountStatistics() throws Exception {
         acc = new Account("1_temp", "pass");
-        acc.updateAccountStatistics(5);
-        String result = getLastLine();
-        assertEquals("Updates account properly", "5", result);
+        acc.updateStatistics(5);
+        String result = readLastLineOfPlayerStatistics();
+        assertEquals("Updates account statistics properly", "5", result);
 
-        acc.updateAccountStatistics(22);
-        result = getLastLine();
-        assertEquals("Updates account properly", "22", result);
+        acc.updateStatistics(22);
+        result = readLastLineOfPlayerStatistics();
+        assertEquals("Updates account statistics properly", "22", result);
 
-        acc.updateAccountStatistics(200);
-        result = getLastLine();
-        assertEquals("Updates account properly", "200", result);
+        acc.updateStatistics(200);
+        result = readLastLineOfPlayerStatistics();
+        assertEquals("Updates account statistics properly", "200", result);
     }
 
     @Test

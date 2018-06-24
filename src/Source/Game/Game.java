@@ -22,8 +22,8 @@ public class Game {
         }
         player2 = joinedPlayer;
 
-        player1.getAccount().updateAccountStatistics(gameID);
-        player2.getAccount().updateAccountStatistics(gameID);
+        player1.getAccount().updateStatistics(gameID);
+        player2.getAccount().updateStatistics(gameID);
         playerInTurn = player1;
         System.out.println("Deployment phase for game " + gameName + " has just started!");
         return true;

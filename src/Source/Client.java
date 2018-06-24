@@ -331,7 +331,6 @@ public class Client {
             System.out.println(result.getMessage());
         }
 
-        // return false if result is null or message returns a "bad" message code
         return !(result == null || result.getEnumValue().equals(ServerResponseType.INVALID));
     }
 
@@ -378,11 +377,11 @@ public class Client {
         buffer = ByteBuffer.allocate(BUFFER_SIZE);
     }
 
-    public void blockSocket() throws IOException{
+    private void blockSocket() throws IOException{
         socket.configureBlocking(true);
     }
 
-    public void unblockSocket() throws IOException{
+    private void unblockSocket() throws IOException{
         socket.configureBlocking(false);
     }
 
