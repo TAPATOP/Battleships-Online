@@ -41,7 +41,7 @@ public class Client {
             if(serverResponse == null){
                 serverResponse = ServerResponseType.values()[(int) buffer.get()];
             }
-            while (buffer.limit() > buffer.position()) {
+            while(buffer.limit() > buffer.position()) {
                 c = (char) buffer.get();
                 messageFromServer.append(c);
             }
@@ -389,6 +389,9 @@ public class Client {
         try{
             Client client = new Client();
             client.initialize("localhost", 6969);
+
+            Client client2 = new Client();
+            client2.initialize("localhost", 6969);
 
             BufferedReader playerInput = new BufferedReader(new InputStreamReader(System.in));
             String playerMessage;

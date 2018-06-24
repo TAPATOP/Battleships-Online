@@ -4,8 +4,6 @@ import org.junit.*;
 import Source.Client;
 
 import java.io.*;
-import java.net.InetSocketAddress;
-import java.nio.channels.SocketChannel;
 import static org.junit.Assert.*;
 
 public class ClientTest {
@@ -205,6 +203,23 @@ public class ClientTest {
         );
     }
 
+    @Test
+    public void handlesAFewPlayersAtATime()throws IOException{
+        client.processPlayerCommand("login TAPATOP peswerdlmao");
+
+        Client secClient = new Client();
+        secClient.initialize();
+        secClient.processPlayerCommand("login borat kazahstan");
+
+        Client trdClient = new Client();
+        trdClient.initialize();
+        trdClient.processPlayerCommand("login hi hi");
+
+        secClient.processPlayerCommand("logout");
+        trdClient.processPlayerCommand("logout");
+        assertTrue(true);
+    }
+
     //@Test
     public void canJoinGame()throws IOException{
         client.processPlayerCommand("logout)");
@@ -216,6 +231,7 @@ public class ClientTest {
         client.processPlayerCommand("create_game hi");
         assertTrue("Second client joins the game", secClient.processPlayerCommand("join_game hi"));
         //client.processPlayerCommand("logout");
-        secClient.processPlayerCommand("logout");
+//        secClient.processPlayerCommand("exit_game");
+//        secClient.processPlayerCommand("logout");
     }
 }

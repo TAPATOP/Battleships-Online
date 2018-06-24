@@ -83,14 +83,14 @@ public class GameTable {
             yChange = 1;
         }
 
-        for (int i = 0; i < ship.getSize(); i++) {
-            if (!coordinatesAreValid(x, y)) {
+        for(int i = 0; i < ship.getSize(); i++) {
+            if(!coordinatesAreValid(x, y)) {
                 System.out.println("Ships aren't supposed to stick outside of the battlefield");
                 return false;
             }
 
             // if null => can be deployed
-            if (boardOfDeployments[x][y] == null) {
+            if(boardOfDeployments[x][y] == null) {
                 x += xChange;
                 y += yChange;
                 continue;
@@ -107,7 +107,7 @@ public class GameTable {
     public char[][] visualizeBoard(){
         char[][] visualizedBoard = new char[DIMENTION_LIMIT][DIMENTION_LIMIT];
 
-        for (int i = 0; i < DIMENTION_LIMIT; i++){
+        for(int i = 0; i < DIMENTION_LIMIT; i++){
             for(int j = 0; j < DIMENTION_LIMIT; j++){
                 visualizedBoard[i][j] = visualizeSquare(boardOfDeployments[i][j]);
             }
@@ -152,14 +152,14 @@ public class GameTable {
     }
 
     private EnumStringMessage executeFiring(int x, int y){
-        if (boardOfDeployments[x][y] == null) {
+        if(boardOfDeployments[x][y] == null) {
             // System.out.println("Miss!");
             boardOfDeployments[x][y] = missedShip;
             return new EnumStringMessage(FireResult.MISS, "Miss!");
         }
 
         // e.g. if the field has already been fired at
-        if (boardOfDeployments[x][y].getSize() < 0) {
+        if(boardOfDeployments[x][y].getSize() < 0) {
             // System.out.println("Can't fire there again");
             return new EnumStringMessage(FireResult.INVALID, "You've already fired there");
         }
@@ -197,7 +197,7 @@ public class GameTable {
 
         for(int i = 0; i < DIMENTION_LIMIT; i++){
             System.out.print((char)(i + 65) + "|");
-            for (char c :
+            for(char c :
                     visualizedBoard[i]) {
                 System.out.print(c + "|");
             }
@@ -266,7 +266,7 @@ public class GameTable {
     public static char[][] initializeTabulaRasa(){
         char[][] table = new char[DIMENTION_LIMIT][DIMENTION_LIMIT];
         for(int i = 0; i < DIMENTION_LIMIT; i++){
-            for (int j = 0; j < DIMENTION_LIMIT; j++){
+            for(int j = 0; j < DIMENTION_LIMIT; j++){
                 table[i][j] = '_';
             }
         }

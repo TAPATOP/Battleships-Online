@@ -18,7 +18,7 @@ public class AccountTest {
             String last = "";
             String line;
 
-            while ((line = input.readLine()) != null) {
+            while((line = input.readLine()) != null) {
                 last = line;
             }
             return last;

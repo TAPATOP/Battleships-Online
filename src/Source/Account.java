@@ -87,7 +87,7 @@ public class Account {
 
         int[] gameIDArray = new int[gameIDs.size()];
         int i = 0;
-        for (Integer element :
+        for(Integer element :
                 gameIDs) {
             gameIDArray[i++] = element;
         }
@@ -124,8 +124,8 @@ public class Account {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if(this == o) return true;
+        if(o == null || getClass() != o.getClass()) return false;
 
         Account account = (Account) o;
 

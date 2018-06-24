@@ -13,7 +13,65 @@ import java.nio.channels.*;
 import java.util.*;
 
 public class Server {
+    // Constructors //
+    @SuppressWarnings("WeakerAccess")
+    public Server(){
+        try{
+            serverSocketChannel = ServerSocketChannel.open();
+            serverSocketChannel.socket().bind(new InetSocketAddress(6969));
+            selector = Selector.open();
+            serverSocketChannel.configureBlocking(false);
+            serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+        } catch (IOException a) {
+            System.out.println("IOException");
+        }
+    }
 
+    // Public methods
+    @SuppressWarnings("InfiniteLoopStatement")
+    public static void main(String args[]) {
+        System.out.println("Server is working");
+        Server server = new Server();
+        server.run();
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    public void run(){
+        try {
+            SelectionKey key;
+            SocketChannel chan;
+            while(true) {
+                int readyChannels = selector.select();
+                if(readyChannels == 0) continue;
+
+                Set<SelectionKey> selectedKeys = selector.selectedKeys();
+                Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
+                while(keyIterator.hasNext()) {
+                    key = keyIterator.next();
+                    if(key.isAcceptable()) {
+                        // ACCEPT THE PENDING CONNECTIONS AND DESIGNATE THEM FOR READING
+                        acceptConnections(selector, key);
+                    } else if(key.isReadable()) {
+                        // DO THE ACTUAL WORK
+                        chan = (SocketChannel) key.channel();
+                        try {
+                            // READ THE CLIENT INPUT
+                            while(readFromClient(chan, key));
+                        } catch (IOException | CancelledKeyException exc) {
+                            System.out.println("Connection to client lost!");
+                            logoutAccount(key, chan);
+                            chan.close();
+                        }
+                    }
+                    keyIterator.remove();
+                }
+            }
+        } catch (IOException a) {
+            System.out.println("IOException");
+        }
+    }
+
+    // Private methods
     private void acceptConnections(Selector selector, SelectionKey key) throws IOException {
         ServerSocketChannel ssc = (ServerSocketChannel) key.channel();
         SocketChannel sc = ssc.accept();
@@ -27,7 +85,7 @@ public class Server {
 
         buffer.clear();
         try {
-            if (chan.read(buffer) <= 0) {
+            if(chan.read(buffer) <= 0) {
                 return false;
             }
         } catch (BufferOverflowException exc) {
@@ -64,7 +122,7 @@ public class Server {
     private String readClientMessage(ByteBuffer buffer) {
         char[] playerInput = new char[buffer.limit()];
         int i = 0;
-        while (buffer.limit() > buffer.position()) {
+        while(buffer.limit() > buffer.position()) {
             playerInput[i++] = (char) buffer.get();
         }
         return new String(playerInput);
@@ -118,7 +176,7 @@ public class Server {
             SelectionKey key
     ) throws IOException {
         EnumStringMessage queryReturn;
-        for (String gameName :
+        for(String gameName :
                 pendingGamesArrayList) {
             queryReturn = new EnumStringMessage(
                     ServerResponseType.NOTHING_OF_IMPORTANCE,
@@ -127,7 +185,7 @@ public class Server {
             writeToClient(queryReturn, chan, getChannelAccount(key));
         }
 
-        for (Map.Entry<String, Game> entry:
+        for(Map.Entry<String, Game> entry:
                 runningGames.entrySet()) {
             Game game = entry.getValue();
             queryReturn = new EnumStringMessage(
@@ -138,18 +196,19 @@ public class Server {
         }
     }
 
+    // By "volatile" I mean that the buffer might explode, e.g. overflow
     private void bufferVolatileGameListSend(
             SocketChannel chan,
             SelectionKey key
     ) throws IOException {
         EnumStringMessage queryReturn;
         StringBuilder messageBuilder = new StringBuilder();
-        for (String gameName :
+        for(String gameName :
                 pendingGamesArrayList) {
             messageBuilder.append(gameName).append(" PENDING\n");
         }
 
-        for (Map.Entry<String, Game> entry :
+        for(Map.Entry<String, Game> entry :
                 runningGames.entrySet()) {
             Game game = entry.getValue();
             messageBuilder.append(game.getGameName()).append(" RUNNING\n");
@@ -179,7 +238,7 @@ public class Server {
 
         StringBuilder messageFromServer = new StringBuilder();
 
-        for (int num :
+        for(int num :
                 statistics) {
             messageFromServer.append(Integer.toString(num)).append('\n');
         }
@@ -591,7 +650,7 @@ public class Server {
 
     private EnumStringMessage registerAccount(String message, SelectionKey key){
         String[] usernameAndPassword = splitUsernameAndPassword(message);
-        if (usernameAndPassword == null) {
+        if(usernameAndPassword == null) {
             return new EnumStringMessage(ServerResponseType.INVALID, "Unverified username/ password");
         }
         Account acc = new Account(usernameAndPassword[0], usernameAndPassword[1]);
@@ -623,7 +682,7 @@ public class Server {
             return new EnumStringMessage(ServerResponseType.INVALID, "You need to log out before you can log in");
         }
         String[] usernameAndPassword = splitUsernameAndPassword(message);
-        if (usernameAndPassword == null) {
+        if(usernameAndPassword == null) {
             return new EnumStringMessage(ServerResponseType.INVALID, "Unverified username/ password");
         }
         Account acc = new Account(usernameAndPassword[0], usernameAndPassword[1]);
@@ -635,7 +694,7 @@ public class Server {
     }
 
     private EnumStringMessage verifyLoginDataAndLogin(Account requestedAcc, Account savedAcc) throws IOException{
-        if (requestedAcc.exists()) {
+        if(requestedAcc.exists()) {
             String savedPass = requestedAcc.loadPassword();
             if(savedPass.equals(requestedAcc.getPassword())){
                 savedAcc.setName(requestedAcc.getName());
@@ -662,7 +721,7 @@ public class Server {
 
     private String[] splitUsernameAndPassword(String input) {
         String[] usernameAndPassword = input.split(" ");
-        if (usernameAndPassword.length != 2) {
+        if(usernameAndPassword.length != 2) {
             System.out.println("Username and password not validated...");
             return null;
         }
@@ -699,63 +758,6 @@ public class Server {
 
     private boolean validateGameName(String gameName){
         return gameName.matches("[a-zA-Z][\\w\\d_]*");
-    }
-
-    // Constructors //
-    @SuppressWarnings("WeakerAccess")
-    Server(){
-        try{
-            serverSocketChannel = ServerSocketChannel.open();
-            serverSocketChannel.socket().bind(new InetSocketAddress(6969));
-            selector = Selector.open();
-            serverSocketChannel.configureBlocking(false);
-            serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-        } catch (IOException a) {
-            System.out.println("IOException");
-        }
-    }
-
-    @SuppressWarnings("InfiniteLoopStatement")
-    public static void main(String args[]) {
-        System.out.println("Server is working");
-        Server server = new Server();
-        server.run();
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    public void run(){
-        try {
-            SelectionKey key;
-            SocketChannel chan;
-            while (true) {
-                int readyChannels = selector.select();
-                if (readyChannels == 0) continue;
-
-                Set<SelectionKey> selectedKeys = selector.selectedKeys();
-                Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
-                while (keyIterator.hasNext()) {
-                    key = keyIterator.next();
-                    if (key.isAcceptable()) {
-                        // ACCEPT THE PENDING CONNECTIONS AND DESIGNATE THEM FOR READING
-                        acceptConnections(selector, key);
-                    } else if (key.isReadable()) {
-                        // DO THE ACTUAL WORK
-                        chan = (SocketChannel) key.channel();
-                        try {
-                            // READ THE CLIENT INPUT
-                            while (readFromClient(chan, key));
-                        } catch (IOException | CancelledKeyException exc) {
-                            System.out.println("Connection to client lost!");
-                            logoutAccount(key, chan);
-                            chan.close();
-                        }
-                    }
-                    keyIterator.remove();
-                }
-            }
-        } catch (IOException a) {
-            System.out.println("IOException");
-        }
     }
 
     // MEMBER VARIABLES
