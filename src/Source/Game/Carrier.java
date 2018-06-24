@@ -1,7 +1,7 @@
 package Source.Game;
 
 class Carrier extends Ship {
-    Carrier(){
+    Carrier() {
         healthPoints = 5;
         size = healthPoints;
     }

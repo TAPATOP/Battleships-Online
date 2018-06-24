@@ -1,7 +1,7 @@
 package Source.Game;
 
 public class EnumStringMessage {
-    public EnumStringMessage(Enum enumValue, String message){
+    public EnumStringMessage(Enum enumValue, String message) {
         this.enumValue = enumValue;
         this.message = message;
     }

@@ -115,7 +115,7 @@ public class GameTableTest {
     }
 
     @Test
-    public void shouldReturnProperMessagesWhenFiring(){
+    public void shouldReturnProperMessagesWhenFiring() {
         char[][] expectedResult = new char[][]{
                 {'X', 'O', 'X', 'X', 'X', 'X', 'O', '_', '_' ,'_'},
                 {'X', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},

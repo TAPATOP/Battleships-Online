@@ -12,7 +12,7 @@ public class AccountTest {
 
     private Account acc = null;
 
-    private String readLastLineOfPlayerStatistics(){
+    private String readLastLineOfPlayerStatistics() {
         try {
             BufferedReader input = new BufferedReader(new FileReader(acc.getPathName()));
             String last = "";
@@ -22,23 +22,23 @@ public class AccountTest {
                 last = line;
             }
             return last;
-        } catch (IOException exc){
+        } catch(IOException exc) {
             exc.printStackTrace();
         }
         return null;
     }
 
 //    @Before
-//    public void setup(){
+//    public void setup() {
 //        acc = new Account("1_temp", "pass");
 //        acc.registerAccount();
 //    }
 //
 //    @After
-//    public void tearDown(){
+//    public void tearDown() {
 //        File file = new File(acc.getPathName());
 //        boolean a = file.delete();
-//        if(!a){
+//        if(!a) {
 //            System.out.println("Something messed up while deleting tempregs");
 //        }
 //    }

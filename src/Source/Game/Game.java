@@ -9,15 +9,15 @@ public class Game {
      * @param host player that requested the creation of the game; he is
      *             automatically logged into the game
      */
-    public Game(String gameName, int gameID, Player host){
+    public Game(String gameName, int gameID, Player host) {
         player1 = host;
         this.gameID = gameID;
         this.gameName = gameName;
     }
 
-    public boolean addPlayer(Player joinedPlayer){
+    public boolean addPlayer(Player joinedPlayer) {
         boolean joinSuccessful = joinedPlayer.joinAGame(gameID);
-        if(!joinSuccessful){
+        if(!joinSuccessful) {
             return false;
         }
         player2 = joinedPlayer;
@@ -33,8 +33,8 @@ public class Game {
         return player2 != null && !(player1.getGameTable().allShipsAreDeployed() && player2.getGameTable().allShipsAreDeployed());
     }
 
-    public Player getOtherPlayer(Player playerWeAlreadyKnow){
-        if(player1.equals(playerWeAlreadyKnow)){
+    public Player getOtherPlayer(Player playerWeAlreadyKnow) {
+        if(player1.equals(playerWeAlreadyKnow)) {
             return player2;
         }
         return player1;
@@ -46,9 +46,9 @@ public class Game {
      * @param accountOfPlayerWeAlreadyKnow Player of whom we wish to learn the opponent
      * @return returns the opponent of the account we already know about
      */
-    public Player getOtherPlayer(Account accountOfPlayerWeAlreadyKnow){
+    public Player getOtherPlayer(Account accountOfPlayerWeAlreadyKnow) {
         Player playerWeAlreadyKnow = new Player(accountOfPlayerWeAlreadyKnow);
-        if(player1.equals(playerWeAlreadyKnow)){
+        if(player1.equals(playerWeAlreadyKnow)) {
             return player2;
         }
         return player1;
@@ -60,26 +60,26 @@ public class Game {
      * one of the players winning or by being terminated due to one player
      * exiting prematurely
      */
-    public void end(){
+    public void end() {
         player1.removeFromGame();
-        if(player2 != null){
+        if(player2 != null) {
             player2.removeFromGame();
         }
     }
 
-    public EnumStringMessage deployShip(Player owner, String coordinates, boolean isVertical){
+    public EnumStringMessage deployShip(Player owner, String coordinates, boolean isVertical) {
         return owner.getGameTable().deployNextShip(coordinates, isVertical);
     }
 
-    public EnumStringMessage executeFiring(Player attacker, String coordinates){
-        if(gameOver){
+    public EnumStringMessage executeFiring(Player attacker, String coordinates) {
+        if(gameOver) {
             return new EnumStringMessage(
                     GameTable.FireResult.INVALID,
                     "Game is over, no need to keep firing..."
             );
         }
 
-        if(!attacker.equals(playerInTurn)){
+        if(!attacker.equals(playerInTurn)) {
             return new EnumStringMessage(
                     GameTable.FireResult.INVALID,
                     "It's not your turn to fire yet"
@@ -88,9 +88,9 @@ public class Game {
 
         EnumStringMessage result = getOtherPlayer(attacker).getGameTable().fireAt(coordinates);
         boolean firingWasLegal = !(result.getEnumValue().equals(GameTable.FireResult.INVALID));
-        if(firingWasLegal){
+        if(firingWasLegal) {
             switchTurns();
-            if(result.getEnumValue().equals(GameTable.FireResult.DESTROYED_LAST_SHIP)){
+            if(result.getEnumValue().equals(GameTable.FireResult.DESTROYED_LAST_SHIP)) {
                 gameOver = true;
             }
         }
@@ -98,10 +98,10 @@ public class Game {
         return result;
     }
 
-    private void switchTurns(){
-        if(player1.equals(playerInTurn)){
+    private void switchTurns() {
+        if(player1.equals(playerInTurn)) {
             playerInTurn = player2;
-        } else{
+        } else {
             playerInTurn = player1;
         }
     }
@@ -114,11 +114,11 @@ public class Game {
         return gameName;
     }
 
-    public Player getPlayerByAccount(Account acc){
-        if(player1.getAccount().equals(acc)){
+    public Player getPlayerByAccount(Account acc) {
+        if(player1.getAccount().equals(acc)) {
             return player1;
         }
-        if(player2.getAccount().equals(acc)){
+        if(player2.getAccount().equals(acc)) {
             return player2;
         }
         return null;

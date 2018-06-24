@@ -7,13 +7,13 @@ public class Player {
      * Used when comparing an Account with a Player
      * @param acc account we already know
      */
-    public Player(Account acc){
+    public Player(Account acc) {
         this.acc = acc;
         gameTable = new GameTable();
     }
 
-    public boolean joinAGame(int gameID){
-        if(acc.getCurrentGameID() != 0){
+    public boolean joinAGame(int gameID) {
+        if(acc.getCurrentGameID() != 0) {
             System.out.println("Account is already logged into another game");
             return false;
         }
@@ -21,19 +21,19 @@ public class Player {
         return true;
     }
 
-    public GameTable getGameTable(){
+    public GameTable getGameTable() {
         return gameTable;
     }
 
-    void removeFromGame(){
+    void removeFromGame() {
         acc.setCurrentGameID(0);
     }
 
-    public Account getAccount(){
+    public Account getAccount() {
         return acc;
     }
 
-    public String getName(){
+    public String getName() {
         return acc.getName();
     }
 

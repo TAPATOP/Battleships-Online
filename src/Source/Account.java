@@ -7,12 +7,12 @@ import java.util.Scanner;
 import java.util.Vector;
 
 public class Account {
-    Account(SocketChannel channel){
+    Account(SocketChannel channel) {
         currentGameID = 0;
         this.channel = channel;
     }
 
-    public Account(String name, String password){
+    public Account(String name, String password) {
         this.name = name;
         this.password = password;
         pathName = ".\\Accounts\\" + name + ".txt";
@@ -52,21 +52,21 @@ public class Account {
         this.currentGameID = currentGameID;
     }
 
-    public void updateStatistics(int gameID){
+    public void updateStatistics(int gameID) {
         File f = new File(pathName);
         if(!f.isFile()) {
             System.out.println("Account doesn't exist");
             return;
         }
-        try( PrintWriter out = new PrintWriter( new FileOutputStream( new File(pathName), true))  ){
+        try( PrintWriter out = new PrintWriter( new FileOutputStream( new File(pathName), true))  ) {
             out.println(gameID);
-            }catch (FileNotFoundException e) {
+            } catch(FileNotFoundException e) {
             System.out.println("Couldn't locate account");
         }
     }
 
-    public int[] loadStatistics(){
-        if(!exists()){
+    public int[] loadStatistics() {
+        if(!exists()) {
             System.out.println("Account doesn't exist");
             return null;
         }
@@ -78,10 +78,10 @@ public class Account {
 
             // skips the password
             scanner.nextLine();
-            while(scanner.hasNextInt()){
+            while(scanner.hasNextInt()) {
                 gameIDs.add(scanner.nextInt());
             }
-        } catch (FileNotFoundException e) {
+        } catch(FileNotFoundException e) {
             e.printStackTrace();
         }
 
@@ -100,14 +100,14 @@ public class Account {
             System.out.println("Account already exists");
             return ;
         }
-        try( PrintWriter out = new PrintWriter(  new FileOutputStream(new File(pathName )))  ){
+        try( PrintWriter out = new PrintWriter(  new FileOutputStream(new File(pathName )))  ) {
             out.println(password);
-        } catch (FileNotFoundException e) {
+        } catch(FileNotFoundException e) {
             System.out.println("Error registering account");
         }
     }
 
-    public boolean exists(){
+    public boolean exists() {
         File f = new File(pathName);
         return f.isFile();
     }
@@ -118,7 +118,7 @@ public class Account {
         return reader.readLine();
     }
 
-    ByteBuffer getBufferForCommunicationWithServer(){
+    ByteBuffer getBufferForCommunicationWithServer() {
         return bufferForCommunicationWithServer;
     }
 

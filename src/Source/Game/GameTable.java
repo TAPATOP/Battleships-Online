@@ -3,7 +3,7 @@ package Source.Game;
 import java.util.Vector;
 
 public class GameTable {
-    public GameTable(){
+    public GameTable() {
         deployedShipsCount = 0;
         allShips.add(new Carrier());
 
@@ -25,9 +25,9 @@ public class GameTable {
      * @param isVertical whether the ship is vertically deployed or not
      * @return returns true if the ship was successfully deployed
      */
-    public EnumStringMessage deployNextShip(String squareCoordinates, boolean isVertical){
+    public EnumStringMessage deployNextShip(String squareCoordinates, boolean isVertical) {
         int[] coords = tranformCoordinatesForReading(squareCoordinates);
-        if(coords[0] < 0){
+        if(coords[0] < 0) {
             return new EnumStringMessage(
                     ShipType.INVALID,
                     "Invalid coordinates"
@@ -38,8 +38,8 @@ public class GameTable {
         return deployShip(allShips.get(deployedShipsCount), x, y, isVertical);
     }
 
-    private EnumStringMessage deployShip(Ship ship, int x, int y, boolean isVertical){
-        if(allShipsAreDeployed()){
+    private EnumStringMessage deployShip(Ship ship, int x, int y, boolean isVertical) {
+        if(allShipsAreDeployed()) {
             System.out.println("All ships are already deployed");
             return new EnumStringMessage(
                     ShipType.INVALID,
@@ -49,14 +49,14 @@ public class GameTable {
 
         int xChange = 0;
         int yChange = 0;
-        if(isVertical){
+        if(isVertical) {
             xChange = 1;
-        }else{
+        } else {
             yChange = 1;
         }
 
-        if(canDeployShip(ship, x, y, isVertical)){
-            for(int i = 0; i < ship.getSize(); i++){
+        if(canDeployShip(ship, x, y, isVertical)) {
+            for(int i = 0; i < ship.getSize(); i++) {
                 boardOfDeployments[x][y] = ship;
                 x += xChange;
                 y += yChange;
@@ -74,12 +74,12 @@ public class GameTable {
         );
     }
 
-    private boolean canDeployShip(Ship ship, int x, int y, boolean isVertical){
+    private boolean canDeployShip(Ship ship, int x, int y, boolean isVertical) {
         int xChange = 0;
         int yChange = 0;
-        if(isVertical){
+        if(isVertical) {
             xChange = 1;
-        } else{
+        } else {
             yChange = 1;
         }
 
@@ -100,23 +100,23 @@ public class GameTable {
         return true;
     }
 
-    public boolean allShipsAreDeployed(){
+    public boolean allShipsAreDeployed() {
         return deployedShipsCount >= TOTAL_NUMBER_OF_SHIPS;
     }
 
-    public char[][] visualizeBoard(){
+    public char[][] visualizeBoard() {
         char[][] visualizedBoard = new char[DIMENTION_LIMIT][DIMENTION_LIMIT];
 
-        for(int i = 0; i < DIMENTION_LIMIT; i++){
-            for(int j = 0; j < DIMENTION_LIMIT; j++){
+        for(int i = 0; i < DIMENTION_LIMIT; i++) {
+            for(int j = 0; j < DIMENTION_LIMIT; j++) {
                 visualizedBoard[i][j] = visualizeSquare(boardOfDeployments[i][j]);
             }
         }
         return visualizedBoard;
     }
 
-    private char visualizeSquare(Ship shipOccupyingTheSquare){
-        if(shipOccupyingTheSquare == null){
+    private char visualizeSquare(Ship shipOccupyingTheSquare) {
+        if(shipOccupyingTheSquare == null) {
             return '_';
         }
         switch(shipOccupyingTheSquare.getSize()) {
@@ -129,9 +129,9 @@ public class GameTable {
         }
     }
 
-    public EnumStringMessage fireAt(String squareCoordinates){
+    public EnumStringMessage fireAt(String squareCoordinates) {
         int[] coords = tranformCoordinatesForReading(squareCoordinates);
-        if(coords[0] < 0){
+        if(coords[0] < 0) {
             return new EnumStringMessage(FireResult.INVALID, "Invalid coordinate");
         }
         int x = coords[0];
@@ -140,18 +140,18 @@ public class GameTable {
         try {
             EnumStringMessage resultMessage = executeFiring(x, y);
             FireResult result = (FireResult)resultMessage.getEnumValue();
-            if(result.equals(FireResult.DESTROYED) && deployedShips.isEmpty()){
+            if(result.equals(FireResult.DESTROYED) && deployedShips.isEmpty()) {
                 return new EnumStringMessage(FireResult.DESTROYED_LAST_SHIP, "Game over");
             }
 
             return resultMessage;
-        }catch(NullPointerException exc){
+        } catch(NullPointerException exc) {
             System.out.println("Something messed up with firing at targets; NULLPTR");
             return new EnumStringMessage(FireResult.INVALID, "Invalid coordinate");
         }
     }
 
-    private EnumStringMessage executeFiring(int x, int y){
+    private EnumStringMessage executeFiring(int x, int y) {
         if(boardOfDeployments[x][y] == null) {
             // System.out.println("Miss!");
             boardOfDeployments[x][y] = missedShip;
@@ -166,7 +166,7 @@ public class GameTable {
         boolean shipIsDead = boardOfDeployments[x][y].takeOneHit();
 
         EnumStringMessage result = checkIfShipDied(shipIsDead, x, y);
-        if(result != null){
+        if(result != null) {
             return result;
         }
 
@@ -175,8 +175,8 @@ public class GameTable {
         return new EnumStringMessage(FireResult.HIT, "HIT!");
     }
 
-    private EnumStringMessage checkIfShipDied(boolean shipIsDead, int x, int y){
-        if(shipIsDead){
+    private EnumStringMessage checkIfShipDied(boolean shipIsDead, int x, int y) {
+        if(shipIsDead) {
             Ship affectedShip = boardOfDeployments[x][y];
             deployedShips.remove(affectedShip);
 
@@ -188,14 +188,14 @@ public class GameTable {
         return null;
     }
 
-    public static void stylizeAndPrintMatrix(char[][] visualizedBoard ){
+    public static void stylizeAndPrintMatrix(char[][] visualizedBoard ) {
         System.out.print("/|");
-        for(int i = 1; i <= DIMENTION_LIMIT; i++){
+        for(int i = 1; i <= DIMENTION_LIMIT; i++) {
             System.out.print(i + "|");
         }
         System.out.println();
 
-        for(int i = 0; i < DIMENTION_LIMIT; i++){
+        for(int i = 0; i < DIMENTION_LIMIT; i++) {
             System.out.print((char)(i + 65) + "|");
             for(char c :
                     visualizedBoard[i]) {
@@ -213,9 +213,9 @@ public class GameTable {
      * @return returns an int[2] array, where arr[0] is x and arr[1] is y;
      * If the given coordinates are invalid in some way, arr[0] will be -1
      */
-    public static int[] tranformCoordinatesForReading(String squareCoordinates){
+    public static int[] tranformCoordinatesForReading(String squareCoordinates) {
         int[] transformedCoords = new int[2];
-        if(!validateCoordinatesString(squareCoordinates)){
+        if(!validateCoordinatesString(squareCoordinates)) {
             transformedCoords[0] = -1;
             return transformedCoords;
         }
@@ -231,18 +231,18 @@ public class GameTable {
         return transformedCoords;
     }
 
-    private static boolean validateCoordinatesString(String squareCoordinates){
-        if(squareCoordinates.length() > 3 || squareCoordinates.length() < 2){
+    private static boolean validateCoordinatesString(String squareCoordinates) {
+        if(squareCoordinates.length() > 3 || squareCoordinates.length() < 2) {
             return false;
         }
-        if(squareCoordinates.charAt(0) < 'A' || squareCoordinates.charAt(0) >= 'A' + DIMENTION_LIMIT){
+        if(squareCoordinates.charAt(0) < 'A' || squareCoordinates.charAt(0) >= 'A' + DIMENTION_LIMIT) {
             return false;
         }
 
         String supposedNumericValue = squareCoordinates.substring(1, squareCoordinates.length());
-        if(supposedNumericValue.matches("[0-9]*")){
+        if(supposedNumericValue.matches("[0-9]*")) {
             int number = Integer.parseInt(supposedNumericValue);
-            if(number > 0 && number <= DIMENTION_LIMIT){
+            if(number > 0 && number <= DIMENTION_LIMIT) {
                 return true;
             }
         }
@@ -259,22 +259,22 @@ public class GameTable {
      * @return returns if firing at given coordinates is possible/ meaningful; firing at a position
      * you've already fired will return false
      */
-    private boolean coordinatesAreValid(int x, int y){
+    private boolean coordinatesAreValid(int x, int y) {
         return (x < DIMENTION_LIMIT && x >= 0 && y < DIMENTION_LIMIT && y >= 0);
     }
 
-    public static char[][] initializeTabulaRasa(){
+    public static char[][] initializeTabulaRasa() {
         char[][] table = new char[DIMENTION_LIMIT][DIMENTION_LIMIT];
-        for(int i = 0; i < DIMENTION_LIMIT; i++){
-            for(int j = 0; j < DIMENTION_LIMIT; j++){
+        for(int i = 0; i < DIMENTION_LIMIT; i++) {
+            for(int j = 0; j < DIMENTION_LIMIT; j++) {
                 table[i][j] = '_';
             }
         }
         return table;
     }
 
-    private static ShipType getShipType(Ship ship){
-        switch(ship.getSize()){
+    private static ShipType getShipType(Ship ship) {
+        switch(ship.getSize()) {
             case 2:
                 return ShipType.DESTROYER;
             case 3:
@@ -288,8 +288,8 @@ public class GameTable {
         }
     }
 
-    public static int getShipSizeByType(ShipType shipType){
-        switch(shipType){
+    public static int getShipSizeByType(ShipType shipType) {
+        switch(shipType) {
             case DESTROYER:
                 return 2;
             case CRUISER:

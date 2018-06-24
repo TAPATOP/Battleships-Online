@@ -1,7 +1,7 @@
 package Source.Game;
 
 class Destroyer extends Ship {
-    Destroyer(){
+    Destroyer() {
         healthPoints = 2;
         size = healthPoints;
     }

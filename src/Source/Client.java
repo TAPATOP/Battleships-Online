@@ -20,7 +20,7 @@ public class Client {
             buffer.put((message).getBytes());
         }
         buffer.flip();
-        while(buffer.hasRemaining()){
+        while(buffer.hasRemaining()) {
             socket.write(buffer);
         }
     }
@@ -34,11 +34,11 @@ public class Client {
         do {
             buffer.clear();
             socket.read(buffer);
-            if(buffer.position() == 0){
+            if(buffer.position() == 0) {
                 return null;
             }
             buffer.flip();
-            if(serverResponse == null){
+            if(serverResponse == null) {
                 serverResponse = ServerResponseType.values()[(int) buffer.get()];
             }
             while(buffer.limit() > buffer.position()) {
@@ -55,7 +55,7 @@ public class Client {
 
     private void processServerResponse(EnumStringMessage serverMessage) throws IOException{
         ServerResponseType responseType = (ServerResponseType)serverMessage.getEnumValue();
-        switch(responseType){
+        switch(responseType) {
             case GAME_OVER:
             case RECORD_SHOT:
                 recordShotFromOpponent(serverMessage);
@@ -65,7 +65,7 @@ public class Client {
 
     private void recordShotFromOpponent(EnumStringMessage message) throws IOException{
         int[] coords = findCoordinatesOfOpponentShotOut(message.getMessage());
-        if(coords[0] == -1){
+        if(coords[0] == -1) {
             return;
         }
 
@@ -84,25 +84,25 @@ public class Client {
         }
     }
 
-    private int[] findCoordinatesOfOpponentShotOut(String coordinates){
+    private int[] findCoordinatesOfOpponentShotOut(String coordinates) {
         String possibleCoords = coordinates.substring(coordinates.length() - 4, coordinates.length() - 1);
         int[] coords = GameTable.tranformCoordinatesForReading(possibleCoords);
 
-        if(coords[0] == -1){
+        if(coords[0] == -1) {
             possibleCoords = possibleCoords.substring(1, possibleCoords.length());
             coords = GameTable.tranformCoordinatesForReading(possibleCoords);
         }
         return coords;
     }
 
-    private void recordShotAtOpponent(int x, int y, ServerResponseType resultOfShot){
+    private void recordShotAtOpponent(int x, int y, ServerResponseType resultOfShot) {
         char c = shotAtOpponentVisualization(resultOfShot);
         opponentGameTable[x][y] = c;
         GameTable.stylizeAndPrintMatrix(opponentGameTable);
     }
 
-    private char shotAtOpponentVisualization(ServerResponseType resultOfShot){
-        switch(resultOfShot){
+    private char shotAtOpponentVisualization(ServerResponseType resultOfShot) {
+        switch(resultOfShot) {
             case HIT:
                 return 'X';
             case MISS:
@@ -112,8 +112,8 @@ public class Client {
         }
     }
 
-    private char visualizeOpponentShot(int x, int y){
-        switch(yourGameTable[x][y]){
+    private char visualizeOpponentShot(int x, int y) {
+        switch(yourGameTable[x][y]) {
             case '#':
                 return 'X';
             case '_':
@@ -167,7 +167,7 @@ public class Client {
         // the enum of this should always be GameTable.ShipType, since that's the command
         EnumStringMessage result = readMessageFromServer();
 
-        if(result == null){
+        if(result == null) {
             return null;
         }
 
@@ -175,7 +175,7 @@ public class Client {
         try {
             ServerResponseType serverResponseAsRead = (ServerResponseType)result.getEnumValue();
             shipType = revertServerResponseTypeToShipType(serverResponseAsRead);
-        }catch(ClassCastException exc){
+        } catch(ClassCastException exc) {
             return result;
         }
 
@@ -186,10 +186,10 @@ public class Client {
         return new EnumStringMessage(ServerResponseType.OK, result.getMessage());
     }
 
-    private void tryDrawingDeployedShip(GameTable.ShipType shipType, String coordinates){
+    private void tryDrawingDeployedShip(GameTable.ShipType shipType, String coordinates) {
         char c = coordinates.charAt(0);
         boolean isVertical;
-        switch(c){
+        switch(c) {
             case 'h':
                 isVertical = false;
                 break;
@@ -202,25 +202,25 @@ public class Client {
         String restOfCoordinates = coordinates.substring(1, coordinates.length());
 
         int[] coords = GameTable.tranformCoordinatesForReading(restOfCoordinates);
-        if(coords[0] == -1){
+        if(coords[0] == -1) {
             System.out.println("Something's wrong with the coordinates");
             return;
         }
         drawDeployedShip(shipType, coords[0], coords[1], isVertical);
     }
 
-    private void drawDeployedShip(GameTable.ShipType shipType, int x, int y, boolean isVertical){
+    private void drawDeployedShip(GameTable.ShipType shipType, int x, int y, boolean isVertical) {
         int shipSize = GameTable.getShipSizeByType(shipType);
 
         int xChange = 0;
         int yChange = 0;
-        if(isVertical){
+        if(isVertical) {
             xChange = 1;
-        }else{
+        } else {
             yChange = 1;
         }
 
-        for(int i = 0; i < shipSize; i++){
+        for(int i = 0; i < shipSize; i++) {
             yourGameTable[x][y] = '#';
             x += xChange;
             y += yChange;
@@ -228,8 +228,8 @@ public class Client {
         GameTable.stylizeAndPrintMatrix(yourGameTable);
     }
 
-    private GameTable.ShipType revertServerResponseTypeToShipType(ServerResponseType original){
-        switch(original){
+    private GameTable.ShipType revertServerResponseTypeToShipType(ServerResponseType original) {
+        switch(original) {
             case DEPLOYED_DESTROYER:
                 return GameTable.ShipType.DESTROYER;
             case DEPLOYED_CRUISER:
@@ -247,7 +247,7 @@ public class Client {
         sendMessageToServer(ClientMessageType.FIRE, coordinates);
         EnumStringMessage result = readMessageFromServer();
 
-        if(result == null){
+        if(result == null) {
             return null;
         }
 
@@ -255,10 +255,10 @@ public class Client {
         boolean shotIsProbablyIndeedAShot = !result.getEnumValue().equals(ServerResponseType.NOTHING_OF_IMPORTANCE);
         boolean shotKilledLastShip = result.getEnumValue().equals(ServerResponseType.DESTROYED_LAST_SHIP);
 
-        if(shotIsNotInvalid && shotIsProbablyIndeedAShot){
+        if(shotIsNotInvalid && shotIsProbablyIndeedAShot) {
             int[] coords = GameTable.tranformCoordinatesForReading(coordinates);
             recordShotAtOpponent(coords[0], coords[1], (ServerResponseType)result.getEnumValue());
-            if(shotKilledLastShip){
+            if(shotKilledLastShip) {
                 yourGameTable = GameTable.initializeTabulaRasa();
                 opponentGameTable = GameTable.initializeTabulaRasa();
                 // processPlayerCommand("exit_game");
@@ -278,15 +278,15 @@ public class Client {
     }
 
     private EnumStringMessage callCommand(ClientMessageType clientMessageType, String remainingMessage) throws IOException{
-        switch(clientMessageType){
+        switch(clientMessageType) {
             case LOGIN:
-                if(remainingMessage == null){
+                if(remainingMessage == null) {
                     System.out.println("Username and password format is not okay");
                     return null;
                 }
                 return login(remainingMessage);
             case REGISTER:
-                if(remainingMessage == null){
+                if(remainingMessage == null) {
                     System.out.println("There is nothing to register...");
                     return null;
                 }
@@ -321,21 +321,21 @@ public class Client {
         String playerMessageType = playerMessage.split(" ")[0];
         ClientMessageType clientMessageType = findMessageTypeOut(playerMessageType);
         String remainingMessage = null;
-        if(playerMessageType.length() + 1 < playerMessage.length()){
+        if(playerMessageType.length() + 1 < playerMessage.length()) {
             remainingMessage = playerMessage.substring(playerMessageType.length() + 1, playerMessage.length());
             remainingMessage = remainingMessage.trim().replaceAll(" +", " ");
         }
 
         EnumStringMessage result = callCommand(clientMessageType, remainingMessage);
-        if(result != null){
+        if(result != null) {
             System.out.println(result.getMessage());
         }
 
         return !(result == null || result.getEnumValue().equals(ServerResponseType.INVALID));
     }
 
-    private ClientMessageType findMessageTypeOut(String string){
-        switch(string){
+    private ClientMessageType findMessageTypeOut(String string) {
+        switch(string) {
             case "login":
                 return ClientMessageType.LOGIN;
             case "register":
@@ -385,7 +385,7 @@ public class Client {
         socket.configureBlocking(false);
     }
 
-    public static void main(String args[]){
+    public static void main(String args[]) {
         try{
             Client client = new Client();
             client.initialize("localhost", 6969);
@@ -401,7 +401,7 @@ public class Client {
 
             // START OF CLIENT- SERVER MESSAGE EXCHANGE
             while(true) {
-                if(playerInput.ready()){
+                if(playerInput.ready()) {
                     client.blockSocket();
                     playerMessage = playerInput.readLine();
                     // SENDS THE INPUT MESSAGE TO THE SERVER
@@ -410,20 +410,20 @@ public class Client {
 
                 try {
                     TimeUnit.MILLISECONDS.sleep(refreshRate);
-                } catch (InterruptedException e) {
+                } catch(InterruptedException e) {
                     e.printStackTrace();
                 }
 
                 client.unblockSocket();
                 EnumStringMessage message = client.readMessageFromServer();
-                if(message != null){
+                if(message != null) {
                     System.out.println(message.getMessage());
                 }
             }
 
-        }catch(UnknownHostException exc){
+        } catch(UnknownHostException exc) {
             System.out.println("Issues locating the server");
-        }catch(IOException exc) {
+        } catch(IOException exc) {
             System.out.println("Cannot connect to server");
         }
     }

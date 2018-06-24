@@ -15,14 +15,14 @@ import java.util.*;
 public class Server {
     // Constructors //
     @SuppressWarnings("WeakerAccess")
-    public Server(){
+    public Server() {
         try{
             serverSocketChannel = ServerSocketChannel.open();
             serverSocketChannel.socket().bind(new InetSocketAddress(6969));
             selector = Selector.open();
             serverSocketChannel.configureBlocking(false);
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-        } catch (IOException a) {
+        } catch(IOException a) {
             System.out.println("IOException");
         }
     }
@@ -36,7 +36,7 @@ public class Server {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public void run(){
+    public void run() {
         try {
             SelectionKey key;
             SocketChannel chan;
@@ -57,7 +57,7 @@ public class Server {
                         try {
                             // READ THE CLIENT INPUT
                             while(readFromClient(chan, key));
-                        } catch (IOException | CancelledKeyException exc) {
+                        } catch(IOException | CancelledKeyException exc) {
                             System.out.println("Connection to client lost!");
                             logoutAccount(key, chan);
                             chan.close();
@@ -66,7 +66,7 @@ public class Server {
                     keyIterator.remove();
                 }
             }
-        } catch (IOException a) {
+        } catch(IOException a) {
             System.out.println("IOException");
         }
     }
@@ -88,7 +88,7 @@ public class Server {
             if(chan.read(buffer) <= 0) {
                 return false;
             }
-        } catch (BufferOverflowException exc) {
+        } catch(BufferOverflowException exc) {
             System.out.println("Client message too long!");
         }
         buffer.flip();
@@ -100,18 +100,18 @@ public class Server {
 
         // No reason not to notify the client about what's going on as soon as possible
         EnumStringMessage result = processMessage(mesType, playerMessage, chan, key);
-        if(result == null){
+        if(result == null) {
             return true;
         }
         writeToClient(result, chan, getChannelAccount(key));
         return true;
     }
 
-    private Account getChannelAccount(SelectionKey key){
+    private Account getChannelAccount(SelectionKey key) {
         return ((Account)key.attachment());
     }
 
-    private ByteBuffer getChannelBuffer(SelectionKey key){
+    private ByteBuffer getChannelBuffer(SelectionKey key) {
         return getChannelAccount(key).getBufferForCommunicationWithServer();
     }
 
@@ -226,7 +226,7 @@ public class Server {
     private EnumStringMessage showPlayerStatistics(SelectionKey key, SocketChannel chan) throws IOException{
         EnumStringMessage messageToClient;
 
-        if(!channelIsLoggedIn(key)){
+        if(!channelIsLoggedIn(key)) {
             messageToClient = new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "You're not logged in"
@@ -255,7 +255,7 @@ public class Server {
     }
 
     private EnumStringMessage fire(String coordinates, SelectionKey key) throws IOException{
-        if(!channelIsInGame(key)){
+        if(!channelIsInGame(key)) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "Please don't fire in the lobby... Join a game first"
@@ -265,14 +265,14 @@ public class Server {
         Game channelGame = getGameByAccount(getChannelAccount(key));
 
         // this shouldn't really execute but warnings are annoying
-        if(channelGame == null){
+        if(channelGame == null) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "You're not in a game, please join one first"
             );
         }
 
-        if(channelGame.isInDeploymentPhase()){
+        if(channelGame.isInDeploymentPhase()) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "Game is still in deployment mode"
@@ -295,7 +295,7 @@ public class Server {
                         (GameTable.FireResult)result.getEnumValue()
                 );
 
-        if(!SRT.equals(ServerResponseType.INVALID)){
+        if(!SRT.equals(ServerResponseType.INVALID)) {
             EnumStringMessage messageToOponent = new EnumStringMessage(
                     ServerResponseType.RECORD_SHOT,
                     channelPlayer.getName() + " fired at: " + coordinates + '\n'
@@ -304,7 +304,7 @@ public class Server {
                     channelGame.getOtherPlayer(channelPlayer),
                     messageToOponent
             );
-            if(SRT.equals(ServerResponseType.DESTROYED_LAST_SHIP)){
+            if(SRT.equals(ServerResponseType.DESTROYED_LAST_SHIP)) {
                 messageToOponent = new EnumStringMessage(
                         ServerResponseType.GAME_OVER,
                         channelPlayer.getName() + " wins!"
@@ -321,12 +321,12 @@ public class Server {
         return result;
     }
 
-    private boolean channelIsInGame(SelectionKey key){
+    private boolean channelIsInGame(SelectionKey key) {
         return getChannelAccount(key) != null && getChannelAccount(key).getCurrentGameID() != 0;
     }
 
-    private ServerResponseType convertGameTableFireResultToServerResponseType(GameTable.FireResult fireResult){
-        switch(fireResult){
+    private ServerResponseType convertGameTableFireResultToServerResponseType(GameTable.FireResult fireResult) {
+        switch(fireResult) {
             case MISS:
                 return ServerResponseType.MISS;
             case HIT:
@@ -344,7 +344,7 @@ public class Server {
             String coordinates,
             SelectionKey key
     ) throws IOException{
-        if(coordinates == null || coordinates.length() == 0){
+        if(coordinates == null || coordinates.length() == 0) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "Please send coordinates in the required format"
@@ -352,7 +352,7 @@ public class Server {
         }
         boolean isVertical;
         char c = coordinates.charAt(0);
-        switch(c){
+        switch(c) {
             case 'v':
                 isVertical = true;
                 break;
@@ -368,7 +368,7 @@ public class Server {
         }
 
         Game gameInQuestion = getGameByAccount(getChannelAccount(key));
-        if(gameInQuestion == null){
+        if(gameInQuestion == null) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "You're not in a game"
@@ -378,14 +378,14 @@ public class Server {
         Player thisPlayer = gameInQuestion.getPlayerByAccount(getChannelAccount(key));
 
         // I don't think this body should ever be executed?
-        if(thisPlayer == null){
+        if(thisPlayer == null) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "You're not part of this game"
             );
         }
 
-        if(thisPlayer.getGameTable().allShipsAreDeployed()){
+        if(thisPlayer.getGameTable().allShipsAreDeployed()) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "You have already deployed all of your ships. I guess you should wait" +
@@ -393,7 +393,7 @@ public class Server {
             );
         }
 
-        if(!gameInQuestion.isInDeploymentPhase()){
+        if(!gameInQuestion.isInDeploymentPhase()) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "Game isn't in deployment phase"
@@ -423,7 +423,7 @@ public class Server {
     }
 
     private void seeIfDeploymentIsFinalized(Game game, Player thisPlayer) throws IOException{
-        if(thisPlayer.getGameTable().allShipsAreDeployed()){
+        if(thisPlayer.getGameTable().allShipsAreDeployed()) {
             EnumStringMessage messageToTheOpponent = new EnumStringMessage(
                     ServerResponseType.NOTHING_OF_IMPORTANCE,
                     "Your opponent has just deployed their last ship."
@@ -433,8 +433,8 @@ public class Server {
         }
     }
 
-    private ServerResponseType transformDeployedShipTypeToServerResponseType(GameTable.ShipType original){
-        switch(original){
+    private ServerResponseType transformDeployedShipTypeToServerResponseType(GameTable.ShipType original) {
+        switch(original) {
             case DESTROYER:
                 return ServerResponseType.DEPLOYED_DESTROYER;
             case CRUISER:
@@ -448,14 +448,14 @@ public class Server {
         }
     }
 
-    private Game getGameByAccount(Account acc){
+    private Game getGameByAccount(Account acc) {
         String nameOfGame = gameIDtoGameNameHash.get(acc.getCurrentGameID());
         Game theGame = pendingGames.get(nameOfGame);
-        if(theGame != null){
+        if(theGame != null) {
             return theGame;
         }
         theGame = runningGames.get(nameOfGame);
-        if(theGame != null){
+        if(theGame != null) {
             return theGame;
         }
         return null;
@@ -466,7 +466,7 @@ public class Server {
             SelectionKey key
     ) throws IOException{
         boolean channelIsLoggedIn = channelIsLoggedIn(key);
-        if(!channelIsLoggedIn){
+        if(!channelIsLoggedIn) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "You need to be logged in to join a game"
@@ -475,9 +475,9 @@ public class Server {
 
         message = removeLastCharacter(message);
 
-        if(message.length() == 0){
+        if(message.length() == 0) {
             message = getRandomPendingGame();
-            if(message == null){
+            if(message == null) {
                 return new EnumStringMessage(
                         ServerResponseType.INVALID,
                         "No games are waiting for players at the moment"
@@ -485,7 +485,7 @@ public class Server {
             }
         }
 
-        if(!validateGameName(message)){
+        if(!validateGameName(message)) {
             System.out.println(message);
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
@@ -494,7 +494,7 @@ public class Server {
         }
 
         Game desiredGame = pendingGames.get(message);
-        if(desiredGame == null){
+        if(desiredGame == null) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "No game with this name is waiting for a second player"
@@ -502,7 +502,7 @@ public class Server {
         }
 
         boolean additionWasSuccessful = desiredGame.addPlayer(new Player(getChannelAccount(key)));
-        if(!additionWasSuccessful){
+        if(!additionWasSuccessful) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "You're already in another game"
@@ -533,9 +533,9 @@ public class Server {
         );
     }
 
-    private String getRandomPendingGame(){
+    private String getRandomPendingGame() {
         Random r = new Random();
-        if(pendingGamesArrayList.size() < 1){
+        if(pendingGamesArrayList.size() < 1) {
             return null;
         }
         String randomGame = pendingGamesArrayList.get(r.nextInt(pendingGamesArrayList.size()));
@@ -553,18 +553,18 @@ public class Server {
      */
     private EnumStringMessage exitGame(SelectionKey key) throws IOException{
         Account channelAccount = getChannelAccount(key);
-        if(channelAccount.getCurrentGameID() == 0){
+        if(channelAccount.getCurrentGameID() == 0) {
             return new EnumStringMessage(ServerResponseType.INVALID, "You're not in a game");
         }
 
         String gameToBeClosedName = gameIDtoGameNameHash.get(channelAccount.getCurrentGameID());
         Game gameToBeClosed = pendingGames.get(gameToBeClosedName);
-        if(gameToBeClosed == null){
+        if(gameToBeClosed == null) {
             gameToBeClosed = runningGames.get(gameToBeClosedName);
         }
 
         // body shouldn't be executed, unless there is a bug
-        if(gameToBeClosed == null){
+        if(gameToBeClosed == null) {
             return new EnumStringMessage(ServerResponseType.INVALID, "Cannot find the game you're in ??");
         }
         return initializeGameExit(key, gameToBeClosed);
@@ -594,9 +594,9 @@ public class Server {
         );
     }
 
-    private EnumStringMessage createGame(String gameName, SelectionKey key){
+    private EnumStringMessage createGame(String gameName, SelectionKey key) {
         boolean channelIsLoggedIn = channelIsLoggedIn(key);
-        if(!channelIsLoggedIn){
+        if(!channelIsLoggedIn) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "You need to be logged in to create a game"
@@ -604,27 +604,27 @@ public class Server {
         }
 
         gameName = removeLastCharacter(gameName);
-        if(!validateGameName(gameName)){
+        if(!validateGameName(gameName)) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "Invalid game name; It must start with a letter and only contain letters, digits and underscores"
             );
         }
 
-        if(gameExists(gameName)){
+        if(gameExists(gameName)) {
             return new EnumStringMessage(ServerResponseType.INVALID, "Game already exists, try another name");
         }
 
         return initializeGameCreation(gameName, key);
     }
 
-    private EnumStringMessage initializeGameCreation(String gameName, SelectionKey key){
+    private EnumStringMessage initializeGameCreation(String gameName, SelectionKey key) {
         Player hostingPlayer = new Player(getChannelAccount(key));
         Game newGame = new Game(gameName, allGamesEverCount, hostingPlayer);
         pendingGames.put(gameName, newGame);
         pendingGamesArrayList.add(gameName);
         gameIDtoGameNameHash.put(allGamesEverCount, gameName);
-        if(!hostingPlayer.joinAGame(newGame.getGameID())){
+        if(!hostingPlayer.joinAGame(newGame.getGameID())) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "Cannot join a game while being in another one!"
@@ -635,12 +635,12 @@ public class Server {
         return new EnumStringMessage(ServerResponseType.OK, "Game created successfully!");
     }
 
-    private boolean gameExists(String gameName){
+    private boolean gameExists(String gameName) {
         return pendingGames.get(gameName) != null || runningGames.get(gameName) != null;
     }
 
     private EnumStringMessage logoutAccount(SelectionKey key, SocketChannel channel) throws IOException{
-        if(channelIsLoggedIn(key)){
+        if(channelIsLoggedIn(key)) {
             System.out.println(getChannelAccount(key).getName() + " has logged out");
             logChannelOut(key, channel);
             return new EnumStringMessage(ServerResponseType.OK, "Successful logout. Bye!");
@@ -648,17 +648,17 @@ public class Server {
         return new EnumStringMessage(ServerResponseType.INVALID, "You need to have logged in to log out...");
     }
 
-    private EnumStringMessage registerAccount(String message, SelectionKey key){
+    private EnumStringMessage registerAccount(String message, SelectionKey key) {
         String[] usernameAndPassword = splitUsernameAndPassword(message);
         if(usernameAndPassword == null) {
             return new EnumStringMessage(ServerResponseType.INVALID, "Unverified username/ password");
         }
         Account acc = new Account(usernameAndPassword[0], usernameAndPassword[1]);
-        if(accountExists(acc)){
+        if(accountExists(acc)) {
             System.out.println(acc.getName() + " already exists");
             return new EnumStringMessage(ServerResponseType.INVALID, "User already exists...");
         }
-        if(channelIsLoggedIn(key)){
+        if(channelIsLoggedIn(key)) {
             System.out.println("This channel is already logged in");
             return new EnumStringMessage(ServerResponseType.INVALID, "You need to log out before you can log in");
         }
@@ -677,7 +677,7 @@ public class Server {
     }
 
     private EnumStringMessage loginAccount(String message, SelectionKey key) throws IOException{
-        if(channelIsLoggedIn(key)){
+        if(channelIsLoggedIn(key)) {
             System.out.println("This channel is already logged in");
             return new EnumStringMessage(ServerResponseType.INVALID, "You need to log out before you can log in");
         }
@@ -686,7 +686,7 @@ public class Server {
             return new EnumStringMessage(ServerResponseType.INVALID, "Unverified username/ password");
         }
         Account acc = new Account(usernameAndPassword[0], usernameAndPassword[1]);
-        if(accountIsLoggedIn(acc)){
+        if(accountIsLoggedIn(acc)) {
             System.out.println(acc.getName() + " is already logged in");
             return new EnumStringMessage(ServerResponseType.INVALID, "User already logged in...");
         }
@@ -696,7 +696,7 @@ public class Server {
     private EnumStringMessage verifyLoginDataAndLogin(Account requestedAcc, Account savedAcc) throws IOException{
         if(requestedAcc.exists()) {
             String savedPass = requestedAcc.loadPassword();
-            if(savedPass.equals(requestedAcc.getPassword())){
+            if(savedPass.equals(requestedAcc.getPassword())) {
                 savedAcc.setName(requestedAcc.getName());
                 savedAcc.setPassword(requestedAcc.getPassword());
                 System.out.println("Successful login!");
@@ -705,17 +705,17 @@ public class Server {
             }
             System.out.println("Incorrect pass");
             return new EnumStringMessage(ServerResponseType.INVALID, "Incorrect password...");
-        } else{
+        } else {
             System.out.println("Account not found.");
             return new EnumStringMessage(ServerResponseType.INVALID, "Account doesn't exist");
         }
     }
 
-    private boolean channelIsLoggedIn(SelectionKey key){
+    private boolean channelIsLoggedIn(SelectionKey key) {
         return  ((Account)key.attachment()).getName() != null;
     }
 
-    private boolean accountIsLoggedIn(Account acc){
+    private boolean accountIsLoggedIn(Account acc) {
         return loggedInUsers.contains(acc.getName());
     }
 
@@ -729,7 +729,7 @@ public class Server {
         return usernameAndPassword;
     }
 
-    private String removeLastCharacter(String input){
+    private String removeLastCharacter(String input) {
         return input.substring(0, input.length() - 1);
     }
 
@@ -749,14 +749,14 @@ public class Server {
     }
 
     private void writeToOpponent(Player opponent, EnumStringMessage messageToOpponent) throws IOException{
-        if(opponent != null){
+        if(opponent != null) {
             Account opponentAccount = opponent.getAccount();
             SocketChannel opponentChannel = opponentAccount.getChannel();
             writeToClient(messageToOpponent, opponentChannel, opponentAccount);
         }
     }
 
-    private boolean validateGameName(String gameName){
+    private boolean validateGameName(String gameName) {
         return gameName.matches("[a-zA-Z][\\w\\d_]*");
     }
 
