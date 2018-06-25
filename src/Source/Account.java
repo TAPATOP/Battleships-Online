@@ -112,7 +112,7 @@ public class Account {
         return f.isFile();
     }
 
-    public String loadPassword() throws IOException{
+    public String loadPassword() throws IOException {
         File f = new File(pathName);
         BufferedReader reader = new BufferedReader(new FileReader(f));
         return reader.readLine();

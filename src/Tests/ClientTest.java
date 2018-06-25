@@ -10,7 +10,7 @@ public class ClientTest {
     private static Client client;
 
     @BeforeClass
-    public static void setup() throws IOException{
+    public static void setup() throws IOException {
         client = new Client("localhost", 6969);
     }
 
@@ -61,7 +61,7 @@ public class ClientTest {
     }
 
     @Test
-    public void shouldLogoutIfNotLoggedOut() throws IOException{
+    public void shouldLogoutIfNotLoggedOut() throws IOException {
         client.processPlayerCommand("logout");
         assertFalse(
                 "Doesn't mess up when trying to log out without even having been logged in",
@@ -77,7 +77,7 @@ public class ClientTest {
     }
 
     @Test
-    public void shouldBeAbleToLogInAndOutMultipleTimes() throws IOException{
+    public void shouldBeAbleToLogInAndOutMultipleTimes() throws IOException {
         assertTrue("logs in fine", client.processPlayerCommand("login TAPATOP peswerdlmao"));
         assertTrue("logs out fine", client.processPlayerCommand("logout"));
         assertFalse(
@@ -90,7 +90,7 @@ public class ClientTest {
     }
 
     @Test
-    public void registeringShouldRegisteredUnregisteredAndNotRegisterRegistered() throws IOException{
+    public void registeringShouldRegisteredUnregisteredAndNotRegisterRegistered() throws IOException {
         assertTrue(
                 "Registers a nonexistant account properly",
                 client.processPlayerCommand("register username password"));
@@ -122,7 +122,7 @@ public class ClientTest {
     }
 
     @Test
-    public void shouldNotBlowUpWhenGivenRandomMessages() throws IOException{
+    public void shouldNotBlowUpWhenGivenRandomMessages() throws IOException {
         // Logic: If you can send this three times in a row without throwing an IOException
         // and be able to login and logout, then you didn't kill the server
 //        client.processPlayerCommand("hello mamma mia");
@@ -137,7 +137,7 @@ public class ClientTest {
     }
 
     @Test
-    public void shouldBeAbleToCreateLegalGames() throws IOException{
+    public void shouldBeAbleToCreateLegalGames() throws IOException {
         client.processPlayerCommand("logout");
         assertFalse(
                 "Doesn't create game without having logged in first",
@@ -180,7 +180,7 @@ public class ClientTest {
     }
 
     @Test
-    public void shouldExitGameProperlyWhenAloneInRoom()throws IOException{
+    public void shouldExitGameProperlyWhenAloneInRoom()throws IOException {
         client.processPlayerCommand("logout");
         client.processPlayerCommand("login hi hi");
 
@@ -204,7 +204,7 @@ public class ClientTest {
     }
 
     @Test
-    public void handlesAFewPlayersAtATime()throws IOException{
+    public void handlesAFewPlayersAtATime()throws IOException {
         client.processPlayerCommand("login TAPATOP peswerdlmao");
 
         Client secClient = new Client();
@@ -219,7 +219,7 @@ public class ClientTest {
     }
 
     @Test
-    public void canJoinGame()throws IOException{
+    public void canJoinGame()throws IOException {
         client.processPlayerCommand("logout)");
         Client secClient = new Client();
         secClient.processPlayerCommand("login borat kazahstan");

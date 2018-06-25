@@ -1,6 +1,5 @@
 package Source;
 
-import Source.Game.EnumStringMessage;
 import Source.Game.GameTable;
 
 import java.io.BufferedReader;
@@ -14,14 +13,14 @@ import java.util.concurrent.TimeUnit;
 
 public class Client {
     // Constructors //
-    public Client() throws IOException{
+    public Client() throws IOException {
         // INITIALIZE CLIENT STUFF
         socket = SocketChannel.open();
         socket.connect(new InetSocketAddress("localhost", 6969));
         buffer = ByteBuffer.allocate(BUFFER_SIZE);
     }
 
-    public Client(String host, int port) throws IOException{
+    public Client(String host, int port) throws IOException {
         // INITIALIZE CLIENT STUFF
         socket = SocketChannel.open();
         socket.connect(new InetSocketAddress(host, port));
@@ -32,7 +31,6 @@ public class Client {
     public static void main(String args[]) {
         try {
             Client client = new Client("localhost", 6969);
-
             BufferedReader playerInput = new BufferedReader(new InputStreamReader(System.in));
             String playerMessage;
             final int timeBetweenRefreshes = 150;
@@ -64,7 +62,7 @@ public class Client {
         }
     }
 
-    public boolean processPlayerCommand(String playerMessage) throws IOException{
+    public boolean processPlayerCommand(String playerMessage) throws IOException {
         // checkForAndPrintMessageFromServer is mostly used in cases where the user gives commands
         // so fast, that the client doesn't have time to print the recently received message,
         // e.g. mostly useful for making the Unit Tests works properly
@@ -89,11 +87,12 @@ public class Client {
     }
 
     // Private methods //
-    private void checkForAndPrintMessageFromServer() throws IOException{
-        EnumStringMessage message = readMessageFromServer();
-        if(message != null) {
-            System.out.println(message.getMessage());
-        }
+    private void blockSocket() throws IOException {
+        socket.configureBlocking(true);
+    }
+
+    private void unblockSocket() throws IOException {
+        socket.configureBlocking(false);
     }
 
     private String[] splitPlayerMessage(String playerMessage){
@@ -108,6 +107,90 @@ public class Client {
         return new String[]{playerMessageType, remainingMessage};
     }
 
+    private void checkForAndPrintMessageFromServer() throws IOException {
+        EnumStringMessage message = readMessageFromServer();
+        if(message != null) {
+            System.out.println(message.getMessage());
+        }
+    }
+
+    private EnumStringMessage callCommand(
+            ClientMessageType clientMessageType,
+            String remainingMessage
+    ) throws IOException {
+        switch(clientMessageType) {
+            case LOGIN:
+                if(remainingMessage == null) {
+                    System.out.println("Username and password format is not okay");
+                    return null;
+                }
+                return login(remainingMessage);
+            case REGISTER:
+                if(remainingMessage == null) {
+                    System.out.println("There is nothing to register...");
+                    return null;
+                }
+                return register(remainingMessage);
+            case LOGOUT:
+                return logout();
+            case CREATE_GAME:
+                return createGame(remainingMessage);
+            case JOIN_GAME:
+                return joinGame(remainingMessage);
+            case EXIT_GAME:
+                return exitGame();
+            case EXIT_CLIENT:
+                return exitClient();
+            case DEPLOY:
+                return deploy(remainingMessage);
+            case FIRE:
+                return fire(remainingMessage);
+            case SEARCH_GAMES:
+                return searchGames();
+            case SHOW_PLAYER_STATISTICS:
+                return showPlayerStatistics();
+            default:
+                System.out.println("No idea what to do with this");
+                return null;
+        }
+    }
+
+    private EnumStringMessage login(String playerMessage) throws IOException {
+        sendMessageToServer(ClientMessageType.LOGIN, playerMessage);
+        return readMessageFromServer();
+    }
+
+    private EnumStringMessage register(String playerMessage) throws IOException {
+        sendMessageToServer(ClientMessageType.REGISTER, playerMessage);
+        return readMessageFromServer();
+    }
+
+    private EnumStringMessage logout() throws IOException {
+        sendMessageToServer(ClientMessageType.LOGOUT, null);
+        return readMessageFromServer();
+    }
+
+    private EnumStringMessage createGame(String gameName) throws IOException {
+        sendMessageToServer(ClientMessageType.CREATE_GAME, gameName);
+        return readMessageFromServer();
+    }
+
+    private EnumStringMessage joinGame(String gameName) throws IOException {
+        sendMessageToServer(ClientMessageType.JOIN_GAME, gameName);
+        return readMessageFromServer();
+    }
+
+    private EnumStringMessage exitGame() throws IOException {
+        sendMessageToServer(ClientMessageType.EXIT_GAME, null);
+        return readMessageFromServer();
+    }
+
+    private EnumStringMessage exitClient() throws IOException {
+        logout();
+        socket.close();
+        return null;
+    }
+
     private void sendMessageToServer(ClientMessageType clientMessageType, String message) throws IOException {
         buffer.clear();
         buffer.put((byte) clientMessageType.ordinal());
@@ -120,9 +203,8 @@ public class Client {
         }
     }
 
-    private EnumStringMessage readMessageFromServer() throws IOException{
+    private EnumStringMessage readMessageFromServer() throws IOException {
         ServerResponseType serverResponse = null;
-
         StringBuilder messageFromServer = new StringBuilder();
         char c;
 
@@ -148,7 +230,7 @@ public class Client {
         return result;
     }
 
-    private void processServerResponse(EnumStringMessage serverMessage) throws IOException{
+    private void processServerResponse(EnumStringMessage serverMessage) throws IOException {
         ServerResponseType responseType = (ServerResponseType)serverMessage.getEnumValue();
         switch(responseType) {
             case GAME_OVER:
@@ -158,37 +240,7 @@ public class Client {
         }
     }
 
-    private EnumStringMessage login(String playerMessage) throws IOException {
-        sendMessageToServer(ClientMessageType.LOGIN, playerMessage);
-        return readMessageFromServer();
-    }
-
-    private EnumStringMessage register(String playerMessage) throws IOException{
-        sendMessageToServer(ClientMessageType.REGISTER, playerMessage);
-        return readMessageFromServer();
-    }
-
-    private EnumStringMessage logout() throws IOException{
-        sendMessageToServer(ClientMessageType.LOGOUT, null);
-        return readMessageFromServer();
-    }
-
-    private EnumStringMessage createGame(String gameName) throws IOException {
-       sendMessageToServer(ClientMessageType.CREATE_GAME, gameName);
-       return readMessageFromServer();
-    }
-
-    private EnumStringMessage exitGame() throws IOException{
-        sendMessageToServer(ClientMessageType.EXIT_GAME, null);
-        return readMessageFromServer();
-    }
-
-    private EnumStringMessage joinGame(String gameName) throws IOException{
-        sendMessageToServer(ClientMessageType.JOIN_GAME, gameName);
-        return readMessageFromServer();
-    }
-
-    private void recordShotFromOpponent(EnumStringMessage message) throws IOException{
+    private void recordShotFromOpponent(EnumStringMessage message) throws IOException {
         int[] coords = findCoordinatesOfOpponentShotOut(message.getMessage());
         if(coords[0] == -1) {
             return;
@@ -196,15 +248,15 @@ public class Client {
 
         int x = coords[0];
         int y = coords[1];
-        char c = visualizeOpponentShot(x, y);
+        char symbolOfOpponentShot = visualizeOpponentShot(x, y);
 
-        yourGameTable[x][y] = c;
-        GameTable.stylizeAndPrintMatrix(yourGameTable);
+        thisPlayerGameTable[x][y] = symbolOfOpponentShot;
+        GameTable.stylizeAndPrintMatrix(thisPlayerGameTable);
 
         if(message.getEnumValue().equals(ServerResponseType.GAME_OVER)) {
             System.out.println("You win!");
             //processPlayerCommand("exit_game");
-            yourGameTable = GameTable.initializeTabulaRasa();
+            thisPlayerGameTable = GameTable.initializeTabulaRasa();
             opponentGameTable = GameTable.initializeTabulaRasa();
         }
     }
@@ -220,57 +272,14 @@ public class Client {
         return coords;
     }
 
-    private EnumStringMessage searchGames() throws IOException{
+    private EnumStringMessage searchGames() throws IOException {
         sendMessageToServer(ClientMessageType.SEARCH_GAMES, null);
         return readMessageFromServer();
     }
 
-    private EnumStringMessage showPlayerStatistics() throws IOException{
+    private EnumStringMessage showPlayerStatistics() throws IOException {
         sendMessageToServer(ClientMessageType.SHOW_PLAYER_STATISTICS, null);
         return null;
-    }
-
-    private EnumStringMessage callCommand(
-            ClientMessageType clientMessageType,
-            String remainingMessage
-    ) throws IOException{
-        switch(clientMessageType) {
-            case LOGIN:
-                if(remainingMessage == null) {
-                    System.out.println("Username and password format is not okay");
-                    return null;
-                }
-                return login(remainingMessage);
-            case REGISTER:
-                if(remainingMessage == null) {
-                    System.out.println("There is nothing to register...");
-                    return null;
-                }
-                return register(remainingMessage);
-            case LOGOUT:
-                return logout();
-            case CREATE_GAME:
-                return createGame(remainingMessage);
-            case EXIT_GAME:
-                return exitGame();
-            case JOIN_GAME:
-                return joinGame(remainingMessage);
-            case EXIT_CLIENT:
-                logout();
-                socket.close();
-                return null;
-            case DEPLOY:
-                return deploy(remainingMessage);
-            case FIRE:
-                return fire(remainingMessage);
-            case SEARCH_GAMES:
-                return searchGames();
-            case SHOW_PLAYER_STATISTICS:
-                return showPlayerStatistics();
-            default:
-                System.out.println("No idea what to do with this");
-                return null;
-        }
     }
 
     private ClientMessageType findMessageTypeOut(String string) {
@@ -302,15 +311,10 @@ public class Client {
         }
     }
 
-    private void blockSocket() throws IOException{
-        socket.configureBlocking(true);
-    }
-
-    private void unblockSocket() throws IOException{
-        socket.configureBlocking(false);
-    }
-
-    // Battle- related, these should go to a "Game" class or something like that
+    // Battle- related methods below
+    //
+    // I'm not sure if I can separate them, since they
+    // don't really implement a complex enough logic?
     private void recordShotAtOpponent(int x, int y, ServerResponseType resultOfShot) {
         char c = shotAtOpponentVisualization(resultOfShot);
         opponentGameTable[x][y] = c;
@@ -329,7 +333,7 @@ public class Client {
     }
 
     private char visualizeOpponentShot(int x, int y) {
-        switch(yourGameTable[x][y]) {
+        switch(thisPlayerGameTable[x][y]) {
             case '#':
                 return 'X';
             case '_':
@@ -347,12 +351,11 @@ public class Client {
      * @return returns the report of what happenned
      * @throws IOException connection is lost with the server
      */
-    private EnumStringMessage deploy(String coordinates) throws IOException{
+    private EnumStringMessage deploy(String coordinates) throws IOException {
         sendMessageToServer(ClientMessageType.DEPLOY, coordinates);
 
         // the enum of this should always be GameTable.ShipType, since that's the command
         EnumStringMessage result = readMessageFromServer();
-
         if(result == null) {
             return null;
         }
@@ -407,11 +410,11 @@ public class Client {
         }
 
         for(int i = 0; i < shipSize; i++) {
-            yourGameTable[x][y] = '#';
+            thisPlayerGameTable[x][y] = '#';
             x += xChange;
             y += yChange;
         }
-        GameTable.stylizeAndPrintMatrix(yourGameTable);
+        GameTable.stylizeAndPrintMatrix(thisPlayerGameTable);
     }
 
     private GameTable.ShipType revertServerResponseTypeToShipType(ServerResponseType original) {
@@ -429,7 +432,7 @@ public class Client {
         }
     }
 
-    private EnumStringMessage fire(String coordinates) throws IOException{
+    private EnumStringMessage fire(String coordinates) throws IOException {
         sendMessageToServer(ClientMessageType.FIRE, coordinates);
         EnumStringMessage result = readMessageFromServer();
 
@@ -445,7 +448,7 @@ public class Client {
             int[] coords = GameTable.tranformCoordinatesForReading(coordinates);
             recordShotAtOpponent(coords[0], coords[1], (ServerResponseType)result.getEnumValue());
             if(shotKilledLastShip) {
-                yourGameTable = GameTable.initializeTabulaRasa();
+                thisPlayerGameTable = GameTable.initializeTabulaRasa();
                 opponentGameTable = GameTable.initializeTabulaRasa();
                 // processPlayerCommand("exit_game");
             }
@@ -459,17 +462,8 @@ public class Client {
     private ByteBuffer buffer;
 
     // GAME VISUALIZATION
-    private char[][] yourGameTable = GameTable.initializeTabulaRasa();
+    private char[][] thisPlayerGameTable = GameTable.initializeTabulaRasa();
     private char[][] opponentGameTable = GameTable.initializeTabulaRasa();
-
-    // MEMBER VARIABLES- RELATED STUFF( shouldn't be needed outside of Testing)
-    public void setSocket(SocketChannel socket) {
-        this.socket = socket;
-    }
-
-    public void setBuffer(ByteBuffer buffer) {
-        this.buffer = buffer;
-    }
 }
 
 // TODO: Remove ANY verifications by the client

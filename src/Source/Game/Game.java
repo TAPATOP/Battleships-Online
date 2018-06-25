@@ -1,6 +1,7 @@
 package Source.Game;
 
 import Source.Account;
+import Source.EnumStringMessage;
 
 public class Game {
     /**
@@ -15,6 +16,7 @@ public class Game {
         this.gameName = gameName;
     }
 
+    // Public interface //
     public boolean addPlayer(Player joinedPlayer) {
         boolean joinSuccessful = joinedPlayer.joinAGame(gameID);
         if(!joinSuccessful) {
@@ -22,8 +24,8 @@ public class Game {
         }
         player2 = joinedPlayer;
 
-        player1.getAccount().updateStatistics(gameID);
-        player2.getAccount().updateStatistics(gameID);
+        player1.updateStatistics(gameID);
+        player2.updateStatistics(gameID);
         playerInTurn = player1;
         System.out.println("Deployment phase for game " + gameName + " has just started!");
         return true;
@@ -53,7 +55,6 @@ public class Game {
         }
         return player1;
     }
-
 
     /**
      * Use this when a game should finish, which is either when it ends naturally by
@@ -98,14 +99,6 @@ public class Game {
         return result;
     }
 
-    private void switchTurns() {
-        if(player1.equals(playerInTurn)) {
-            playerInTurn = player2;
-        } else {
-            playerInTurn = player1;
-        }
-    }
-
     public int getGameID() {
         return gameID;
     }
@@ -124,9 +117,20 @@ public class Game {
         return null;
     }
 
+    // Private methods //
+    private void switchTurns() {
+        if(player1.equals(playerInTurn)) {
+            playerInTurn = player2;
+        } else {
+            playerInTurn = player1;
+        }
+    }
+
+    // Member variables //
     private Player player1;
     private Player player2;
     private Player playerInTurn;
+
     private int gameID;
     private String gameName;
     private boolean gameOver = false;

@@ -1,4 +1,4 @@
-package Source.Game;
+package Source;
 
 public class EnumStringMessage {
     public EnumStringMessage(Enum enumValue, String message) {
@@ -10,7 +10,7 @@ public class EnumStringMessage {
         return enumValue;
     }
 
-    public String getMessage() {
+    String getMessage() {
         return message;
     }
 

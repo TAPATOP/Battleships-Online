@@ -37,6 +37,10 @@ public class Player {
         return acc.getName();
     }
 
+    public void updateStatistics(int gameID) {
+        acc.updateStatistics(gameID);
+    }
+
     @Override
     public boolean equals(Object o) {
         if(this == o) return true;

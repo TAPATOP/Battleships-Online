@@ -1,5 +1,7 @@
 package Source.Game;
 
+import Source.EnumStringMessage;
+
 import java.util.Vector;
 
 public class GameTable {
