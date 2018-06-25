@@ -250,14 +250,14 @@ public class Client {
         int y = coords[1];
         char symbolOfOpponentShot = visualizeOpponentShot(x, y);
 
-        thisPlayerGameTable[x][y] = symbolOfOpponentShot;
-        GameTable.stylizeAndPrintMatrix(thisPlayerGameTable);
+        thisPlayerGameTable.theTable[x][y] = symbolOfOpponentShot;
+        thisPlayerGameTable.stylizeAndPrintMatrix();
 
         if(message.getEnumValue().equals(ServerResponseType.GAME_OVER)) {
             System.out.println("You win!");
             //processPlayerCommand("exit_game");
-            thisPlayerGameTable = GameTable.initializeTabulaRasa();
-            opponentGameTable = GameTable.initializeTabulaRasa();
+            thisPlayerGameTable = new GameTable();
+            opponentGameTable = new GameTable();
         }
     }
 
@@ -315,12 +315,6 @@ public class Client {
     //
     // I'm not sure if I can separate them, since they
     // don't really implement a complex enough logic?
-    private void recordShotAtOpponent(int x, int y, ServerResponseType resultOfShot) {
-        char c = shotAtOpponentVisualization(resultOfShot);
-        opponentGameTable[x][y] = c;
-        GameTable.stylizeAndPrintMatrix(opponentGameTable);
-    }
-
     private char shotAtOpponentVisualization(ServerResponseType resultOfShot) {
         switch(resultOfShot) {
             case HIT:
@@ -333,7 +327,7 @@ public class Client {
     }
 
     private char visualizeOpponentShot(int x, int y) {
-        switch(thisPlayerGameTable[x][y]) {
+        switch(thisPlayerGameTable.theTable[x][y]) {
             case '#':
                 return 'X';
             case '_':
@@ -351,7 +345,7 @@ public class Client {
      * @return returns the report of what happenned
      * @throws IOException connection is lost with the server
      */
-    private EnumStringMessage deploy(String coordinates) throws IOException {
+    private EnumStringMessage deploy(final String coordinates) throws IOException {
         sendMessageToServer(ClientMessageType.DEPLOY, coordinates);
 
         // the enum of this should always be GameTable.ShipType, since that's the command
@@ -360,61 +354,25 @@ public class Client {
             return null;
         }
 
+        // TODO:Add later
+//        if(result.getEnumValue() == ServerResponseType.INVALID){
+//            return result;
+//        }
+
         GameTable.ShipType shipType;
         try {
             ServerResponseType serverResponseAsRead = (ServerResponseType)result.getEnumValue();
             shipType = revertServerResponseTypeToShipType(serverResponseAsRead);
         } catch(ClassCastException exc) {
+            System.out.println("Issues casting Server Response Type to ShipType");
             return result;
         }
 
         if(!shipType.equals(GameTable.ShipType.INVALID)) {
-            tryDrawingDeployedShip(shipType, coordinates);
+            thisPlayerGameTable.deployShip(shipType, coordinates);
         }
 
         return new EnumStringMessage(ServerResponseType.OK, result.getMessage());
-    }
-
-    private void tryDrawingDeployedShip(GameTable.ShipType shipType, String coordinates) {
-        char c = coordinates.charAt(0);
-        boolean isVertical;
-        switch(c) {
-            case 'h':
-                isVertical = false;
-                break;
-            case 'v':
-                isVertical = true;
-                break;
-            default:
-                return;
-        }
-        String restOfCoordinates = coordinates.substring(1, coordinates.length());
-
-        int[] coords = GameTable.tranformCoordinatesForReading(restOfCoordinates);
-        if(coords[0] == -1) {
-            System.out.println("Something's wrong with the coordinates");
-            return;
-        }
-        drawDeployedShip(shipType, coords[0], coords[1], isVertical);
-    }
-
-    private void drawDeployedShip(GameTable.ShipType shipType, int x, int y, boolean isVertical) {
-        int shipSize = GameTable.getShipSizeByType(shipType);
-
-        int xChange = 0;
-        int yChange = 0;
-        if(isVertical) {
-            xChange = 1;
-        } else {
-            yChange = 1;
-        }
-
-        for(int i = 0; i < shipSize; i++) {
-            thisPlayerGameTable[x][y] = '#';
-            x += xChange;
-            y += yChange;
-        }
-        GameTable.stylizeAndPrintMatrix(thisPlayerGameTable);
     }
 
     private GameTable.ShipType revertServerResponseTypeToShipType(ServerResponseType original) {
@@ -435,7 +393,6 @@ public class Client {
     private EnumStringMessage fire(String coordinates) throws IOException {
         sendMessageToServer(ClientMessageType.FIRE, coordinates);
         EnumStringMessage result = readMessageFromServer();
-
         if(result == null) {
             return null;
         }
@@ -445,11 +402,10 @@ public class Client {
         boolean shotKilledLastShip = result.getEnumValue().equals(ServerResponseType.DESTROYED_LAST_SHIP);
 
         if(shotIsNotInvalid && shotIsProbablyIndeedAShot) {
-            int[] coords = GameTable.tranformCoordinatesForReading(coordinates);
-            recordShotAtOpponent(coords[0], coords[1], (ServerResponseType)result.getEnumValue());
+            opponentGameTable.recordShotAt(coordinates);
             if(shotKilledLastShip) {
-                thisPlayerGameTable = GameTable.initializeTabulaRasa();
-                opponentGameTable = GameTable.initializeTabulaRasa();
+                thisPlayerGameTable = new GameTable();
+                opponentGameTable = new GameTable();
                 // processPlayerCommand("exit_game");
             }
         }
@@ -462,8 +418,8 @@ public class Client {
     private ByteBuffer buffer;
 
     // GAME VISUALIZATION
-    private char[][] thisPlayerGameTable = GameTable.initializeTabulaRasa();
-    private char[][] opponentGameTable = GameTable.initializeTabulaRasa();
+    private GameTable thisPlayerGameTable = new GameTable();
+    private GameTable opponentGameTable = new GameTable();
 }
 
 // TODO: Remove ANY verifications by the client

@@ -397,6 +397,7 @@ public class Server {
                     "Game isn't in deployment phase"
             );
         }
+
         String remainsOfCoordinates = removeLastCharacter(coordinates.substring(1, coordinates.length()));
         EnumStringMessage result =
                 initiateShipDeployment(remainsOfCoordinates, isVertical, gameInQuestion, thisPlayer);
@@ -426,7 +427,6 @@ public class Server {
                     ServerResponseType.NOTHING_OF_IMPORTANCE,
                     "Your opponent has just deployed their last ship."
             );
-
             writeToOpponent(game.getOtherPlayer(thisPlayer), messageToTheOpponent);
         }
     }

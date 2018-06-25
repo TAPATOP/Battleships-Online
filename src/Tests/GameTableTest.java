@@ -82,32 +82,32 @@ public class GameTableTest {
         gt.deployNextShip("A3", false);
         gt.deployNextShip("C3", false);
 
-        gt.fireAt("A2");
-        gt.fireAt("B1");
-        gt.fireAt("A1");
-        gt.fireAt("A4");
-        gt.fireAt("C6");
+        gt.recordShotAt("A2");
+        gt.recordShotAt("B1");
+        gt.recordShotAt("A1");
+        gt.recordShotAt("A4");
+        gt.recordShotAt("C6");
         assertEquals(
                 "Shots at ships and empty fields are recorded properly",
                 Arrays.deepToString(expectedResult),
                 (Arrays.deepToString(gt.visualizeBoard())));
 
-        gt.fireAt("C6");
-        gt.fireAt("C6");
+        gt.recordShotAt("C6");
+        gt.recordShotAt("C6");
         assertEquals(
                 "Doesn't mess up when firing somewhere it has already hit ships at",
                 Arrays.deepToString(expectedResult),
                 (Arrays.deepToString(gt.visualizeBoard())));
 
-        gt.fireAt("A2");
-        gt.fireAt("A2");
+        gt.recordShotAt("A2");
+        gt.recordShotAt("A2");
         assertEquals(
                 "Doesn't mess up when firing somewhere it has already missed ships at",
                 Arrays.deepToString(expectedResult),
                 (Arrays.deepToString(gt.visualizeBoard())));
 
-        gt.fireAt("E50");
-        gt.fireAt("W500");
+        gt.recordShotAt("E50");
+        gt.recordShotAt("W500");
         assertEquals(
                 "Doesn't mess up when firing at fields that don't really exist",
                 Arrays.deepToString(expectedResult),
@@ -135,62 +135,62 @@ public class GameTableTest {
 
         GameTable.FireResult resultOfFire;
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("A2").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("A2").getEnumValue();
         assertEquals("First miss", GameTable.FireResult.MISS, resultOfFire);
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("A3").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("A3").getEnumValue();
         assertEquals("First hit", GameTable.FireResult.HIT, resultOfFire);
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("A4").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("A4").getEnumValue();
         assertEquals("Second hit", GameTable.FireResult.HIT, resultOfFire);
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("A5").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("A5").getEnumValue();
         assertEquals("Third hit", GameTable.FireResult.HIT, resultOfFire);
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("A6").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("A6").getEnumValue();
         assertEquals("Killing hit", GameTable.FireResult.DESTROYED, resultOfFire);
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("A7").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("A7").getEnumValue();
         assertEquals("Seconds miss", GameTable.FireResult.MISS, resultOfFire);
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("A3").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("A3").getEnumValue();
         assertEquals("Hit on another ship", GameTable.FireResult.INVALID, resultOfFire);
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("C1").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("C1").getEnumValue();
         assertEquals("Hit on another ship", GameTable.FireResult.HIT, resultOfFire);
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("A1").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("A1").getEnumValue();
         assertEquals("Can fire at the first deployed ship 1", GameTable.FireResult.HIT, resultOfFire);
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("B1").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("B1").getEnumValue();
         assertEquals("Can fire at the first deployed ship 1", GameTable.FireResult.HIT, resultOfFire);
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("D1").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("D1").getEnumValue();
         assertEquals("Can fire at the first deployed ship 1", GameTable.FireResult.HIT, resultOfFire);
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("E1").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("E1").getEnumValue();
         assertEquals("Recognizes win condition", GameTable.FireResult.DESTROYED_LAST_SHIP, resultOfFire);
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("J10").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("J10").getEnumValue();
         assertEquals("Can fire at the corner of the map", GameTable.FireResult.MISS, resultOfFire);
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("J10").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("J10").getEnumValue();
         assertEquals("Can not fire at the corner of the map again", GameTable.FireResult.INVALID, resultOfFire);
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("69 XD").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("69 XD").getEnumValue();
         assertEquals("Passing gibberish as coordinates 1", GameTable.FireResult.INVALID, resultOfFire);
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("6").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("6").getEnumValue();
         assertEquals("Passing gibberish as coordinates 2", GameTable.FireResult.INVALID, resultOfFire);
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("B").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("B").getEnumValue();
         assertEquals("Passing gibberish as coordinates 3", GameTable.FireResult.INVALID, resultOfFire);
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("WS").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("WS").getEnumValue();
         assertEquals("Passing gibberish as coordinates 4", GameTable.FireResult.INVALID, resultOfFire);
 
 
-        resultOfFire = (GameTable.FireResult)gt.fireAt("B4 54").getEnumValue();
+        resultOfFire = (GameTable.FireResult)gt.recordShotAt("B4 54").getEnumValue();
         assertEquals("Passing gibberish as coordinates 5", GameTable.FireResult.INVALID, resultOfFire);
 
         assertEquals(

@@ -87,7 +87,7 @@ public class Game {
             );
         }
 
-        EnumStringMessage result = getOtherPlayer(attacker).getGameTable().fireAt(coordinates);
+        EnumStringMessage result = getOtherPlayer(attacker).getGameTable().recordShotAt(coordinates);
         boolean firingWasLegal = !(result.getEnumValue().equals(GameTable.FireResult.INVALID));
         if(firingWasLegal) {
             switchTurns();

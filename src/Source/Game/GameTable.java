@@ -20,7 +20,21 @@ public class GameTable {
         allShips.add(new Destroyer());
         allShips.add(new Destroyer());
         allShips.add(new Destroyer());
+
+        initializeTabulaRasa();
     }
+
+    private static boolean checkIfVertical(char c){
+        switch(c) {
+            case 'h':
+                return false;
+            case 'v':
+                return true;
+            default:
+                return false; // I'll pretend this is OK...
+        }
+    }
+
     /**
      * Deploys the next ship in line
      * @param squareCoordinates the coordinates of the ship in the format: [A-J][1-10]
@@ -74,6 +88,52 @@ public class GameTable {
                 ShipType.INVALID,
                 "You can't position this " + getShipType(ship) + " here like this"
         );
+    }
+
+    /**
+     * Used by the Client when trying to deploy a ship
+     * The String is "coorcinateInfo" and not just "coordinates", because
+     * it also contains a flag for horizontal/ vertical
+     */
+    @SuppressWarnings("UnusedReturnValue")
+    public boolean deployShip(ShipType shipType, String coordinateInfo){
+        boolean isVertical = checkIfVertical(coordinateInfo.charAt(0));
+        String restOfCoordinates = coordinateInfo.substring(1, coordinateInfo.length());
+        int[] coords = tranformCoordinatesForReading(restOfCoordinates);
+        int x = coords[0];
+        int y = coords[1];
+
+        if(x == -1) {
+            System.out.println("Something's wrong with the coordinates");
+            return false;
+        }
+
+        Ship ship = createShipByShipType(shipType);
+        if(ship == null){
+            System.out.println("Something's wrong with the ship");
+            return false;
+        }
+
+        deployShip(ship, x, y, isVertical);
+
+        return true;
+    }
+
+    private Ship createShipByShipType(ShipType shipType){
+        switch(shipType){
+            case DESTROYER:
+                return new Destroyer();
+            case CRUISER:
+                return new Cruiser();
+            case BATTLESHIP:
+                return new Battleship();
+            case AIRCRAFT_CARRIER:
+                return new Carrier();
+            case UNKNOWN:
+            case INVALID:
+                default:
+                    return null;
+        }
     }
 
     private boolean canDeployShip(Ship ship, int x, int y, boolean isVertical) {
@@ -131,7 +191,7 @@ public class GameTable {
         }
     }
 
-    public EnumStringMessage fireAt(String squareCoordinates) {
+    public EnumStringMessage recordShotAt(String squareCoordinates) {
         int[] coords = tranformCoordinatesForReading(squareCoordinates);
         if(coords[0] < 0) {
             return new EnumStringMessage(FireResult.INVALID, "Invalid coordinate");
@@ -190,7 +250,7 @@ public class GameTable {
         return null;
     }
 
-    public static void stylizeAndPrintMatrix(char[][] visualizedBoard ) {
+    public void stylizeAndPrintMatrix() {
         System.out.print("/|");
         for(int i = 1; i <= DIMENTION_LIMIT; i++) {
             System.out.print(i + "|");
@@ -200,7 +260,7 @@ public class GameTable {
         for(int i = 0; i < DIMENTION_LIMIT; i++) {
             System.out.print((char)(i + 65) + "|");
             for(char c :
-                    visualizedBoard[i]) {
+                    theTable[i]) {
                 System.out.print(c + "|");
             }
             System.out.println();
@@ -265,14 +325,13 @@ public class GameTable {
         return (x < DIMENTION_LIMIT && x >= 0 && y < DIMENTION_LIMIT && y >= 0);
     }
 
-    public static char[][] initializeTabulaRasa() {
-        char[][] table = new char[DIMENTION_LIMIT][DIMENTION_LIMIT];
+    private void initializeTabulaRasa() {
+        theTable = new char[DIMENTION_LIMIT][DIMENTION_LIMIT];
         for(int i = 0; i < DIMENTION_LIMIT; i++) {
             for(int j = 0; j < DIMENTION_LIMIT; j++) {
-                table[i][j] = '_';
+                theTable[i][j] = '_';
             }
         }
-        return table;
     }
 
     private static ShipType getShipType(Ship ship) {
@@ -314,6 +373,7 @@ public class GameTable {
     private Vector<Ship> allShips = new Vector<>();
     private Ship[][] boardOfDeployments = new Ship[DIMENTION_LIMIT][DIMENTION_LIMIT];
     private int deployedShipsCount;
+    public char[][] theTable;
 
     public enum FireResult{
         MISS,
