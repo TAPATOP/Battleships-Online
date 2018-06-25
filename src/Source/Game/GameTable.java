@@ -97,6 +97,7 @@ public class GameTable {
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean deployShip(ShipType shipType, String coordinateInfo){
+        //TODO: Make Client calculate the coordinates( probably wont implement soon)
         boolean isVertical = checkIfVertical(coordinateInfo.charAt(0));
         String restOfCoordinates = coordinateInfo.substring(1, coordinateInfo.length());
         int[] coords = tranformCoordinatesForReading(restOfCoordinates);
@@ -199,6 +200,11 @@ public class GameTable {
         int x = coords[0];
         int y = coords[1];
 
+        return recordShotAt(x, y);
+    }
+
+    public EnumStringMessage recordShotAt(int x, int y){
+
         try {
             EnumStringMessage resultMessage = executeFiring(x, y);
             FireResult result = (FireResult)resultMessage.getEnumValue();
@@ -211,6 +217,7 @@ public class GameTable {
             System.out.println("Something messed up with firing at targets; NULLPTR");
             return new EnumStringMessage(FireResult.INVALID, "Invalid coordinate");
         }
+
     }
 
     private EnumStringMessage executeFiring(int x, int y) {
@@ -365,7 +372,7 @@ public class GameTable {
     }
 
     // CONSTANTS
-    private static final int TOTAL_NUMBER_OF_SHIPS = 7;
+    private static final int TOTAL_NUMBER_OF_SHIPS = 2;
     private static final int DIMENTION_LIMIT = 10;
 
     // MEMBER VARIABLES
@@ -373,7 +380,7 @@ public class GameTable {
     private Vector<Ship> allShips = new Vector<>();
     private Ship[][] boardOfDeployments = new Ship[DIMENTION_LIMIT][DIMENTION_LIMIT];
     private int deployedShipsCount;
-    public char[][] theTable;
+    private char[][] theTable;
 
     public enum FireResult{
         MISS,

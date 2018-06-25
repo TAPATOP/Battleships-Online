@@ -191,6 +191,63 @@ public class Client {
         return null;
     }
 
+    /**
+     * Send coordinates of where to start deploying the ship from
+     * @param coordinates of where the ship is starting to deploy from( it deploys from left to right
+     *                    or from top to bottom). Must be in the [h|v][A-J][1-10] format, where
+     *                    h = horizontal and v = vertical
+     * @return returns the report of what happenned
+     * @throws IOException connection is lost with the server
+     */
+    private EnumStringMessage deploy(final String coordinates) throws IOException {
+        sendMessageToServer(ClientMessageType.DEPLOY, coordinates);
+        EnumStringMessage result = readMessageFromServer();
+        if(result == null) {
+            return null;
+        }
+
+        if(result.getEnumValue() == ServerResponseType.INVALID){
+            return result;
+        }
+
+        GameTable.ShipType shipType;
+        try {
+            ServerResponseType serverResponseAsRead = (ServerResponseType)result.getEnumValue();
+            shipType = revertServerResponseTypeToShipType(serverResponseAsRead);
+        } catch(ClassCastException exc) {
+            System.out.println("Issues casting Server Response Type to ShipType");
+            return result;
+        }
+
+        if(!shipType.equals(GameTable.ShipType.INVALID)) {
+            thisPlayerGameTable.deployShip(shipType, coordinates);
+        }
+
+        return new EnumStringMessage(ServerResponseType.OK, result.getMessage());
+    }
+
+    private EnumStringMessage fire(String coordinates) throws IOException {
+        sendMessageToServer(ClientMessageType.FIRE, coordinates);
+        EnumStringMessage result = readMessageFromServer();
+        if(result == null) {
+            return null;
+        }
+
+        boolean shotIsNotInvalid = !result.getEnumValue().equals(ServerResponseType.INVALID);
+        boolean shotIsProbablyIndeedAShot = !result.getEnumValue().equals(ServerResponseType.NOTHING_OF_IMPORTANCE);
+        boolean shotKilledLastShip = result.getEnumValue().equals(ServerResponseType.DESTROYED_LAST_SHIP);
+
+        if(shotIsNotInvalid && shotIsProbablyIndeedAShot) {
+            opponentGameTable.recordShotAt(coordinates);
+            if(shotKilledLastShip) {
+                thisPlayerGameTable = new GameTable();
+                opponentGameTable = new GameTable();
+                // processPlayerCommand("exit_game");
+            }
+        }
+        return result;
+    }
+
     private void sendMessageToServer(ClientMessageType clientMessageType, String message) throws IOException {
         buffer.clear();
         buffer.put((byte) clientMessageType.ordinal());
@@ -248,9 +305,8 @@ public class Client {
 
         int x = coords[0];
         int y = coords[1];
-        char symbolOfOpponentShot = visualizeOpponentShot(x, y);
 
-        thisPlayerGameTable.theTable[x][y] = symbolOfOpponentShot;
+        thisPlayerGameTable.recordShotAt(x, y);
         thisPlayerGameTable.stylizeAndPrintMatrix();
 
         if(message.getEnumValue().equals(ServerResponseType.GAME_OVER)) {
@@ -311,70 +367,6 @@ public class Client {
         }
     }
 
-    // Battle- related methods below
-    //
-    // I'm not sure if I can separate them, since they
-    // don't really implement a complex enough logic?
-    private char shotAtOpponentVisualization(ServerResponseType resultOfShot) {
-        switch(resultOfShot) {
-            case HIT:
-                return 'X';
-            case MISS:
-                return 'O';
-            default:
-                return '?';
-        }
-    }
-
-    private char visualizeOpponentShot(int x, int y) {
-        switch(thisPlayerGameTable.theTable[x][y]) {
-            case '#':
-                return 'X';
-            case '_':
-                return 'O';
-            default:
-                return '?';
-        }
-    }
-
-    /**
-     * Send coordinates of where to start deploying the ship from
-     * @param coordinates of where the ship is starting to deploy from( it deploys from left to right
-     *                    or from top to bottom). Must be in the [h|v][A-J][1-10] format, where
-     *                    h = horizontal and v = vertical
-     * @return returns the report of what happenned
-     * @throws IOException connection is lost with the server
-     */
-    private EnumStringMessage deploy(final String coordinates) throws IOException {
-        sendMessageToServer(ClientMessageType.DEPLOY, coordinates);
-
-        // the enum of this should always be GameTable.ShipType, since that's the command
-        EnumStringMessage result = readMessageFromServer();
-        if(result == null) {
-            return null;
-        }
-
-        // TODO:Add later
-//        if(result.getEnumValue() == ServerResponseType.INVALID){
-//            return result;
-//        }
-
-        GameTable.ShipType shipType;
-        try {
-            ServerResponseType serverResponseAsRead = (ServerResponseType)result.getEnumValue();
-            shipType = revertServerResponseTypeToShipType(serverResponseAsRead);
-        } catch(ClassCastException exc) {
-            System.out.println("Issues casting Server Response Type to ShipType");
-            return result;
-        }
-
-        if(!shipType.equals(GameTable.ShipType.INVALID)) {
-            thisPlayerGameTable.deployShip(shipType, coordinates);
-        }
-
-        return new EnumStringMessage(ServerResponseType.OK, result.getMessage());
-    }
-
     private GameTable.ShipType revertServerResponseTypeToShipType(ServerResponseType original) {
         switch(original) {
             case DEPLOYED_DESTROYER:
@@ -388,28 +380,6 @@ public class Client {
             default:
                 return GameTable.ShipType.INVALID;
         }
-    }
-
-    private EnumStringMessage fire(String coordinates) throws IOException {
-        sendMessageToServer(ClientMessageType.FIRE, coordinates);
-        EnumStringMessage result = readMessageFromServer();
-        if(result == null) {
-            return null;
-        }
-
-        boolean shotIsNotInvalid = !result.getEnumValue().equals(ServerResponseType.INVALID);
-        boolean shotIsProbablyIndeedAShot = !result.getEnumValue().equals(ServerResponseType.NOTHING_OF_IMPORTANCE);
-        boolean shotKilledLastShip = result.getEnumValue().equals(ServerResponseType.DESTROYED_LAST_SHIP);
-
-        if(shotIsNotInvalid && shotIsProbablyIndeedAShot) {
-            opponentGameTable.recordShotAt(coordinates);
-            if(shotKilledLastShip) {
-                thisPlayerGameTable = new GameTable();
-                opponentGameTable = new GameTable();
-                // processPlayerCommand("exit_game");
-            }
-        }
-        return result;
     }
 
     // MEMBER VARIABLES

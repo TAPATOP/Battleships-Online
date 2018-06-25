@@ -686,7 +686,7 @@ public class Server {
         Account acc = new Account(usernameAndPassword[0], usernameAndPassword[1]);
         if(accountIsLoggedIn(acc)) {
             System.out.println(acc.getName() + " is already logged in");
-            return new EnumStringMessage(ServerResponseType.INVALID, "User already logged in...");
+            return new EnumStringMessage(ServerResponseType.INVALID, "User " + acc.getName() + " already logged in...");
         }
         return verifyLoginDataAndLogin(acc, (Account)(key.attachment()));
     }

@@ -8,10 +8,14 @@ import static org.junit.Assert.*;
 
 public class ClientTest {
     private static Client client;
+    private static Client secondClient;
+    private static Client thirdClient;
 
     @BeforeClass
     public static void setup() throws IOException {
         client = new Client("localhost", 6969);
+        secondClient = new Client("localhost", 6969);
+        thirdClient = new Client("localhost", 6969);
     }
 
     // I have no idea why this exists but am too afraid to delete it( yet)
@@ -33,6 +37,7 @@ public class ClientTest {
     @After
     public void logout() throws IOException {
         client.processPlayerCommand("logout");
+        secondClient.processPlayerCommand("logout");
     }
 
     @Test
@@ -206,16 +211,27 @@ public class ClientTest {
     @Test
     public void handlesAFewPlayersAtATime()throws IOException {
         client.processPlayerCommand("login TAPATOP peswerdlmao");
+        assertTrue(
+                "A second account can log in",
+                secondClient.processPlayerCommand("login borat kazahstan")
+        );
+        assertTrue(
+                "A third account ccan log in",
+                thirdClient.processPlayerCommand("login hi hi")
+        );
 
-        Client secClient = new Client();
-        secClient.processPlayerCommand("login borat kazahstan");
-
-        Client trdClient = new Client();
-        trdClient.processPlayerCommand("login hi hi");
-
-        secClient.processPlayerCommand("logout");
-        trdClient.processPlayerCommand("logout");
-        assertTrue(true);
+        assertTrue(
+                "Second account can log out",
+                secondClient.processPlayerCommand("logout")
+        );
+        assertTrue(
+                "First client can log out",
+                client.processPlayerCommand("logout")
+        );
+        assertTrue(
+                "Third client can log out",
+                thirdClient.processPlayerCommand("logout")
+        );
     }
 
     @Test
@@ -227,8 +243,6 @@ public class ClientTest {
         client.processPlayerCommand("login TAPATOP peswerdlmao");
         client.processPlayerCommand("create_game hi");
         assertTrue("Second client joins the game", secClient.processPlayerCommand("join_game hi"));
-        //client.processPlayerCommand("logout");
-//        secClient.processPlayerCommand("exit_game");
-//        secClient.processPlayerCommand("logout");
+        secClient.processPlayerCommand("logout");
     }
 }
