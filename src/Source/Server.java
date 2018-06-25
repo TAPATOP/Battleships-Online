@@ -176,7 +176,7 @@ public class Server {
     ) throws IOException {
         EnumStringMessage queryReturn;
         for(String gameName :
-                pendingGamesArrayList) {
+                allPendingGames) {
             queryReturn = new EnumStringMessage(
                     ServerResponseType.NOTHING_OF_IMPORTANCE,
                     gameName + " PENDING\n"
@@ -203,7 +203,7 @@ public class Server {
         EnumStringMessage queryReturn;
         StringBuilder messageBuilder = new StringBuilder();
         for(String gameName :
-                pendingGamesArrayList) {
+                allPendingGames) {
             messageBuilder.append(gameName).append(" PENDING\n");
         }
 
@@ -447,7 +447,7 @@ public class Server {
     }
 
     private Game getGameByAccount(Account acc) {
-        String nameOfGame = gameIDtoGameNameHash.get(acc.getCurrentGameID());
+        String nameOfGame = gameStorageByID.get(acc.getCurrentGameID());
         Game theGame = pendingGames.get(nameOfGame);
         if(theGame != null) {
             return theGame;
@@ -514,7 +514,7 @@ public class Server {
             Game desiredGame
     ) throws IOException {
         pendingGames.remove(desiredGame.getGameName());
-        pendingGamesArrayList.remove(desiredGame.getGameName());
+        allPendingGames.remove(desiredGame.getGameName());
         runningGames.put(desiredGame.getGameName(), desiredGame);
 
         Player opponent = desiredGame.getOtherPlayer(getChannelAccount(currentPlayerKey));
@@ -533,10 +533,10 @@ public class Server {
 
     private String getRandomPendingGame() {
         Random r = new Random();
-        if(pendingGamesArrayList.size() < 1) {
+        if(allPendingGames.size() < 1) {
             return null;
         }
-        String randomGame = pendingGamesArrayList.get(r.nextInt(pendingGamesArrayList.size()));
+        String randomGame = allPendingGames.get(r.nextInt(allPendingGames.size()));
         System.out.println("Fetching random game: " + randomGame);
         return randomGame;
     }
@@ -555,7 +555,7 @@ public class Server {
             return new EnumStringMessage(ServerResponseType.INVALID, "You're not in a game");
         }
 
-        String gameToBeClosedName = gameIDtoGameNameHash.get(channelAccount.getCurrentGameID());
+        String gameToBeClosedName = gameStorageByID.get(channelAccount.getCurrentGameID());
         Game gameToBeClosed = pendingGames.get(gameToBeClosedName);
         if(gameToBeClosed == null) {
             gameToBeClosed = runningGames.get(gameToBeClosedName);
@@ -575,7 +575,7 @@ public class Server {
         Account channelAccount = getChannelAccount(key);
 
         pendingGames.remove(currentGame.getGameName());
-        pendingGamesArrayList.remove(currentGame.getGameName());
+        allPendingGames.remove(currentGame.getGameName());
         runningGames.remove(currentGame.getGameName());
         currentGame.end();
 
@@ -620,8 +620,8 @@ public class Server {
         Player hostingPlayer = new Player(getChannelAccount(key));
         Game newGame = new Game(gameName, allGamesEverCount, hostingPlayer);
         pendingGames.put(gameName, newGame);
-        pendingGamesArrayList.add(gameName);
-        gameIDtoGameNameHash.put(allGamesEverCount, gameName);
+        allPendingGames.add(gameName);
+        gameStorageByID.put(allGamesEverCount, gameName);
         if(!hostingPlayer.joinAGame(newGame.getGameID())) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
@@ -762,10 +762,10 @@ public class Server {
     private ServerSocketChannel serverSocketChannel;
     private Selector selector;
 
-    private HashSet<String> loggedInUsers = new HashSet<>();
-    private HashMap<String, Game> pendingGames = new HashMap<>();
-    private HashMap<String, Game> runningGames = new HashMap<>();
-    private HashMap<Integer, String> gameIDtoGameNameHash = new HashMap<>();
-    private List<String> pendingGamesArrayList = new ArrayList<>();
+    private Set<String> loggedInUsers = new HashSet<>();
+    private Map<String, Game> pendingGames = new HashMap<>();
+    private Map<String, Game> runningGames = new HashMap<>();
+    private Map<Integer, String> gameStorageByID = new HashMap<>();
+    private List<String> allPendingGames = new ArrayList<>();
     private int allGamesEverCount = 1;
 }

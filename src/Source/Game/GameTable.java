@@ -21,10 +21,22 @@ public class GameTable {
         allShips.add(new Destroyer());
         allShips.add(new Destroyer());
 
-        initializeTabulaRasa();
+        initializeWhiteBoard();
     }
 
-    private static boolean checkIfVertical(char c){
+    public static boolean compareArrays(char[][] arr1, char[][] arr2){
+        for(int i = 0; i < DIMENTION_LIMIT; i++){
+            for(int j = 0; j < DIMENTION_LIMIT; j++){
+                if(arr1[i][j] != arr2[i][j]){
+                    System.out.println(i + " " + j + " => " + arr1[i][j] + " " + arr2[i][j]);
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean checkIfVertical(char c){
         switch(c) {
             case 'h':
                 return false;
@@ -63,13 +75,9 @@ public class GameTable {
             );
         }
 
-        int xChange = 0;
-        int yChange = 0;
-        if(isVertical) {
-            xChange = 1;
-        } else {
-            yChange = 1;
-        }
+        int[] xAndYChanges = generateXAndYChange(isVertical);
+        int xChange = xAndYChanges[0];
+        int yChange = xAndYChanges[1];
 
         if(canDeployShip(ship, x, y, isVertical)) {
             for(int i = 0; i < ship.getSize(); i++) {
@@ -88,6 +96,23 @@ public class GameTable {
                 ShipType.INVALID,
                 "You can't position this " + getShipType(ship) + " here like this"
         );
+    }
+
+    private int[] generateXAndYChange(boolean isVertical) {
+        int xChange = 0;
+        int yChange = 0;
+        int[] result = new int[2];
+
+        if(isVertical) {
+            xChange = 1;
+        } else {
+            yChange = 1;
+        }
+
+        result[0] = xChange;
+        result[1] = yChange;
+
+        return result;
     }
 
     /**
@@ -263,7 +288,7 @@ public class GameTable {
             System.out.print(i + "|");
         }
         System.out.println();
-
+        char[][] theTable = exportTableAsRawData();
         for(int i = 0; i < DIMENTION_LIMIT; i++) {
             System.out.print((char)(i + 65) + "|");
             for(char c :
@@ -332,16 +357,18 @@ public class GameTable {
         return (x < DIMENTION_LIMIT && x >= 0 && y < DIMENTION_LIMIT && y >= 0);
     }
 
-    private void initializeTabulaRasa() {
-        theTable = new char[DIMENTION_LIMIT][DIMENTION_LIMIT];
-        for(int i = 0; i < DIMENTION_LIMIT; i++) {
-            for(int j = 0; j < DIMENTION_LIMIT; j++) {
-                theTable[i][j] = '_';
+    private void initializeWhiteBoard() {
+        boardOfDeployments  = new Ship[DIMENTION_LIMIT][DIMENTION_LIMIT];
+        for (Ship[] line :
+                boardOfDeployments) {
+            for (Ship ship :
+                    line) {
+                ship = null;
             }
         }
     }
 
-    private static ShipType getShipType(Ship ship) {
+    private ShipType getShipType(Ship ship) {
         switch(ship.getSize()) {
             case 2:
                 return ShipType.DESTROYER;
@@ -371,16 +398,25 @@ public class GameTable {
         }
     }
 
+    public char[][] exportTableAsRawData(){
+        char[][] charTable = new char[DIMENTION_LIMIT][DIMENTION_LIMIT];
+        for(int i = 0; i < DIMENTION_LIMIT; i++){
+            for(int j = 0; j < DIMENTION_LIMIT; j++){
+                charTable[i][j] = visualizeSquare(boardOfDeployments[i][j]);
+            }
+        }
+        return charTable;
+    }
+
     // CONSTANTS
-    private static final int TOTAL_NUMBER_OF_SHIPS = 2;
+    private static final int TOTAL_NUMBER_OF_SHIPS = 7;
     private static final int DIMENTION_LIMIT = 10;
 
     // MEMBER VARIABLES
     private Vector<Ship> deployedShips = new Vector<>();
     private Vector<Ship> allShips = new Vector<>();
-    private Ship[][] boardOfDeployments = new Ship[DIMENTION_LIMIT][DIMENTION_LIMIT];
+    private Ship[][] boardOfDeployments;
     private int deployedShipsCount;
-    private char[][] theTable;
 
     public enum FireResult{
         MISS,

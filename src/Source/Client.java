@@ -82,8 +82,16 @@ public class Client {
             System.out.println(result.getMessage());
         }
 
-        // return if the result is "bad", return false
+        // if the result is "bad", return false
         return !(result == null || result.getEnumValue().equals(ServerResponseType.INVALID));
+    }
+
+    public char[][] exportOwnGameTable(){
+        return thisPlayerGameTable.exportTableAsRawData();
+    }
+
+    public char[][] exportOpponentGameTable(){
+        return opponentGameTable.exportTableAsRawData();
     }
 
     // Private methods //
@@ -233,12 +241,13 @@ public class Client {
             return null;
         }
 
-        boolean shotIsNotInvalid = !result.getEnumValue().equals(ServerResponseType.INVALID);
+        boolean shotIsValid = !result.getEnumValue().equals(ServerResponseType.INVALID);
         boolean shotIsProbablyIndeedAShot = !result.getEnumValue().equals(ServerResponseType.NOTHING_OF_IMPORTANCE);
         boolean shotKilledLastShip = result.getEnumValue().equals(ServerResponseType.DESTROYED_LAST_SHIP);
 
-        if(shotIsNotInvalid && shotIsProbablyIndeedAShot) {
+        if(shotIsValid && shotIsProbablyIndeedAShot) {
             opponentGameTable.recordShotAt(coordinates);
+            opponentGameTable.stylizeAndPrintMatrix();
             if(shotKilledLastShip) {
                 thisPlayerGameTable = new GameTable();
                 opponentGameTable = new GameTable();

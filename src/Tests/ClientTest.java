@@ -1,9 +1,12 @@
 package Tests;
 
+import Source.Game.GameTable;
 import org.junit.*;
 import Source.Client;
 
 import java.io.*;
+import java.util.Arrays;
+
 import static org.junit.Assert.*;
 
 public class ClientTest {
@@ -39,6 +42,45 @@ public class ClientTest {
         client.processPlayerCommand("logout");
         secondClient.processPlayerCommand("logout");
         thirdClient.processPlayerCommand("logoout");
+    }
+    
+    private void setupAStandardGame() throws IOException {
+        /*
+        char[][] expectedClientResult = new char[][]{
+                {'#', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'#', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'#', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'#', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'#', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '#', '#', '#' ,'#'}
+        };
+        char[][] expectedSecondClientResult = new char[][]{
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'#', '#', '#', '#', '#', '#', '#', '#', '#' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'}
+        };
+        */
+        
+        client.processPlayerCommand("login TAPATOP peswerdlmao");
+        client.processPlayerCommand("create_game hi");
+        secondClient.processPlayerCommand("login borat kazahstan");
+        secondClient.processPlayerCommand("join_game hi");
+
+        client.processPlayerCommand("deploy vA1");
+        client.processPlayerCommand("deploy hJ7");
+        secondClient.processPlayerCommand("deploy hD5");
+        secondClient.processPlayerCommand("deploy hD1");
     }
 
     @Test
@@ -282,6 +324,123 @@ public class ClientTest {
         );
         assertTrue("Player2 can deploy a ship if it's tip is next to another ship's",
                 secondClient.processPlayerCommand("deploy hD1")
+        );
+    }
+
+    @Test
+    public void battleRoomShouldBeImmuneToSpam() throws IOException {
+        client.processPlayerCommand("login TAPATOP peswerdlmao");
+        client.processPlayerCommand("create_game hi");
+        secondClient.processPlayerCommand("login borat kazahstan");
+        secondClient.processPlayerCommand("join_game hi");
+
+        client.processPlayerCommand("deploy vA1");
+        client.processPlayerCommand("deploy hJ7");
+        secondClient.processPlayerCommand("deploy hD5");
+        secondClient.processPlayerCommand("deploy hD1");
+
+        client.processPlayerCommand("weqweqweqw ad w ");
+        client.processPlayerCommand("@!w ad w ");
+        client.processPlayerCommand("");
+        assertFalse(
+                "It's not the other player's turn even after the first one spamming",
+                secondClient.processPlayerCommand("fire A1")
+        );
+        assertTrue(
+                "It's still player's turn to fire even after spamming",
+                client.processPlayerCommand("fire A1")
+        );
+    }
+
+    //@Test
+    public void canFireAtShipsAndReceiveDamageAndMiss() throws IOException {
+        char[][] expectedClientOwnTable = new char[][]{
+                {'#', 'O', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'X', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'#', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'#', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'#', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '#', '#', '#' ,'#'}
+        };
+
+        char[][] expectedClientOpponentTable = new char[][]{
+                {'O', '_', '_', '_', 'O', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'}
+        };
+
+        char[][] expectedSecondClientOwnTable = new char[][]{
+                {'O', '_', '_', '_', 'O', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'#', '#', '#', '#', '#', '#', '#', '#', '#' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'}
+        };
+
+        char[][] expectedSecondClientOpponentTable = new char[][]{
+                {'_', 'O', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'X', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'}
+        };
+        
+        setupAStandardGame();
+        client.processPlayerCommand("fire A1");
+        secondClient.processPlayerCommand("fire A2");
+        client.processPlayerCommand("fire A1");
+        client.processPlayerCommand("fire A5");
+        secondClient.processPlayerCommand("fire B1");
+//        client.processPlayerCommand("fire D2");
+//        secondClient.processPlayerCommand("fire B1");
+//        secondClient.processPlayerCommand("fire lol");
+//        secondClient.processPlayerCommand("fire C1");
+//        client.processPlayerCommand("fire D5");
+//        secondClient.processPlayerCommand("fire H8");
+
+//        client.thisPlayerGameTable.stylizeAndPrintMatrix();
+//        client.opponentGameTable.stylizeAndPrintMatrix();
+//        secondClient.thisPlayerGameTable.stylizeAndPrintMatrix();
+//        secondClient.opponentGameTable.stylizeAndPrintMatrix();
+
+        client.processPlayerCommand("hi");
+        secondClient.processPlayerCommand("hi");
+        assertTrue(
+                "All of Player1's shots were recorder properly",
+                GameTable.compareArrays(expectedClientOwnTable, client.exportOwnGameTable())
+        );
+        assertTrue(
+                "All of Player1's opponent shots were recorder properly",
+                GameTable.compareArrays(expectedClientOpponentTable, client.exportOpponentGameTable())
+        );
+        assertTrue(
+                "All of Player2's shots were recorder properly",
+                GameTable.compareArrays(expectedSecondClientOwnTable, secondClient.exportOwnGameTable())
+        );
+        assertTrue(
+                "All of Player2's opponent shots were recorder properly",
+                GameTable.compareArrays(expectedSecondClientOpponentTable, secondClient.exportOpponentGameTable())
         );
     }
 }
