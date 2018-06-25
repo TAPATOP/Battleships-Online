@@ -38,6 +38,7 @@ public class ClientTest {
     public void logout() throws IOException {
         client.processPlayerCommand("logout");
         secondClient.processPlayerCommand("logout");
+        thirdClient.processPlayerCommand("logoout");
     }
 
     @Test
@@ -67,7 +68,6 @@ public class ClientTest {
 
     @Test
     public void shouldLogoutIfNotLoggedOut() throws IOException {
-        client.processPlayerCommand("logout");
         assertFalse(
                 "Doesn't mess up when trying to log out without even having been logged in",
                 client.processPlayerCommand("logout"));
@@ -130,11 +130,11 @@ public class ClientTest {
     public void shouldNotBlowUpWhenGivenRandomMessages() throws IOException {
         // Logic: If you can send this three times in a row without throwing an IOException
         // and be able to login and logout, then you didn't kill the server
-//        client.processPlayerCommand("hello mamma mia");
-//        client.processPlayerCommand("hello mamma mia");
-//        client.processPlayerCommand("hello mamma mia");
-//        client.processPlayerCommand("server did nothing wrong");
-//        client.processPlayerCommand("black suns and celtic crosses sitting on a tree");
+        client.processPlayerCommand("hello mamma mia");
+        client.processPlayerCommand("hello mamma mia");
+        client.processPlayerCommand("hello mamma mia");
+        client.processPlayerCommand("server did nothing wrong");
+        client.processPlayerCommand("black suns and celtic crosses sitting on a tree");
 
         client.processPlayerCommand("logout");
         assertTrue(client.processPlayerCommand("login TAPATOP peswerdlmao"));
@@ -143,7 +143,6 @@ public class ClientTest {
 
     @Test
     public void shouldBeAbleToCreateLegalGames() throws IOException {
-        client.processPlayerCommand("logout");
         assertFalse(
                 "Doesn't create game without having logged in first",
                 client.processPlayerCommand("create_game hi")
@@ -186,7 +185,6 @@ public class ClientTest {
 
     @Test
     public void shouldExitGameProperlyWhenAloneInRoom()throws IOException {
-        client.processPlayerCommand("logout");
         client.processPlayerCommand("login hi hi");
 
         client.processPlayerCommand("create_game hi");
@@ -236,13 +234,54 @@ public class ClientTest {
 
     @Test
     public void canJoinGame()throws IOException {
-        client.processPlayerCommand("logout)");
-        Client secClient = new Client();
-        secClient.processPlayerCommand("login borat kazahstan");
+        secondClient.processPlayerCommand("login borat kazahstan");
 
         client.processPlayerCommand("login TAPATOP peswerdlmao");
         client.processPlayerCommand("create_game hi");
-        assertTrue("Second client joins the game", secClient.processPlayerCommand("join_game hi"));
-        secClient.processPlayerCommand("logout");
+        assertTrue("Second client joins the game", secondClient.processPlayerCommand("join_game hi"));
+        secondClient.processPlayerCommand("logout");
+    }
+
+    @Test
+    public void canDeployShips() throws IOException{
+        client.processPlayerCommand("login TAPATOP peswerdlmao");
+        client.processPlayerCommand("create_game hi");
+        secondClient.processPlayerCommand("login borat kazahstan");
+        secondClient.processPlayerCommand("join_game hi");
+
+        // keep in mind these are made for games with a max of 2 ships per side, cause im a lazy ****
+        assertTrue(
+                "Player1 can deploy a ship vertically at A1 without colliding with anything",
+                client.processPlayerCommand("deploy vA1")
+        );
+        assertFalse("Player1 can't deploy a ship if it collides with another ship",
+                client.processPlayerCommand("deploy hB1")
+        );
+        assertFalse("Player1 can't deploy a ship if it collides with the edges of the map",
+                client.processPlayerCommand("deploy hA10")
+        );
+        assertFalse("Player1 can't deploy a ship if it collides with the edges of the map",
+                client.processPlayerCommand("deploy hA9")
+        );
+        assertTrue("Player1 can deploy a ship in the lower corners of the map",
+                client.processPlayerCommand("deploy hJ7")
+        );
+
+        assertFalse("Player2 can't deploy a ship horizontally at the edge of the map",
+                secondClient.processPlayerCommand("deploy hJ10")
+        );
+        assertFalse("Player2 can't deploy a ship vertically at the edge of the map",
+                secondClient.processPlayerCommand("deploy vJ10")
+        );
+        assertTrue(
+                "Player2 can deploy a ship in the middle of the map",
+                secondClient.processPlayerCommand("deploy hD5")
+        );
+        assertFalse("Player2 can't deploy a ship if it's tip is onto another ship",
+                secondClient.processPlayerCommand("deploy hD2")
+        );
+        assertTrue("Player2 can deploy a ship if it's tip is next to another ship's",
+                secondClient.processPlayerCommand("deploy hD1")
+        );
     }
 }
