@@ -1,6 +1,3 @@
-package Tests;
-
-import Source.Game.GameTable;
 import org.junit.*;
 import Source.Client;
 
@@ -21,7 +18,6 @@ public class ClientTest {
         thirdClient = new Client("localhost", 6969);
     }
 
-    // I have no idea why this exists but am too afraid to delete it( yet)
     @AfterClass
     public static void deleteTempRegistration() {
         File file = new File(".\\Accounts\\username.txt");

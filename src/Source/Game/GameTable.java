@@ -6,7 +6,7 @@ import java.util.Vector;
 
 public class GameTable {
     // Constants
-    private static final int TOTAL_NUMBER_OF_SHIPS = 7;
+    private static final int TOTAL_NUMBER_OF_SHIPS = 2;
     private static final int DIMENTION_LIMIT = 10;
 
     // Member variables //
