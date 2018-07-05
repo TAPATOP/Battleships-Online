@@ -428,19 +428,19 @@ public class ClientTest {
         secondClient.processPlayerCommand("hi");
         assertTrue(
                 "All of Player1's shots were recorder properly",
-                GameTable.compareArrays(expectedClientOwnTable, client.exportOwnGameTable())
+                Arrays.deepEquals(expectedClientOwnTable, client.exportOwnGameTable())
         );
         assertTrue(
                 "All of Player1's opponent shots were recorder properly",
-                GameTable.compareArrays(expectedClientOpponentTable, client.exportOpponentGameTable())
+                Arrays.deepEquals(expectedClientOpponentTable, client.exportOpponentGameTable())
         );
         assertTrue(
                 "All of Player2's shots were recorder properly",
-                GameTable.compareArrays(expectedSecondClientOwnTable, secondClient.exportOwnGameTable())
+                Arrays.deepEquals(expectedSecondClientOwnTable, secondClient.exportOwnGameTable())
         );
         assertTrue(
                 "All of Player2's opponent shots were recorder properly",
-                GameTable.compareArrays(expectedSecondClientOpponentTable, secondClient.exportOpponentGameTable())
+                Arrays.deepEquals(expectedSecondClientOpponentTable, secondClient.exportOpponentGameTable())
         );
     }
 }

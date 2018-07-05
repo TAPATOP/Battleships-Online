@@ -3,15 +3,17 @@ package Source.Game;
 import Source.Account;
 
 public class Player {
-    /**
-     * Used when comparing an Account with a Player
-     * @param acc account we already know
-     */
+    // Member variables //
+    private Account acc;
+    private GameTable gameTable;
+
+    // Constructors //
     public Player(Account acc) {
         this.acc = acc;
         gameTable = new GameTable();
     }
 
+    // Methods //
     public boolean joinAGame(int gameID) {
         if(acc.getCurrentGameID() != 0) {
             System.out.println("Account is already logged into another game");
@@ -37,7 +39,7 @@ public class Player {
         return acc.getName();
     }
 
-    public void updateStatistics(int gameID) {
+    void updateStatistics(int gameID) {
         acc.updateStatistics(gameID);
     }
 
@@ -55,7 +57,4 @@ public class Player {
     public int hashCode() {
         return acc.hashCode();
     }
-
-    private Account acc;
-    private GameTable gameTable;
 }

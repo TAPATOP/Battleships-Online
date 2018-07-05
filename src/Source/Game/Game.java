@@ -4,6 +4,15 @@ import Source.Account;
 import Source.EnumStringMessage;
 
 public class Game {
+    // Member variables //
+    private Player player1;
+    private Player player2;
+    private Player playerInTurn;
+
+    private int gameID;
+    private String gameName;
+    private boolean gameOver = false;
+
     /**
      * Game constructor
      * @param gameID the corresponding ID of the game according to the server
@@ -125,13 +134,4 @@ public class Game {
             playerInTurn = player1;
         }
     }
-
-    // Member variables //
-    private Player player1;
-    private Player player2;
-    private Player playerInTurn;
-
-    private int gameID;
-    private String gameName;
-    private boolean gameOver = false;
 }

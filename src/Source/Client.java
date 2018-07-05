@@ -12,16 +12,23 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.TimeUnit;
 
 public class Client {
+    // Member variables //
+    private final int BUFFER_SIZE = 1024;
+    private SocketChannel socket;
+    private ByteBuffer buffer;
+
+    // Game visualization member variables //
+    private GameTable thisPlayerGameTable = new GameTable();
+    private GameTable opponentGameTable = new GameTable();
+
     // Constructors //
     public Client() throws IOException {
-        // INITIALIZE CLIENT STUFF
         socket = SocketChannel.open();
         socket.connect(new InetSocketAddress("localhost", 6969));
         buffer = ByteBuffer.allocate(BUFFER_SIZE);
     }
 
     public Client(String host, int port) throws IOException {
-        // INITIALIZE CLIENT STUFF
         socket = SocketChannel.open();
         socket.connect(new InetSocketAddress(host, port));
         buffer = ByteBuffer.allocate(BUFFER_SIZE);
@@ -390,15 +397,6 @@ public class Client {
                 return GameTable.ShipType.INVALID;
         }
     }
-
-    // MEMBER VARIABLES
-    private final int BUFFER_SIZE = 1024;
-    private SocketChannel socket;
-    private ByteBuffer buffer;
-
-    // GAME VISUALIZATION
-    private GameTable thisPlayerGameTable = new GameTable();
-    private GameTable opponentGameTable = new GameTable();
 }
 
 // TODO: Remove ANY verifications by the client

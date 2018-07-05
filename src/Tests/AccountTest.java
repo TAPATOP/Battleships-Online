@@ -14,7 +14,7 @@ public class AccountTest {
 
     private String readLastLineOfPlayerStatistics() {
         try {
-            BufferedReader input = new BufferedReader(new FileReader(acc.getPathName()));
+            BufferedReader input = new BufferedReader(new FileReader(acc.getPersonalRecordFilePath()));
             String last = "";
             String line;
 
@@ -36,7 +36,7 @@ public class AccountTest {
 //
 //    @After
 //    public void tearDown() {
-//        File file = new File(acc.getPathName());
+//        File file = new File(acc.getPersonalRecordFilePath());
 //        boolean a = file.delete();
 //        if(!a) {
 //            System.out.println("Something messed up while deleting tempregs");

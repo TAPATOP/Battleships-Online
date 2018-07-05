@@ -1,6 +1,11 @@
 package Source.Game;
 
 abstract class Ship {
+    // Member variables //
+    int healthPoints;
+    int size;
+
+    // Constructors //
     Ship() {
         healthPoints = 0;
         size = 0;
@@ -15,6 +20,7 @@ abstract class Ship {
         size = 0;
     }
 
+    // Methods //
     /**
      * Used when a player tries hitting the enemy's ships
      *
@@ -32,7 +38,4 @@ abstract class Ship {
     int getSize() {
         return size;
     }
-
-    int healthPoints;
-    int size;
 }

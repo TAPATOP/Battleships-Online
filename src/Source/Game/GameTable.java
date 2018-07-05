@@ -5,6 +5,21 @@ import Source.EnumStringMessage;
 import java.util.Vector;
 
 public class GameTable {
+    // Constants
+    private static final int TOTAL_NUMBER_OF_SHIPS = 7;
+    private static final int DIMENTION_LIMIT = 10;
+
+    // Member variables //
+    private Vector<Ship> deployedShips = new Vector<>();
+    private Vector<Ship> allShips = new Vector<>();
+    private Ship[][] boardOfDeployments;
+    private int deployedShipsCount;
+
+    // Used to flag the result of fire on the map after shooting at it
+    private final DamagedPartOfShip damagedShip = new DamagedPartOfShip();
+    private final MissedShip missedShip = new MissedShip();
+
+    // Constructors //
     public GameTable() {
         deployedShipsCount = 0;
         allShips.add(new Carrier());
@@ -24,18 +39,7 @@ public class GameTable {
         initializeWhiteBoard();
     }
 
-    public static boolean compareArrays(char[][] arr1, char[][] arr2){
-        for(int i = 0; i < DIMENTION_LIMIT; i++){
-            for(int j = 0; j < DIMENTION_LIMIT; j++){
-                if(arr1[i][j] != arr2[i][j]){
-                    System.out.println(i + " " + j + " => " + arr1[i][j] + " " + arr2[i][j]);
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
+    // Methods //
     private boolean checkIfVertical(char c){
         switch(c) {
             case 'h':
@@ -408,16 +412,6 @@ public class GameTable {
         return charTable;
     }
 
-    // CONSTANTS
-    private static final int TOTAL_NUMBER_OF_SHIPS = 7;
-    private static final int DIMENTION_LIMIT = 10;
-
-    // MEMBER VARIABLES
-    private Vector<Ship> deployedShips = new Vector<>();
-    private Vector<Ship> allShips = new Vector<>();
-    private Ship[][] boardOfDeployments;
-    private int deployedShipsCount;
-
     public enum FireResult{
         MISS,
         HIT,
@@ -434,8 +428,4 @@ public class GameTable {
         AIRCRAFT_CARRIER,
         UNKNOWN,
     }
-
-    // LITERALLY TRASH
-    private DamagedPartOfShip damagedShip = new DamagedPartOfShip();
-    private MissedShip missedShip = new MissedShip();
 }

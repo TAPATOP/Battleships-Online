@@ -12,6 +12,17 @@ import java.nio.channels.*;
 import java.util.*;
 
 public class Server {
+    // MEMBER VARIABLES
+    private ServerSocketChannel serverSocketChannel;
+    private Selector selector;
+
+    private Set<String> loggedInUsers = new HashSet<>();
+    private Map<String, Game> pendingGames = new HashMap<>();
+    private Map<String, Game> runningGames = new HashMap<>();
+    private Map<Integer, String> gameStorageByID = new HashMap<>();
+    private List<String> allPendingGames = new ArrayList<>();
+    private int allGamesEverCount = 1;
+
     // Constructors //
     @SuppressWarnings("WeakerAccess")
     public Server() {
@@ -665,7 +676,7 @@ public class Server {
     }
 
     private boolean accountExists(Account acc) {
-        return (new File(acc.getPathName()).isFile());
+        return (new File(acc.getPersonalRecordFilePath()).isFile());
     }
 
     private void logChannelOut(SelectionKey key, SocketChannel channel) throws IOException {
@@ -757,15 +768,4 @@ public class Server {
     private boolean validateGameName(String gameName) {
         return gameName.matches("[a-zA-Z][\\w\\d_]*");
     }
-
-    // MEMBER VARIABLES
-    private ServerSocketChannel serverSocketChannel;
-    private Selector selector;
-
-    private Set<String> loggedInUsers = new HashSet<>();
-    private Map<String, Game> pendingGames = new HashMap<>();
-    private Map<String, Game> runningGames = new HashMap<>();
-    private Map<Integer, String> gameStorageByID = new HashMap<>();
-    private List<String> allPendingGames = new ArrayList<>();
-    private int allGamesEverCount = 1;
 }

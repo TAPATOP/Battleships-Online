@@ -7,6 +7,17 @@ import java.util.Scanner;
 import java.util.Vector;
 
 public class Account {
+    // Member variables //
+    private String name;
+    private String password;
+    private int currentGameID;
+
+    private ByteBuffer bufferForCommunicationWithServer = ByteBuffer.allocate(1024);
+    private SocketChannel channel;
+
+    private String personalRecordFilePath;
+
+    // Constructors //
     Account(SocketChannel channel) {
         currentGameID = 0;
         this.channel = channel;
@@ -15,10 +26,11 @@ public class Account {
     public Account(String name, String password) {
         this.name = name;
         this.password = password;
-        pathName = ".\\Accounts\\" + name + ".txt";
+        personalRecordFilePath = ".\\Accounts\\" + name + ".txt";
         currentGameID = 0;
     }
 
+    // Members //
     public String getName() {
         return name;
     }
@@ -31,8 +43,8 @@ public class Account {
         return currentGameID;
     }
 
-    public String getPathName() {
-        return pathName;
+    public String getPersonalRecordFilePath() {
+        return personalRecordFilePath;
     }
 
     SocketChannel getChannel() {
@@ -41,7 +53,7 @@ public class Account {
 
     void setName(String name) {
         this.name = name;
-        pathName = ".\\Accounts\\" + name + ".txt";
+        personalRecordFilePath = ".\\Accounts\\" + name + ".txt";
     }
 
     void setPassword(String password) {
@@ -53,12 +65,12 @@ public class Account {
     }
 
     public void updateStatistics(int gameID) {
-        File f = new File(pathName);
+        File f = new File(personalRecordFilePath);
         if(!f.isFile()) {
             System.out.println("Account doesn't exist");
             return;
         }
-        try( PrintWriter out = new PrintWriter( new FileOutputStream( new File(pathName), true))  ) {
+        try( PrintWriter out = new PrintWriter( new FileOutputStream( new File(personalRecordFilePath), true))  ) {
             out.println(gameID);
             } catch(FileNotFoundException e) {
             System.out.println("Couldn't locate account");
@@ -74,7 +86,7 @@ public class Account {
 
         Scanner scanner;
         try {
-            scanner = new Scanner(new File(pathName));
+            scanner = new Scanner(new File(personalRecordFilePath));
 
             // skips the password
             scanner.nextLine();
@@ -100,7 +112,7 @@ public class Account {
             System.out.println("Account already exists");
             return ;
         }
-        try( PrintWriter out = new PrintWriter(  new FileOutputStream(new File(pathName )))  ) {
+        try( PrintWriter out = new PrintWriter(  new FileOutputStream(new File(personalRecordFilePath)))  ) {
             out.println(password);
         } catch(FileNotFoundException e) {
             System.out.println("Error registering account");
@@ -108,12 +120,12 @@ public class Account {
     }
 
     public boolean exists() {
-        File f = new File(pathName);
+        File f = new File(personalRecordFilePath);
         return f.isFile();
     }
 
     public String loadPassword() throws IOException {
-        File f = new File(pathName);
+        File f = new File(personalRecordFilePath);
         BufferedReader reader = new BufferedReader(new FileReader(f));
         return reader.readLine();
     }
@@ -136,13 +148,4 @@ public class Account {
     public int hashCode() {
         return name.hashCode();
     }
-
-    // MEMBER VARIABLES
-    private String name;
-    private String password;
-    private int currentGameID;
-    private ByteBuffer bufferForCommunicationWithServer = ByteBuffer.allocate(1024);
-    private SocketChannel channel;
-
-    private String pathName;
 }
