@@ -6,7 +6,7 @@ import java.util.Vector;
 
 public class GameTable {
     // Constants
-    private static final int TOTAL_NUMBER_OF_SHIPS = 2;
+    private static final int TOTAL_NUMBER_OF_SHIPS = 7;
     private static final int DIMENTION_LIMIT = 10;
 
     // Member variables //
@@ -22,21 +22,34 @@ public class GameTable {
     // Constructors //
     public GameTable() {
         deployedShipsCount = 0;
-        allShips.add(new Carrier());
 
-        allShips.add(new Battleship());
-        allShips.add(new Battleship());
-
-        allShips.add(new Cruiser());
-        allShips.add(new Cruiser());
-        allShips.add(new Cruiser());
-
-        allShips.add(new Destroyer());
-        allShips.add(new Destroyer());
-        allShips.add(new Destroyer());
-        allShips.add(new Destroyer());
+        addShips(1, ShipType.AIRCRAFT_CARRIER);
+        addShips(2, ShipType.BATTLESHIP);
+        addShips(3, ShipType.CRUISER);
+        addShips(4, ShipType.DESTROYER);
 
         initializeWhiteBoard();
+    }
+
+    public GameTable(
+            int numberOfCarriers,
+            int numberOfBattleships,
+            int numberOfCruisers,
+            int numberOfDestroyers
+    ) {
+        deployedShipsCount = 0;
+        addShips(numberOfCarriers, ShipType.AIRCRAFT_CARRIER);
+        addShips(numberOfBattleships, ShipType.BATTLESHIP);
+        addShips(numberOfCruisers, ShipType.CRUISER);
+        addShips(numberOfDestroyers, ShipType.DESTROYER);
+
+        initializeWhiteBoard();
+    }
+
+    private void addShips(int shipCount, ShipType shipType) {
+        for (int i = 0; i < shipCount; i++) {
+            allShips.add(createShipByShipType(shipType));
+        }
     }
 
     // Methods //
