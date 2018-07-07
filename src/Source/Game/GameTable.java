@@ -6,7 +6,6 @@ import java.util.Vector;
 
 public class GameTable {
     // Constants
-    private static final int TOTAL_NUMBER_OF_SHIPS = 7;
     private static final int DIMENTION_LIMIT = 10;
 
     // Member variables //
@@ -14,6 +13,7 @@ public class GameTable {
     private Vector<Ship> allShips = new Vector<>();
     private Ship[][] boardOfDeployments;
     private int deployedShipsCount;
+    private int totalNumberOfShips = 2;
 
     // Used to flag the result of fire on the map after shooting at it
     private final DamagedPartOfShip damagedShip = new DamagedPartOfShip();
@@ -22,6 +22,7 @@ public class GameTable {
     // Constructors //
     public GameTable() {
         deployedShipsCount = 0;
+        totalNumberOfShips = 2;
 
         addShips(1, ShipType.AIRCRAFT_CARRIER);
         addShips(2, ShipType.BATTLESHIP);
@@ -31,6 +32,11 @@ public class GameTable {
         initializeWhiteBoard();
     }
 
+    public GameTable(int numberOfShips) {
+        this();
+        totalNumberOfShips = numberOfShips;
+    }
+
     public GameTable(
             int numberOfCarriers,
             int numberOfBattleships,
@@ -38,6 +44,11 @@ public class GameTable {
             int numberOfDestroyers
     ) {
         deployedShipsCount = 0;
+        totalNumberOfShips =
+                numberOfBattleships + numberOfCarriers +
+                numberOfCruisers + numberOfDestroyers
+        ;
+
         addShips(numberOfCarriers, ShipType.AIRCRAFT_CARRIER);
         addShips(numberOfBattleships, ShipType.BATTLESHIP);
         addShips(numberOfCruisers, ShipType.CRUISER);
@@ -206,7 +217,7 @@ public class GameTable {
     }
 
     public boolean allShipsAreDeployed() {
-        return deployedShipsCount >= TOTAL_NUMBER_OF_SHIPS;
+        return deployedShipsCount >= totalNumberOfShips;
     }
 
     public char[][] visualizeBoard() {

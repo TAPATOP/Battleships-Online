@@ -1,5 +1,3 @@
-package Tests;
-
 import Source.Game.GameTable;
 import org.junit.Test;
 
@@ -35,7 +33,7 @@ public class GameTableTest {
                 {'_', '_', '_', '_', '_', '_', '_', '#', '#' ,'#'}
         };
 
-        GameTable gt = new GameTable();
+        GameTable gt = new GameTable(7);
         gt.deployNextShip("A1", true);
         gt.deployNextShip("A3", false);
         gt.deployNextShip("C3", false);
@@ -77,7 +75,7 @@ public class GameTableTest {
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'}
         };
 
-        GameTable gt = new GameTable();
+        GameTable gt = new GameTable(3);
         gt.deployNextShip("A1", true);
         gt.deployNextShip("A3", false);
         gt.deployNextShip("C3", false);
@@ -129,7 +127,7 @@ public class GameTableTest {
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'O'}
         };
 
-        GameTable gt = new GameTable();
+        GameTable gt = new GameTable(2);
         gt.deployNextShip("A1", true);
         gt.deployNextShip("A3", false);
 

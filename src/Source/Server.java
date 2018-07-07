@@ -66,6 +66,7 @@ public class Server {
                         chan = (SocketChannel) key.channel();
                         try {
                             // READ THE CLIENT INPUT
+                            //noinspection StatementWithEmptyBody
                             while(readFromClient(chan, key));
                         } catch(IOException | CancelledKeyException exc) {
                             System.out.println("Connection to client lost!");
@@ -386,7 +387,7 @@ public class Server {
 
         Player thisPlayer = gameInQuestion.getPlayerByAccount(getChannelAccount(key));
 
-        // I don't think this body should ever be executed?
+        // I don't think this body should ever be executed, should investigate
         if(thisPlayer == null) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,

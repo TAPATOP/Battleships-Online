@@ -321,6 +321,9 @@ public class ClientTest {
         assertTrue("Player2 can deploy a ship if it's tip is next to another ship's",
                 secondClient.processPlayerCommand("deploy hD1")
         );
+        assertFalse("Player2 can't deploy a ship after he has already deployed all of his",
+                secondClient.processPlayerCommand("deploy hA1")
+        );
     }
 
     @Test

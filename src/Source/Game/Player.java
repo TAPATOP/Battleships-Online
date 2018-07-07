@@ -13,6 +13,12 @@ public class Player {
         gameTable = new GameTable();
     }
 
+    public Player(Account acc, int shipsCount) {
+        this.acc = acc;
+        gameTable = new GameTable(shipsCount);
+    }
+
+
     // Methods //
     public boolean joinAGame(int gameID) {
         if(acc.getCurrentGameID() != 0) {
