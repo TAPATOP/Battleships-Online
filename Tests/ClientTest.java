@@ -69,7 +69,7 @@ public class ClientTest {
         */
         
         client.processPlayerCommand("login TAPATOP peswerdlmao");
-        client.processPlayerCommand("create_game hi");
+        client.processPlayerCommand("create_game hi 2");
         secondClient.processPlayerCommand("login borat kazahstan");
         secondClient.processPlayerCommand("join_game hi");
 
@@ -219,6 +219,16 @@ public class ClientTest {
                 client.processPlayerCommand("create_game hi")
 
         );
+        assertTrue(
+                "Exits his own game just fine",
+                client.processPlayerCommand("exit_game")
+
+        );
+        assertTrue(
+                "Creates a game with custom number of ships just fine",
+                client.processPlayerCommand("create_game STOPRIGHTTHEREPUNK 2")
+
+        );
     }
 
     @Test
@@ -283,7 +293,7 @@ public class ClientTest {
     @Test
     public void canDeployShips() throws IOException{
         client.processPlayerCommand("login TAPATOP peswerdlmao");
-        client.processPlayerCommand("create_game hi");
+        client.processPlayerCommand("create_game hi 2");
         secondClient.processPlayerCommand("login borat kazahstan");
         secondClient.processPlayerCommand("join_game hi");
 
@@ -329,7 +339,7 @@ public class ClientTest {
     @Test
     public void battleRoomShouldBeImmuneToSpam() throws IOException {
         client.processPlayerCommand("login TAPATOP peswerdlmao");
-        client.processPlayerCommand("create_game hi");
+        client.processPlayerCommand("create_game hi 2");
         secondClient.processPlayerCommand("login borat kazahstan");
         secondClient.processPlayerCommand("join_game hi");
 

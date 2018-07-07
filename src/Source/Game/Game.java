@@ -12,6 +12,7 @@ public class Game {
     private int gameID;
     private String gameName;
     private boolean gameOver = false;
+    private int startingShipsCount;
 
     /**
      * Game constructor
@@ -23,6 +24,14 @@ public class Game {
         player1 = host;
         this.gameID = gameID;
         this.gameName = gameName;
+        startingShipsCount = 10;
+    }
+
+    public Game(String gameName, int startingShipsCount, int gameID, Player host) {
+        player1 = host;
+        this.gameID = gameID;
+        this.gameName = gameName;
+        this.startingShipsCount = startingShipsCount;
     }
 
     // Public interface //
@@ -65,6 +74,9 @@ public class Game {
         return player1;
     }
 
+    public int getStartingShipsCount() {
+        return startingShipsCount;
+    }
     /**
      * Use this when a game should finish, which is either when it ends naturally by
      * one of the players winning or by being terminated due to one player

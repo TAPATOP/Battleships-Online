@@ -486,6 +486,7 @@ public class Server {
         message = removeLastCharacter(message);
 
         if(message.length() == 0) {
+            // TODO: replace message with gameName
             message = getRandomPendingGame();
             if(message == null) {
                 return new EnumStringMessage(
@@ -511,11 +512,14 @@ public class Server {
             );
         }
 
-        boolean additionWasSuccessful = desiredGame.addPlayer(new Player(getChannelAccount(key)));
+        boolean additionWasSuccessful = desiredGame.addPlayer(
+                new Player(getChannelAccount(key),
+                        desiredGame.getStartingShipsCount())
+        );
         if(!additionWasSuccessful) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
-                    "You're already in another game"
+                    "You can't be added to the game"
             );
         }
         return initializeGameJoin(key, desiredGame);
@@ -604,7 +608,7 @@ public class Server {
         );
     }
 
-    private EnumStringMessage createGame(String gameName, SelectionKey key) {
+    private EnumStringMessage createGame(String message, SelectionKey key) {
         boolean channelIsLoggedIn = channelIsLoggedIn(key);
         if(!channelIsLoggedIn) {
             return new EnumStringMessage(
@@ -613,7 +617,8 @@ public class Server {
             );
         }
 
-        gameName = removeLastCharacter(gameName);
+        String[] gameNameAndShipCount = removeLastCharacter(message).split(" ");
+        String gameName = gameNameAndShipCount[0];
         if(!validateGameName(gameName)) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
@@ -625,19 +630,39 @@ public class Server {
             return new EnumStringMessage(ServerResponseType.INVALID, "Game already exists, try another name");
         }
 
-        return initializeGameCreation(gameName, key);
+        String numberOfShipsAsText;
+        try {
+            numberOfShipsAsText = gameNameAndShipCount[1];
+        } catch (ArrayIndexOutOfBoundsException exc) {
+            numberOfShipsAsText = null;
+        }
+
+        int numberOfShipsAsNumeric;
+        if (numberOfShipsAsText == null) {
+            numberOfShipsAsNumeric = 10;
+        } else if (numberOfShipsAsText.matches("\\d+")) {
+            numberOfShipsAsNumeric = Integer.parseInt(numberOfShipsAsText);
+        } else {
+            System.out.println("You gave me this: " + numberOfShipsAsText + ".");
+            return new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "There should be a single number after the command or no number at all"
+            );
+        }
+
+        return initializeGameCreation(gameName, numberOfShipsAsNumeric, key);
     }
 
-    private EnumStringMessage initializeGameCreation(String gameName, SelectionKey key) {
-        Player hostingPlayer = new Player(getChannelAccount(key));
-        Game newGame = new Game(gameName, allGamesEverCount, hostingPlayer);
+    private EnumStringMessage initializeGameCreation(String gameName, int numberOfShips, SelectionKey key) {
+        Player hostingPlayer = new Player(getChannelAccount(key), numberOfShips);
+        Game newGame = new Game(gameName, numberOfShips, allGamesEverCount, hostingPlayer);
         pendingGames.put(gameName, newGame);
         allPendingGames.add(gameName);
         gameStorageByID.put(allGamesEverCount, gameName);
         if(!hostingPlayer.joinAGame(newGame.getGameID())) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
-                    "Cannot join a game while being in another one!"
+                    "Cannot create a game while being in another one!"
             );
         }
 
