@@ -642,11 +642,13 @@ public class Server {
             numberOfShipsAsNumeric = 10;
         } else if (numberOfShipsAsText.matches("\\d+")) {
             numberOfShipsAsNumeric = Integer.parseInt(numberOfShipsAsText);
+            if (numberOfShipsAsNumeric > 10) {
+                return new EnumStringMessage(ServerResponseType.INVALID, "The number is too big");
+            }
         } else {
-            System.out.println("You gave me this: " + numberOfShipsAsText + ".");
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
-                    "There should be a single number after the command or no number at all"
+                    "There should be a single positive number after the command or no number at all"
             );
         }
 

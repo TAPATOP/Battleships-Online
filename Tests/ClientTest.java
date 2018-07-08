@@ -255,7 +255,7 @@ public class ClientTest {
     }
 
     @Test
-    public void handlesAFewPlayersAtATime()throws IOException {
+    public void shouldHandleAFewPlayersAtATime()throws IOException {
         client.processPlayerCommand("login TAPATOP peswerdlmao");
         assertTrue(
                 "A second account can log in",
@@ -281,7 +281,7 @@ public class ClientTest {
     }
 
     @Test
-    public void canJoinGame()throws IOException {
+    public void shouldJoinGame()throws IOException {
         secondClient.processPlayerCommand("login borat kazahstan");
 
         client.processPlayerCommand("login TAPATOP peswerdlmao");
@@ -291,7 +291,23 @@ public class ClientTest {
     }
 
     @Test
-    public void canDeployShips() throws IOException{
+    public void shouldLeaveOtherPlayersGame() throws IOException {
+        client.processPlayerCommand("login TAPATOP peswerdlmao");
+        client.processPlayerCommand("create_game ho");
+        secondClient.processPlayerCommand("login borat kazahstan");
+        secondClient.processPlayerCommand("join_game");
+
+        assertTrue(
+                "Can leave other player's game",
+                secondClient.processPlayerCommand("exit_game")
+        );
+        assertTrue("First player doesn't crash after second player leaves game",
+                client.processPlayerCommand("create_game hi")
+        );
+    }
+
+    @Test
+    public void shouldDeployShips() throws IOException{
         client.processPlayerCommand("login TAPATOP peswerdlmao");
         client.processPlayerCommand("create_game hi 2");
         secondClient.processPlayerCommand("login borat kazahstan");

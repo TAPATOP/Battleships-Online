@@ -22,7 +22,7 @@ public class GameTable {
     // Constructors //
     public GameTable() {
         deployedShipsCount = 0;
-        totalNumberOfShips = 2;
+        totalNumberOfShips = 10;
 
         addShips(1, ShipType.AIRCRAFT_CARRIER);
         addShips(2, ShipType.BATTLESHIP);
