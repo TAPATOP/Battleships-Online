@@ -1,6 +1,7 @@
 package Source;
 
 import Source.Game.GameTable;
+import Source.Game.SimplifiedGameTable;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,7 +20,7 @@ public class Client {
 
     // Game visualization member variables //
     private GameTable thisPlayerGameTable = new GameTable();
-    private GameTable opponentGameTable = new GameTable();
+    private SimplifiedGameTable opponentGameTable = new SimplifiedGameTable();
 
     // Constructors //
     public Client() throws IOException {
@@ -251,13 +252,14 @@ public class Client {
         boolean shotIsValid = !result.getEnumValue().equals(ServerResponseType.INVALID);
         boolean shotIsProbablyIndeedAShot = !result.getEnumValue().equals(ServerResponseType.NOTHING_OF_IMPORTANCE);
         boolean shotKilledLastShip = result.getEnumValue().equals(ServerResponseType.DESTROYED_LAST_SHIP);
+        ServerResponseType fireResult = (ServerResponseType)result.getEnumValue();
 
         if(shotIsValid && shotIsProbablyIndeedAShot) {
-            opponentGameTable.recordShotAt(coordinates);
+            opponentGameTable.recordShotAt(coordinates, fireResult);
             opponentGameTable.stylizeAndPrintMatrix();
             if(shotKilledLastShip) {
                 thisPlayerGameTable = new GameTable();
-                opponentGameTable = new GameTable();
+                opponentGameTable = new SimplifiedGameTable();
                 // processPlayerCommand("exit_game");
             }
         }
@@ -329,7 +331,7 @@ public class Client {
             System.out.println("You win!");
             //processPlayerCommand("exit_game");
             thisPlayerGameTable = new GameTable();
-            opponentGameTable = new GameTable();
+            opponentGameTable = new SimplifiedGameTable();
         }
     }
 

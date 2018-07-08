@@ -377,17 +377,17 @@ public class ClientTest {
         );
     }
 
-    //@Test
+    @Test
     public void canFireAtShipsAndReceiveDamageAndMiss() throws IOException {
         char[][] expectedClientOwnTable = new char[][]{
                 {'#', 'O', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'X', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
-                {'#', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'X', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'#', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'#', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
-                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', 'O', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '#', '#', '#' ,'#'}
         };
@@ -396,7 +396,7 @@ public class ClientTest {
                 {'O', '_', '_', '_', 'O', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
-                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', 'X', '_', '_', 'X', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
@@ -409,7 +409,7 @@ public class ClientTest {
                 {'O', '_', '_', '_', 'O', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
-                {'#', '#', '#', '#', '#', '#', '#', '#', '#' ,'_'},
+                {'#', 'X', '#', '#', 'X', '#', '#', '#', '#' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
@@ -421,12 +421,12 @@ public class ClientTest {
         char[][] expectedSecondClientOpponentTable = new char[][]{
                 {'_', 'O', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'X', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'X', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
-                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
-                {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
+                {'_', '_', '_', '_', '_', '_', '_', 'O', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'},
                 {'_', '_', '_', '_', '_', '_', '_', '_', '_' ,'_'}
         };
@@ -437,12 +437,13 @@ public class ClientTest {
         client.processPlayerCommand("fire A1");
         client.processPlayerCommand("fire A5");
         secondClient.processPlayerCommand("fire B1");
-//        client.processPlayerCommand("fire D2");
-//        secondClient.processPlayerCommand("fire B1");
-//        secondClient.processPlayerCommand("fire lol");
-//        secondClient.processPlayerCommand("fire C1");
-//        client.processPlayerCommand("fire D5");
-//        secondClient.processPlayerCommand("fire H8");
+        client.processPlayerCommand("fire D2");
+        secondClient.processPlayerCommand("fire B1");
+        secondClient.processPlayerCommand("fire lol");
+        secondClient.processPlayerCommand("fire C1");
+        secondClient.processPlayerCommand("fire D1");
+        client.processPlayerCommand("fire D5");
+        secondClient.processPlayerCommand("fire H8");
 
 //        client.thisPlayerGameTable.stylizeAndPrintMatrix();
 //        client.opponentGameTable.stylizeAndPrintMatrix();
