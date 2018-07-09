@@ -8,7 +8,7 @@ public class Player {
     private GameTable gameTable;
 
     // Constructors //
-    public Player(Account acc) {
+    Player(Account acc) {
         this.acc = acc;
         gameTable = new GameTable();
     }
@@ -18,10 +18,9 @@ public class Player {
         gameTable = new GameTable(shipsCount);
     }
 
-
     // Methods //
     public boolean joinAGame(int gameID) {
-        if(acc.getCurrentGameID() != 0) {
+        if (acc.getCurrentGameID() != 0) {
             System.out.println("Account is already logged into another game");
             return false;
         }
@@ -51,8 +50,8 @@ public class Player {
 
     @Override
     public boolean equals(Object o) {
-        if(this == o) return true;
-        if(o == null || getClass() != o.getClass()) return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
         Player player = (Player) o;
 

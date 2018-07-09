@@ -66,7 +66,7 @@ public class Account {
 
     public void updateStatistics(int gameID) {
         File f = new File(personalRecordFilePath);
-        if(!f.isFile()) {
+        if (!f.isFile()) {
             System.out.println("Account doesn't exist");
             return;
         }
@@ -78,7 +78,7 @@ public class Account {
     }
 
     public int[] loadStatistics() {
-        if(!exists()) {
+        if (!exists()) {
             System.out.println("Account doesn't exist");
             return null;
         }
@@ -90,7 +90,7 @@ public class Account {
 
             // skips the password
             scanner.nextLine();
-            while(scanner.hasNextInt()) {
+            while (scanner.hasNextInt()) {
                 gameIDs.add(scanner.nextInt());
             }
         } catch(FileNotFoundException e) {
@@ -99,7 +99,7 @@ public class Account {
 
         int[] gameIDArray = new int[gameIDs.size()];
         int i = 0;
-        for(Integer element :
+        for (Integer element :
                 gameIDs) {
             gameIDArray[i++] = element;
         }
@@ -108,7 +108,7 @@ public class Account {
     }
 
     void registerAccount() {
-        if(exists()) {
+        if (exists()) {
             System.out.println("Account already exists");
             return ;
         }
@@ -136,8 +136,8 @@ public class Account {
 
     @Override
     public boolean equals(Object o) {
-        if(this == o) return true;
-        if(o == null || getClass() != o.getClass()) return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
         Account account = (Account) o;
 

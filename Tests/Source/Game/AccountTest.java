@@ -1,4 +1,4 @@
-package Tests;
+package Source.Game;
 
 import Source.Account;
 import org.junit.Test;
@@ -18,7 +18,7 @@ public class AccountTest {
             String last = "";
             String line;
 
-            while((line = input.readLine()) != null) {
+            while ((line = input.readLine()) != null) {
                 last = line;
             }
             return last;
@@ -38,7 +38,7 @@ public class AccountTest {
 //    public void tearDown() {
 //        File file = new File(acc.getPersonalRecordFilePath());
 //        boolean a = file.delete();
-//        if(!a) {
+//        if (!a) {
 //            System.out.println("Something messed up while deleting tempregs");
 //        }
 //    }

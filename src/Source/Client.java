@@ -47,8 +47,8 @@ public class Client {
 
             // START OF CLIENT- SERVER MESSAGE EXCHANGE
             //noinspection InfiniteLoopStatement
-            while(true) {
-                if(playerInput.ready()) {
+            while (true) {
+                if (playerInput.ready()) {
                     client.blockSocket();
                     playerMessage = playerInput.readLine();
                     client.processPlayerCommand(playerMessage);
@@ -86,7 +86,7 @@ public class Client {
         String remainingMessage = splitMessage[1];
 
         EnumStringMessage result = callCommand(clientMessageType, remainingMessage);
-        if(result != null) {
+        if (result != null) {
             System.out.println(result.getMessage());
         }
 
@@ -115,7 +115,7 @@ public class Client {
         String playerMessageType = playerMessage.split(" ")[0];
         String remainingMessage = null;
 
-        if(playerMessageType.length() + 1 < playerMessage.length()) {
+        if (playerMessageType.length() + 1 < playerMessage.length()) {
             remainingMessage = playerMessage.substring(playerMessageType.length() + 1, playerMessage.length());
             remainingMessage = remainingMessage.trim().replaceAll(" +", " ");
         }
@@ -125,7 +125,7 @@ public class Client {
 
     private void checkForAndPrintMessageFromServer() throws IOException {
         EnumStringMessage message = readMessageFromServer();
-        if(message != null) {
+        if (message != null) {
             System.out.println(message.getMessage());
         }
     }
@@ -136,13 +136,13 @@ public class Client {
     ) throws IOException {
         switch(clientMessageType) {
             case LOGIN:
-                if(remainingMessage == null) {
+                if (remainingMessage == null) {
                     System.out.println("Username and password format is not okay");
                     return null;
                 }
                 return login(remainingMessage);
             case REGISTER:
-                if(remainingMessage == null) {
+                if (remainingMessage == null) {
                     System.out.println("There is nothing to register...");
                     return null;
                 }
@@ -218,11 +218,11 @@ public class Client {
     private EnumStringMessage deploy(final String coordinates) throws IOException {
         sendMessageToServer(ClientMessageType.DEPLOY, coordinates);
         EnumStringMessage result = readMessageFromServer();
-        if(result == null) {
+        if (result == null) {
             return null;
         }
 
-        if(result.getEnumValue() == ServerResponseType.INVALID){
+        if (result.getEnumValue() == ServerResponseType.INVALID){
             return result;
         }
 
@@ -235,7 +235,7 @@ public class Client {
             return result;
         }
 
-        if(!shipType.equals(GameTable.ShipType.INVALID)) {
+        if (!shipType.equals(GameTable.ShipType.INVALID)) {
             thisPlayerGameTable.deployShip(shipType, coordinates);
         }
 
@@ -245,7 +245,7 @@ public class Client {
     private EnumStringMessage fire(String coordinates) throws IOException {
         sendMessageToServer(ClientMessageType.FIRE, coordinates);
         EnumStringMessage result = readMessageFromServer();
-        if(result == null) {
+        if (result == null) {
             return null;
         }
 
@@ -254,10 +254,10 @@ public class Client {
         boolean shotKilledLastShip = result.getEnumValue().equals(ServerResponseType.DESTROYED_LAST_SHIP);
         ServerResponseType fireResult = (ServerResponseType)result.getEnumValue();
 
-        if(shotIsValid && shotIsProbablyIndeedAShot) {
+        if (shotIsValid && shotIsProbablyIndeedAShot) {
             opponentGameTable.recordShotAt(coordinates, fireResult);
             opponentGameTable.stylizeAndPrintMatrix();
-            if(shotKilledLastShip) {
+            if (shotKilledLastShip) {
                 thisPlayerGameTable = new GameTable();
                 opponentGameTable = new SimplifiedGameTable();
                 // processPlayerCommand("exit_game");
@@ -269,11 +269,11 @@ public class Client {
     private void sendMessageToServer(ClientMessageType clientMessageType, String message) throws IOException {
         buffer.clear();
         buffer.put((byte) clientMessageType.ordinal());
-        if(message != null) {
+        if (message != null) {
             buffer.put((message).getBytes());
         }
         buffer.flip();
-        while(buffer.hasRemaining()) {
+        while (buffer.hasRemaining()) {
             socket.write(buffer);
         }
     }
@@ -286,18 +286,18 @@ public class Client {
         do {
             buffer.clear();
             socket.read(buffer);
-            if(buffer.position() == 0) {
+            if (buffer.position() == 0) {
                 return null;
             }
             buffer.flip();
-            if(serverResponse == null) {
+            if (serverResponse == null) {
                 serverResponse = ServerResponseType.values()[(int) buffer.get()];
             }
-            while(buffer.limit() > buffer.position()) {
+            while (buffer.limit() > buffer.position()) {
                 c = (char) buffer.get();
                 messageFromServer.append(c);
             }
-        }while(buffer.limit() >= buffer.capacity());
+        }while (buffer.limit() >= buffer.capacity());
 
         EnumStringMessage result = new EnumStringMessage(serverResponse, messageFromServer.toString());
         processServerResponse(result);
@@ -317,7 +317,7 @@ public class Client {
 
     private void recordShotFromOpponent(EnumStringMessage message) throws IOException {
         int[] coords = findCoordinatesOfOpponentShotOut(message.getMessage());
-        if(coords[0] == -1) {
+        if (coords[0] == -1) {
             return;
         }
 
@@ -327,7 +327,7 @@ public class Client {
         thisPlayerGameTable.recordShotAt(x, y);
         thisPlayerGameTable.stylizeAndPrintMatrix();
 
-        if(message.getEnumValue().equals(ServerResponseType.GAME_OVER)) {
+        if (message.getEnumValue().equals(ServerResponseType.GAME_OVER)) {
             System.out.println("You win!");
             //processPlayerCommand("exit_game");
             thisPlayerGameTable = new GameTable();
@@ -339,7 +339,7 @@ public class Client {
         String possibleCoords = coordinates.substring(coordinates.length() - 4, coordinates.length() - 1);
         int[] coords = GameTable.tranformCoordinatesForReading(possibleCoords);
 
-        if(coords[0] == -1) {
+        if (coords[0] == -1) {
             possibleCoords = possibleCoords.substring(1, possibleCoords.length());
             coords = GameTable.tranformCoordinatesForReading(possibleCoords);
         }

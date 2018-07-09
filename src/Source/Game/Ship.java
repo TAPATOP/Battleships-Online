@@ -28,7 +28,7 @@ abstract class Ship {
      * was already destroyed( should only reach this in a case of a bug) or survived
      */
     boolean takeOneHit() {
-        if(healthPoints <= 0) {
+        if (healthPoints <= 0) {
             System.out.println("Why are you firing at a dead ship??");
             return false;
         }

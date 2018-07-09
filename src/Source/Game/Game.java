@@ -37,7 +37,7 @@ public class Game {
     // Public interface //
     public boolean addPlayer(Player joinedPlayer) {
         boolean joinSuccessful = joinedPlayer.joinAGame(gameID);
-        if(!joinSuccessful) {
+        if (!joinSuccessful) {
             return false;
         }
         player2 = joinedPlayer;
@@ -54,7 +54,7 @@ public class Game {
     }
 
     public Player getOtherPlayer(Player playerWeAlreadyKnow) {
-        if(player1.equals(playerWeAlreadyKnow)) {
+        if (player1.equals(playerWeAlreadyKnow)) {
             return player2;
         }
         return player1;
@@ -68,7 +68,7 @@ public class Game {
      */
     public Player getOtherPlayer(Account accountOfPlayerWeAlreadyKnow) {
         Player playerWeAlreadyKnow = new Player(accountOfPlayerWeAlreadyKnow);
-        if(player1.equals(playerWeAlreadyKnow)) {
+        if (player1.equals(playerWeAlreadyKnow)) {
             return player2;
         }
         return player1;
@@ -84,7 +84,7 @@ public class Game {
      */
     public void end() {
         player1.removeFromGame();
-        if(player2 != null) {
+        if (player2 != null) {
             player2.removeFromGame();
         }
     }
@@ -94,14 +94,14 @@ public class Game {
     }
 
     public EnumStringMessage executeFiring(Player attacker, String coordinates) {
-        if(gameOver) {
+        if (gameOver) {
             return new EnumStringMessage(
                     GameTable.FireResult.INVALID,
                     "Game is over, no need to keep firing..."
             );
         }
 
-        if(!attacker.equals(playerInTurn)) {
+        if (!attacker.equals(playerInTurn)) {
             return new EnumStringMessage(
                     GameTable.FireResult.INVALID,
                     "It's not your turn to fire yet"
@@ -110,9 +110,9 @@ public class Game {
 
         EnumStringMessage result = getOtherPlayer(attacker).getGameTable().recordShotAt(coordinates);
         boolean firingWasLegal = !(result.getEnumValue().equals(GameTable.FireResult.INVALID));
-        if(firingWasLegal) {
+        if (firingWasLegal) {
             switchTurns();
-            if(result.getEnumValue().equals(GameTable.FireResult.DESTROYED_LAST_SHIP)) {
+            if (result.getEnumValue().equals(GameTable.FireResult.DESTROYED_LAST_SHIP)) {
                 gameOver = true;
             }
         }
@@ -129,10 +129,10 @@ public class Game {
     }
 
     public Player getPlayerByAccount(Account acc) {
-        if(player1.getAccount().equals(acc)) {
+        if (player1.getAccount().equals(acc)) {
             return player1;
         }
-        if(player2.getAccount().equals(acc)) {
+        if (player2.getAccount().equals(acc)) {
             return player2;
         }
         return null;
@@ -140,7 +140,7 @@ public class Game {
 
     // Private methods //
     private void switchTurns() {
-        if(player1.equals(playerInTurn)) {
+        if (player1.equals(playerInTurn)) {
             playerInTurn = player2;
         } else {
             playerInTurn = player1;

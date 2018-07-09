@@ -22,13 +22,13 @@ public class ClientTest {
     public static void deleteTempRegistration() {
         File file = new File(".\\Accounts\\username.txt");
         boolean a = file.delete();
-        if(!a) {
+        if (!a) {
             System.out.println("Something messed up while deleting tempregs");
             return;
         }
         file = new File(".\\Accounts\\username2.txt");
         a = file.delete();
-        if(!a) {
+        if (!a) {
             System.out.println("Something messed up while deleting tempregs");
         }
     }

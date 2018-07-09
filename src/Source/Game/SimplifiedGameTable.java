@@ -53,13 +53,13 @@ public class SimplifiedGameTable {
 
     public void stylizeAndPrintMatrix() {
         System.out.print("/|");
-        for(int i = 1; i <= DIMENTION_LIMIT; i++) {
+        for (int i = 1; i <= DIMENTION_LIMIT; i++) {
             System.out.print(i + "|");
         }
         System.out.println();
-        for(int i = 0; i < DIMENTION_LIMIT; i++) {
+        for (int i = 0; i < DIMENTION_LIMIT; i++) {
             System.out.print((char)(i + 65) + "|");
-            for(int j = 0; j < DIMENTION_LIMIT; j++) {
+            for (int j = 0; j < DIMENTION_LIMIT; j++) {
                 System.out.print(table[i][j] + "|");
             }
             System.out.println();
