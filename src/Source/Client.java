@@ -337,13 +337,18 @@ public class Client {
 
     private int[] findCoordinatesOfOpponentShotOut(String coordinates) {
         String possibleCoords = coordinates.substring(coordinates.length() - 4, coordinates.length() - 1);
-        int[] coords = GameTable.tranformCoordinatesForReading(possibleCoords);
+        Coordinates coords = new Coordinates(possibleCoords);
 
-        if (coords[0] == -1) {
+        if (coords.getX() < 0) {
             possibleCoords = possibleCoords.substring(1, possibleCoords.length());
-            coords = GameTable.tranformCoordinatesForReading(possibleCoords);
+            coords = new Coordinates(possibleCoords);
         }
-        return coords;
+        // TODO: slay this
+        int[] coords2 = new int[2];
+        coords2[0] = coords.getX();
+        coords2[1] = coords.getY();
+
+        return coords2;
     }
 
     private EnumStringMessage searchGames() throws IOException {

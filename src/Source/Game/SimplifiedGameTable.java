@@ -1,5 +1,6 @@
 package Source.Game;
 
+import Source.Coordinates;
 import Source.ServerResponseType;
 
 public class SimplifiedGameTable {
@@ -30,11 +31,9 @@ public class SimplifiedGameTable {
 
     public void recordShotAt(String squareCoordinates, ServerResponseType fireResult) {
         try {
-            int[] coords = GameTable.tranformCoordinatesForReading(squareCoordinates);
-            int x = coords[0];
-            int y = coords[1];
+            Coordinates coordinates = new Coordinates(squareCoordinates);
             char fireResultVisualization = visualizeServerFireResult(fireResult);
-            table[x][y] = fireResultVisualization;
+            table[coordinates.getX()][coordinates.getY()] = fireResultVisualization;
         } catch (IndexOutOfBoundsException exc) {
             System.out.println("The fire position is out of bounds");
         }

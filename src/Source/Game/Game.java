@@ -89,6 +89,7 @@ public class Game {
         }
     }
 
+    // TODO: make the String into Coordinates
     public EnumStringMessage deployShip(Player owner, String coordinates, boolean isVertical) {
         return owner.getGameTable().deployNextShip(coordinates, isVertical);
     }
@@ -107,7 +108,7 @@ public class Game {
                     "It's not your turn to fire yet"
             );
         }
-
+        // TODO: remove the need of getGameTable() below
         EnumStringMessage result = getOtherPlayer(attacker).getGameTable().recordShotAt(coordinates);
         boolean firingWasLegal = !(result.getEnumValue().equals(GameTable.FireResult.INVALID));
         if (firingWasLegal) {

@@ -1,5 +1,6 @@
 package Source.Game;
 
+import Source.Coordinates;
 import Source.EnumStringMessage;
 
 import java.util.Vector;
@@ -64,16 +65,6 @@ public class GameTable {
     }
 
     // Methods //
-    private boolean checkIfVertical(char c){
-        switch(c) {
-            case 'h':
-                return false;
-            case 'v':
-                return true;
-            default:
-                return false; // I'll pretend this is OK...
-        }
-    }
 
     /**
      * Deploys the next ship in line
@@ -82,16 +73,14 @@ public class GameTable {
      * @return returns true if the ship was successfully deployed
      */
     public EnumStringMessage deployNextShip(String squareCoordinates, boolean isVertical) {
-        int[] coords = tranformCoordinatesForReading(squareCoordinates);
-        if (coords[0] < 0) {
+        Coordinates coordinates = new Coordinates(squareCoordinates);
+        if (coordinates.getX() < 0) {
             return new EnumStringMessage(
                     ShipType.INVALID,
                     "Invalid coordinates"
             );
         }
-        int x = coords[0];
-        int y = coords[1];
-        return deployShip(allShips.get(deployedShipsCount), x, y, isVertical);
+        return deployShip(allShips.get(deployedShipsCount), coordinates.getX(), coordinates.getY(), isVertical);
     }
 
     private EnumStringMessage deployShip(Ship ship, int x, int y, boolean isVertical) {
@@ -150,14 +139,9 @@ public class GameTable {
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean deployShip(ShipType shipType, String coordinateInfo){
-        //TODO: Make Client calculate the coordinates( probably wont implement soon)
-        boolean isVertical = checkIfVertical(coordinateInfo.charAt(0));
-        String restOfCoordinates = coordinateInfo.substring(1, coordinateInfo.length());
-        int[] coords = tranformCoordinatesForReading(restOfCoordinates);
-        int x = coords[0];
-        int y = coords[1];
+        Coordinates coordinates = new Coordinates(coordinateInfo);
 
-        if (x == -1) {
+        if (coordinates.getX() < 0) {
             System.out.println("Something's wrong with the coordinates");
             return false;
         }
@@ -168,7 +152,7 @@ public class GameTable {
             return false;
         }
 
-        deployShip(ship, x, y, isVertical);
+        deployShip(ship, coordinates.getX(), coordinates.getY(), coordinates.isVertical());
 
         return true;
     }
@@ -246,14 +230,12 @@ public class GameTable {
     }
 
     public EnumStringMessage recordShotAt(String squareCoordinates) {
-        int[] coords = tranformCoordinatesForReading(squareCoordinates);
-        if (coords[0] < 0) {
+        Coordinates coords = new Coordinates(squareCoordinates);
+        if (coords.getX() < 0 || coords.getX() >= DIMENTION_LIMIT || coords.getY() >= DIMENTION_LIMIT) {
             return new EnumStringMessage(FireResult.INVALID, "Invalid coordinate");
         }
-        int x = coords[0];
-        int y = coords[1];
 
-        return recordShotAt(x, y);
+        return recordShotAt(coords.getX(), coords.getY());
     }
 
     public EnumStringMessage recordShotAt(int x, int y){
@@ -335,41 +317,6 @@ public class GameTable {
      * @return returns an int[2] array, where arr[0] is x and arr[1] is y;
      * If the given coordinates are invalid in some way, arr[0] will be -1
      */
-    public static int[] tranformCoordinatesForReading(String squareCoordinates) {
-        int[] transformedCoords = new int[2];
-        if (!validateCoordinatesString(squareCoordinates)) {
-            transformedCoords[0] = -1;
-            return transformedCoords;
-        }
-
-        char x = squareCoordinates.toUpperCase().charAt(0);
-        String digitsOfCoords = squareCoordinates.substring(1, squareCoordinates.length());
-
-        int y = Integer.parseInt(digitsOfCoords);
-
-        transformedCoords[0] = x - 'A';
-        transformedCoords[1] = y - 1;
-
-        return transformedCoords;
-    }
-
-    private static boolean validateCoordinatesString(String squareCoordinates) {
-        if (squareCoordinates.length() > 3 || squareCoordinates.length() < 2) {
-            return false;
-        }
-        if (squareCoordinates.charAt(0) < 'A' || squareCoordinates.charAt(0) >= 'A' + DIMENTION_LIMIT) {
-            return false;
-        }
-
-        String supposedNumericValue = squareCoordinates.substring(1, squareCoordinates.length());
-        if (supposedNumericValue.matches("[0-9]*")) {
-            int number = Integer.parseInt(supposedNumericValue);
-            if (number > 0 && number <= DIMENTION_LIMIT) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     /**
      * Checks if the given coordinates actually fit on the GameTable.
