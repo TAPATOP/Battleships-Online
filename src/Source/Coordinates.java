@@ -42,6 +42,11 @@ public class Coordinates {
         tranformCoordinates(coordinatesAsText);
     }
 
+    public Coordinates(String coordinatesAsText, boolean isVertical) {
+        this(coordinatesAsText);
+        this.isVertical = isVertical;
+    }
+
     // Methods //
     private void tranformCoordinates(String coordinates) {
         if (!validateCoordinatesString(coordinates)) {

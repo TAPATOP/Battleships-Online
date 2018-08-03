@@ -314,6 +314,10 @@ public class ClientTest {
         secondClient.processPlayerCommand("join_game hi");
 
         // keep in mind these are made for games with a max of 2 ships per side, cause im a lazy ****
+        assertFalse(
+                "Empty deploy command should not destroy the server",
+                client.processPlayerCommand("deploy")
+        );
         assertTrue(
                 "Player1 can deploy a ship vertically at A1 without colliding with anything",
                 client.processPlayerCommand("deploy vA1")

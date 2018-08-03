@@ -65,25 +65,38 @@ public class GameTable {
     }
 
     // Methods //
-
     /**
      * Deploys the next ship in line
      * @param squareCoordinates the coordinates of the ship in the format: [A-J][1-10]
      * @param isVertical whether the ship is vertically deployed or not
      * @return returns true if the ship was successfully deployed
      */
+    @SuppressWarnings("UnusedReturnValue")
     public EnumStringMessage deployNextShip(String squareCoordinates, boolean isVertical) {
-        Coordinates coordinates = new Coordinates(squareCoordinates);
+        Coordinates coordinates = new Coordinates(squareCoordinates, isVertical);
         if (coordinates.getX() < 0) {
             return new EnumStringMessage(
                     ShipType.INVALID,
                     "Invalid coordinates"
             );
         }
-        return deployShip(allShips.get(deployedShipsCount), coordinates.getX(), coordinates.getY(), isVertical);
+        return deployShip(allShips.get(deployedShipsCount), coordinates);
     }
 
-    private EnumStringMessage deployShip(Ship ship, int x, int y, boolean isVertical) {
+    /**
+     * Deploys the next ship in line the list
+     */
+    public EnumStringMessage deployNextShip(Coordinates coordinates) {
+        if (coordinates.getX() < 0) {
+            return new EnumStringMessage(
+                    ShipType.INVALID,
+                    "Invalid coordinates"
+            );
+        }
+        return deployShip(allShips.get(deployedShipsCount), coordinates);
+    }
+
+    private EnumStringMessage deployShip(Ship ship, Coordinates coordinates) {
         if (allShipsAreDeployed()) {
             System.out.println("All ships are already deployed");
             return new EnumStringMessage(
@@ -92,15 +105,18 @@ public class GameTable {
             );
         }
 
-        int[] xAndYChanges = generateXAndYChange(isVertical);
+        int[] xAndYChanges = generateXAndYChange(coordinates.isVertical());
+        int x = coordinates.getX();
+        int y = coordinates.getY();
         int xChange = xAndYChanges[0];
         int yChange = xAndYChanges[1];
 
-        if (canDeployShip(ship, x, y, isVertical)) {
+        if (canDeployShip(ship, coordinates)) {
             for (int i = 0; i < ship.getSize(); i++) {
                 boardOfDeployments[x][y] = ship;
                 x += xChange;
                 y += yChange;
+                //stylizeAndPrintMatrix();
             }
             deployedShips.add(allShips.get(deployedShipsCount));
             deployedShipsCount++;
@@ -134,8 +150,6 @@ public class GameTable {
 
     /**
      * Used by the Client when trying to deploy a ship
-     * The String is "coorcinateInfo" and not just "coordinates", because
-     * it also contains a flag for horizontal/ vertical
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean deployShip(ShipType shipType, String coordinateInfo){
@@ -152,7 +166,7 @@ public class GameTable {
             return false;
         }
 
-        deployShip(ship, coordinates.getX(), coordinates.getY(), coordinates.isVertical());
+        deployShip(ship, coordinates);
 
         return true;
     }
@@ -174,15 +188,17 @@ public class GameTable {
         }
     }
 
-    private boolean canDeployShip(Ship ship, int x, int y, boolean isVertical) {
+    private boolean canDeployShip(Ship ship, Coordinates coordinates) {
         int xChange = 0;
         int yChange = 0;
-        if (isVertical) {
+        if (coordinates.isVertical()) {
             xChange = 1;
         } else {
             yChange = 1;
         }
 
+        int x = coordinates.getX();
+        int y = coordinates.getY();
         for (int i = 0; i < ship.getSize(); i++) {
             if (!coordinatesAreValid(x, y)) {
                 System.out.println("Ships aren't supposed to stick outside of the battlefield");

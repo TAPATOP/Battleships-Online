@@ -1,6 +1,7 @@
 package Source.Game;
 
 import Source.Account;
+import Source.Coordinates;
 import Source.EnumStringMessage;
 
 public class Game {
@@ -90,8 +91,8 @@ public class Game {
     }
 
     // TODO: make the String into Coordinates
-    public EnumStringMessage deployShip(Player owner, String coordinates, boolean isVertical) {
-        return owner.getGameTable().deployNextShip(coordinates, isVertical);
+    public EnumStringMessage deployShip(Player owner, Coordinates coordinates) {
+        return owner.getGameTable().deployNextShip(coordinates);
     }
 
     public EnumStringMessage executeFiring(Player attacker, String coordinates) {

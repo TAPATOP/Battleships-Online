@@ -351,30 +351,14 @@ public class Server {
     }
 
     private EnumStringMessage deployShip(
-            String coordinates,
+            String coordinatesAsText,
             SelectionKey key
     ) throws IOException {
-        if (coordinates == null || coordinates.length() == 0) {
+        if (coordinatesAsText == null || coordinatesAsText.length() <= 1) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "Please send coordinates in the required format"
             );
-        }
-        boolean isVertical;
-        char c = coordinates.charAt(0);
-        switch(c) {
-            case 'v':
-                isVertical = true;
-                break;
-            case 'h':
-                isVertical = false;
-                break;
-            default:
-                return new EnumStringMessage(
-                        ServerResponseType.INVALID,
-                        "First letter of coordinates must be h or v," +
-                                " representing whether the ship is deployed horizontally or vertically."
-                );
         }
 
         Game gameInQuestion = getGameByAccount(getChannelAccount(key));
@@ -410,21 +394,21 @@ public class Server {
             );
         }
 
-        String remainsOfCoordinates = removeLastCharacter(coordinates.substring(1, coordinates.length()));
+        String remainsOfCoordinates = removeLastCharacter(coordinatesAsText.substring(0, coordinatesAsText.length()));
+        Coordinates coordinates = new Coordinates(remainsOfCoordinates);
         EnumStringMessage result =
-                initiateShipDeployment(remainsOfCoordinates, isVertical, gameInQuestion, thisPlayer);
+                initiateShipDeployment(coordinates, gameInQuestion, thisPlayer);
         seeIfDeploymentIsFinalized(gameInQuestion, thisPlayer);
 
         return result;
     }
 
     private EnumStringMessage initiateShipDeployment(
-            String coordinates,
-            boolean isVertical,
+            Coordinates coordinates,
             Game gameInQuestion,
             Player thisPlayer
     ) throws IOException {
-        EnumStringMessage result = gameInQuestion.deployShip(thisPlayer, coordinates, isVertical);
+        EnumStringMessage result = gameInQuestion.deployShip(thisPlayer, coordinates);
         result = new EnumStringMessage(
                 transformDeployedShipTypeToServerResponseType((GameTable.ShipType)result.getEnumValue()),
                 result.getMessage()
