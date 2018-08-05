@@ -1,5 +1,7 @@
 package Source;
 
+import Source.Exceptions.AuthenticationException;
+import Source.Exceptions.GeneralBattleshipsException;
 import Source.Game.Game;
 import Source.Game.GameTable;
 import Source.Game.Player;
@@ -110,7 +112,14 @@ public class Server {
         System.out.println("Processing this message: " + playerMessage);
 
         // No reason not to notify the client about what's going on as soon as possible
-        EnumStringMessage result = processMessage(mesType, playerMessage, chan, key);
+        EnumStringMessage result;
+        try {
+            result = processMessage(mesType, playerMessage, chan, key);
+        } catch (GeneralBattleshipsException exc) {
+            result = new EnumStringMessage(ServerResponseType.INVALID, exc.getMessage());
+        }
+
+        // TODO: Check if this check is needed anymore
         if (result == null) {
             return true;
         }
@@ -139,7 +148,12 @@ public class Server {
         return new String(playerInput);
     }
 
-    private EnumStringMessage processMessage(ClientMessageType mesType, String message, SocketChannel chan, SelectionKey key) throws IOException {
+    private EnumStringMessage processMessage(
+            ClientMessageType mesType,
+            String message,
+            SocketChannel chan,
+            SelectionKey key)
+            throws IOException, GeneralBattleshipsException {
         switch (mesType) {
             case LOGIN:
                 return loginAccount(message, key);
@@ -187,8 +201,7 @@ public class Server {
             SelectionKey key
     ) throws IOException {
         EnumStringMessage queryReturn;
-        for (String gameName :
-                allPendingGames) {
+        for (String gameName : allPendingGames) {
             queryReturn = new EnumStringMessage(
                     ServerResponseType.NOTHING_OF_IMPORTANCE,
                     gameName + " PENDING\n"
@@ -669,11 +682,9 @@ public class Server {
         return new EnumStringMessage(ServerResponseType.INVALID, "You need to have logged in to log out...");
     }
 
-    private EnumStringMessage registerAccount(String message, SelectionKey key) {
+    private EnumStringMessage registerAccount(String message, SelectionKey key) throws AuthenticationException {
         String[] usernameAndPassword = splitUsernameAndPassword(message);
-        if (usernameAndPassword == null) {
-            return new EnumStringMessage(ServerResponseType.INVALID, "Unverified username/ password");
-        }
+
         Account acc = new Account(usernameAndPassword[0], usernameAndPassword[1]);
         if (accountExists(acc)) {
             System.out.println(acc.getName() + " already exists");
@@ -697,21 +708,22 @@ public class Server {
         key.attach(new Account(channel));
     }
 
-    private EnumStringMessage loginAccount(String message, SelectionKey key) throws IOException {
+    private EnumStringMessage loginAccount(String message, SelectionKey key)
+            throws IOException, GeneralBattleshipsException {
         if (channelIsLoggedIn(key)) {
             System.out.println("This channel is already logged in");
             return new EnumStringMessage(ServerResponseType.INVALID, "You need to log out before you can log in");
         }
 
         String[] usernameAndPassword = splitUsernameAndPassword(message);
-        if (usernameAndPassword == null) {
-            return new EnumStringMessage(ServerResponseType.INVALID, "Unverified username/ password");
-        }
 
         Account acc = new Account(usernameAndPassword[0], usernameAndPassword[1]);
         if (accountIsLoggedIn(acc)) {
             System.out.println(acc.getName() + " is already logged in");
-            return new EnumStringMessage(ServerResponseType.INVALID, "User " + acc.getName() + " already logged in...");
+            return new EnumStringMessage(
+                    ServerResponseType.INVALID,
+                    "User " + acc.getName() + " already logged in..."
+            );
         }
 
         return verifyLoginDataAndLogin(acc, (Account)(key.attachment()));
@@ -743,11 +755,10 @@ public class Server {
         return loggedInUsers.contains(acc.getName());
     }
 
-    private String[] splitUsernameAndPassword(String input) {
+    private String[] splitUsernameAndPassword(String input) throws AuthenticationException {
         String[] usernameAndPassword = input.split(" ");
         if (usernameAndPassword.length != 2) {
-            System.out.println("Username and password not validated...");
-            return null;
+            throw new AuthenticationException("Username and password not validated...");
         }
         usernameAndPassword[1] = removeLastCharacter(usernameAndPassword[1]);
         return usernameAndPassword;
@@ -784,3 +795,5 @@ public class Server {
         return gameName.matches("[a-zA-Z][\\w\\d_]*");
     }
 }
+
+// TODO: Try- with- resources
