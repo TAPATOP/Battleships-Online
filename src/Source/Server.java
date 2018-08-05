@@ -607,8 +607,7 @@ public class Server {
     }
 
     private EnumStringMessage createGame(String message, SelectionKey key) {
-        boolean channelIsLoggedIn = channelIsLoggedIn(key);
-        if (!channelIsLoggedIn) {
+        if (!channelIsLoggedIn(key)) {
             return new EnumStringMessage(
                     ServerResponseType.INVALID,
                     "You need to be logged in to create a game"
@@ -692,7 +691,7 @@ public class Server {
             System.out.println("This channel is already logged in");
             return new EnumStringMessage(ServerResponseType.INVALID, "You need to log out before you can log in");
         }
-        acc.registerAccount();
+        acc.register();
         return new EnumStringMessage(ServerResponseType.OK, "Successful registration! Welcome aboard, " + acc.getName());
     }
 
@@ -723,12 +722,29 @@ public class Server {
         return verifyLoginDataAndLogin(acc, (Account)(key.attachment()));
     }
 
-    private EnumStringMessage verifyLoginDataAndLogin(Account requestedAcc, Account savedAcc) throws IOException {
+    private boolean channelIsLoggedIn(SelectionKey key) {
+        return  ((Account)key.attachment()).getName() != null;
+    }
+
+    private String[] splitUsernameAndPassword(String input) throws UsernameOrPasswordException {
+        String[] usernameAndPassword = input.split(" ");
+        if (usernameAndPassword.length != 2) {
+            throw new UsernameOrPasswordException("Username and password not validated...");
+        }
+        usernameAndPassword[1] = removeLastCharacter(usernameAndPassword[1]);
+        return usernameAndPassword;
+    }
+
+    private boolean accountIsLoggedIn(Account acc) {
+        return loggedInUsers.contains(acc.getName());
+    }
+
+    private EnumStringMessage verifyLoginDataAndLogin(Account requestedAcc, Account accountOfChannel) throws IOException {
         if (requestedAcc.exists()) {
             String savedPass = requestedAcc.loadPassword();
             if (savedPass.equals(requestedAcc.getPassword())) {
-                savedAcc.setName(requestedAcc.getName());
-                savedAcc.setPassword(requestedAcc.getPassword());
+                accountOfChannel.setName(requestedAcc.getName());
+                accountOfChannel.setPassword(requestedAcc.getPassword());
                 System.out.println("Successful login!");
                 loggedInUsers.add(requestedAcc.getName());
                 return new EnumStringMessage(ServerResponseType.OK, "Successful login!");
@@ -739,23 +755,6 @@ public class Server {
             System.out.println("Account not found.");
             return new EnumStringMessage(ServerResponseType.INVALID, "Account doesn't exist");
         }
-    }
-
-    private boolean channelIsLoggedIn(SelectionKey key) {
-        return  ((Account)key.attachment()).getName() != null;
-    }
-
-    private boolean accountIsLoggedIn(Account acc) {
-        return loggedInUsers.contains(acc.getName());
-    }
-
-    private String[] splitUsernameAndPassword(String input) throws UsernameOrPasswordException {
-        String[] usernameAndPassword = input.split(" ");
-        if (usernameAndPassword.length != 2) {
-            throw new UsernameOrPasswordException("Username and password not validated...");
-        }
-        usernameAndPassword[1] = removeLastCharacter(usernameAndPassword[1]);
-        return usernameAndPassword;
     }
 
     private String removeLastCharacter(String input) {

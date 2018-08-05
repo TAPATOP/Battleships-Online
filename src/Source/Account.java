@@ -110,7 +110,7 @@ public class Account {
         return gameIDArray;
     }
 
-    void registerAccount() throws RegistrationException {
+    void register() throws RegistrationException {
         if (exists()) {
             System.out.println("Account already exists");
             throw new RegistrationException("User already exists");
@@ -138,6 +138,9 @@ public class Account {
         return bufferForCommunicationWithServer;
     }
 
+    public void login() {
+
+    }
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
