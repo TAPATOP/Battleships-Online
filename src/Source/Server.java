@@ -1,7 +1,8 @@
 package Source;
 
-import Source.Exceptions.AuthenticationException;
+import Source.Exceptions.AccountException;
 import Source.Exceptions.GeneralBattleshipsException;
+import Source.Exceptions.UsernameOrPasswordException;
 import Source.Game.Game;
 import Source.Game.GameTable;
 import Source.Game.Player;
@@ -682,24 +683,17 @@ public class Server {
         return new EnumStringMessage(ServerResponseType.INVALID, "You need to have logged in to log out...");
     }
 
-    private EnumStringMessage registerAccount(String message, SelectionKey key) throws AuthenticationException {
+    private EnumStringMessage registerAccount(String message, SelectionKey key) throws AccountException {
         String[] usernameAndPassword = splitUsernameAndPassword(message);
 
         Account acc = new Account(usernameAndPassword[0], usernameAndPassword[1]);
-        if (accountExists(acc)) {
-            System.out.println(acc.getName() + " already exists");
-            return new EnumStringMessage(ServerResponseType.INVALID, "User already exists...");
-        }
+
         if (channelIsLoggedIn(key)) {
             System.out.println("This channel is already logged in");
             return new EnumStringMessage(ServerResponseType.INVALID, "You need to log out before you can log in");
         }
         acc.registerAccount();
-    return new EnumStringMessage(ServerResponseType.OK, "Successful registration! Welcome aboard, " + acc.getName());
-    }
-
-    private boolean accountExists(Account acc) {
-        return (new File(acc.getPersonalRecordFilePath()).isFile());
+        return new EnumStringMessage(ServerResponseType.OK, "Successful registration! Welcome aboard, " + acc.getName());
     }
 
     private void logChannelOut(SelectionKey key, SocketChannel channel) throws IOException {
@@ -755,10 +749,10 @@ public class Server {
         return loggedInUsers.contains(acc.getName());
     }
 
-    private String[] splitUsernameAndPassword(String input) throws AuthenticationException {
+    private String[] splitUsernameAndPassword(String input) throws UsernameOrPasswordException {
         String[] usernameAndPassword = input.split(" ");
         if (usernameAndPassword.length != 2) {
-            throw new AuthenticationException("Username and password not validated...");
+            throw new UsernameOrPasswordException("Username and password not validated...");
         }
         usernameAndPassword[1] = removeLastCharacter(usernameAndPassword[1]);
         return usernameAndPassword;

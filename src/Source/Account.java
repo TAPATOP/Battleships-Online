@@ -1,5 +1,8 @@
 package Source;
 
+import Source.Exceptions.AccountException;
+import Source.Exceptions.RegistrationException;
+
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -107,15 +110,16 @@ public class Account {
         return gameIDArray;
     }
 
-    void registerAccount() {
+    void registerAccount() throws RegistrationException {
         if (exists()) {
             System.out.println("Account already exists");
-            return ;
+            throw new RegistrationException("User already exists");
         }
         try( PrintWriter out = new PrintWriter(  new FileOutputStream(new File(personalRecordFilePath)))  ) {
             out.println(password);
         } catch(FileNotFoundException e) {
             System.out.println("Error registering account");
+            throw new RegistrationException("Cannot create account at the moment");
         }
     }
 
